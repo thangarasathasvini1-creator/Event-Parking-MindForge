@@ -1,5 +1,6 @@
 ﻿using Event_And_Parking_Manage_system.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Event_And_Parking_Manage_system.Data
 {
@@ -12,6 +13,11 @@ namespace Event_And_Parking_Manage_system.Data
 
         //dbset for Customer entity
         public DbSet<Customer> Customers => Set<Customer>();
+
+        public DbSet<Venue> Venues => Set<Venue>();
+        public DbSet<EventCategory> EventCategories => Set<EventCategory>();
+        public DbSet<Event> Events => Set<Event>();
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
