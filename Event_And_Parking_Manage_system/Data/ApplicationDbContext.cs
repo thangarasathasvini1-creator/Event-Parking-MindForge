@@ -17,6 +17,8 @@ namespace Event_And_Parking_Manage_system.Data
         public DbSet<Venue> Venues => Set<Venue>();
         public DbSet<EventCategory> EventCategories => Set<EventCategory>();
         public DbSet<Event> Events => Set<Event>();
+        public DbSet<Seat> Seats => Set<Seat>();
+        public DbSet<ParkingSlot> ParkingSlots => Set<ParkingSlot>();
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -26,6 +28,8 @@ namespace Event_And_Parking_Manage_system.Data
             // Apply all configurations from the current assembly
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
         }
+
+        
 
     }
 }
