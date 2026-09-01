@@ -17,7 +17,6 @@
 
   <ItemGroup>
     <Folder Include="DTOs\" />
-    <Folder Include="Data\" />
     <Folder Include="Helpers\" />
     <Folder Include="BackgroundServices\" />
     <Folder Include="Repositories\Interfaces\" />
