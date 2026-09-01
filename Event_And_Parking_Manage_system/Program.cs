@@ -1,4 +1,8 @@
 
+
+using Event_And_Parking_Manage_system.Data;
+using Microsoft.EntityFrameworkCore;
+
 namespace Event_And_Parking_Manage_system
 {
     public class Program
@@ -6,6 +10,10 @@ namespace Event_And_Parking_Manage_system
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            //EF core context configuration
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             // Add services to the container.
 
