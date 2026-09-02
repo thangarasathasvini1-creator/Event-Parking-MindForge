@@ -18,6 +18,11 @@ namespace Event_And_Parking_Manage_system.Models.Entities
         public DateTime? PasswordResetTokenExpiresAt { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
+        public ICollection<Booking> Bookings { get; set; }
+        = new List<Booking>();
+
+        public ICollection<Notification> Notifications { get; set; }
+        = new List<Notification>();
 
     }
 }
