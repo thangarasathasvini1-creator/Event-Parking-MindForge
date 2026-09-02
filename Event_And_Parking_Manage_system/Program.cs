@@ -1,6 +1,11 @@
 
 
 using Event_And_Parking_Manage_system.Data;
+using Event_And_Parking_Manage_system.Repositories;
+using Event_And_Parking_Manage_system.Repositories.Interfaces;
+using Event_And_Parking_Manage_system.Services;
+using Event_And_Parking_Manage_system.Services.Interfaces;
+using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Event_And_Parking_Manage_system
@@ -15,9 +20,25 @@ namespace Event_And_Parking_Manage_system
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+            //Dependency Injection for Repositories and Services
+            //Services
+            builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+
+
+            //Repositories
+            builder.Services.AddScoped<ICustomerService, CustomerService>();
+
+            // auth service
+            builder.Services.AddScoped<IAuthService, AuthService>();
+
+
+
             // Add services to the container.
 
             builder.Services.AddControllers();
+
+            builder.Services.AddFluentValidationAutoValidation();
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
