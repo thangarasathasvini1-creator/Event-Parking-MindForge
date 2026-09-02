@@ -14,8 +14,7 @@ namespace Event_And_Parking_Manage_system.Models.Entities
 
         public decimal Fee { get; set; }
 
-        public ParkingSlotStatus Status { get; set; }
-            = ParkingSlotStatus.Available;
+        public ParkingSlotStatus Status { get; set; } = ParkingSlotStatus.Available;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
@@ -24,7 +23,6 @@ namespace Event_And_Parking_Manage_system.Models.Entities
         //Navigation Property
         public Event Event { get; set; } = null!;
 
-        //public ICollection<ParkingReservation> ParkingReservations { get; set; }
-        //    = new List<ParkingReservation>();
+        public ICollection<ParkingReservation> ParkingReservations { get; set; } = new List<ParkingReservation>();
     }
 }
