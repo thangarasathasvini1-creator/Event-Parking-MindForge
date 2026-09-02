@@ -1,0 +1,21 @@
+﻿using Event_And_Parking_Manage_system.DTOs.Customers;
+using FluentValidation;
+
+namespace Event_And_Parking_Manage_system.Validators
+{
+    public class ResetPasswordValidator : AbstractValidator<ResetPasswordDto>
+    {
+        public ResetPasswordValidator()
+        {
+            RuleFor(x => x.Token)
+                .NotEmpty()
+                .WithMessage("Reset token is required.");
+
+            RuleFor(x => x.NewPassword)
+                .NotEmpty()
+                .WithMessage("New password is required.")
+                .MinimumLength(8)
+                .WithMessage("Password must be at least 8 characters.");
+        }
+    }
+}
