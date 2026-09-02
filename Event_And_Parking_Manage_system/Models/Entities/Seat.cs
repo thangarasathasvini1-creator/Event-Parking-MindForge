@@ -23,7 +23,7 @@ namespace Event_And_Parking_Manage_system.Models.Entities
         // Navigation Property
         public Event Event { get; set; } = null!;
 
-        //public ICollection<BookingSeat> BookingSeats { get; set; }
-        //    = new List<BookingSeat>();
+        public ICollection<BookingSeat> BookingSeats { get; set; }
+           = new List<BookingSeat>();
     }
 }

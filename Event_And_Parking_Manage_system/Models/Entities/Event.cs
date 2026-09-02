@@ -35,5 +35,8 @@
 
         public ICollection<Seat> Seats { get; set; }
         = new List<Seat>();
+
+        public ICollection<Booking> Bookings { get; set; }
+        = new List<Booking>();
     }
 }
