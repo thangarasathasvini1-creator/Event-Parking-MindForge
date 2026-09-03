@@ -5,9 +5,8 @@ using Event_And_Parking_Manage_system.Repositories.Interfaces;
 using Event_And_Parking_Manage_system.Services;
 using Event_And_Parking_Manage_system.Services.Implementation;
 using Event_And_Parking_Manage_system.Services.Interfaces;
-//using FluentValidation.AspNetCore;
+using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
-
 
 namespace Event_And_Parking_Manage_system
 {
@@ -17,44 +16,44 @@ namespace Event_And_Parking_Manage_system
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            //EF core context configuration
+            // EF Core context configuration
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(
+                    builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            //Dependency Injection for Repositories and Services
-            //Services
-           //builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+            // Dependency Injection for Repositories and Services
 
+            // Customer Repository
+            builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 
-            //Repositories
-            //builder.Services.AddScoped<ICustomerService, CustomerService>();
+            // Customer Service
+            builder.Services.AddScoped<ICustomerService, CustomerService>();
 
-            // auth service
-           // builder.Services.AddScoped<IAuthService, AuthService>();
+            // Auth Service
+            builder.Services.AddScoped<IAuthService, AuthService>();
 
-            //member 2
-            //builder.Services.AddScoped<IVenueRepository, VenueRepository>();
+            // Member 2 - Repositories
+            builder.Services.AddScoped<IVenueRepository, VenueRepository>();
+            builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+            builder.Services.AddScoped<IEventRepository, EventRepository>();
 
-            //builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+            // Member 2 - Services
+            builder.Services.AddScoped<IVenueService, VenueService>();
+            builder.Services.AddScoped<ICategoryService, CategoryService>();
+            builder.Services.AddScoped<IEventService, EventService>();
 
-            //builder.Services.AddScoped<IEventRepository, EventRepository>();
-
-            //builder.Services.AddScoped<IVenueService, VenueService>();
-
-            //builder.Services.AddScoped<ICategoryService, CategoryService>();
-
-            //builder.Services.AddScoped<IEventService, EventService>();
-
-            // Add services to the container.
-
+            // Add services to the container
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+            builder.Services.AddFluentValidationAutoValidation();
+
+            // Swagger/OpenAPI
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            // Configure the HTTP request pipeline
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -64,7 +63,6 @@ namespace Event_And_Parking_Manage_system
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
 
             app.MapControllers();
 

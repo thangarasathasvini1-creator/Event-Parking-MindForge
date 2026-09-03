@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -16,14 +18,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DTOs\" />
-    <Folder Include="Data\" />
     <Folder Include="Helpers\" />
     <Folder Include="BackgroundServices\" />
-    <Folder Include="Repositories\Interfaces\" />
-    <Folder Include="Repositories\Implementation\" />
-    <Folder Include="Services\Interfaces\" />
-    <Folder Include="Services\Implementation\" />
   </ItemGroup>
 
 </Project>

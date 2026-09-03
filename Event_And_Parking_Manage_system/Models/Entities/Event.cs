@@ -29,5 +29,14 @@
         public Venue Venue { get; set; } = null!;
 
         public EventCategory Category { get; set; } = null!;
+
+        public ICollection<ParkingSlot> ParkingSlots { get; set; }
+        = new List<ParkingSlot>();
+
+        public ICollection<Seat> Seats { get; set; }
+        = new List<Seat>();
+
+        public ICollection<Booking> Bookings { get; set; }
+        = new List<Booking>();
     }
 }
