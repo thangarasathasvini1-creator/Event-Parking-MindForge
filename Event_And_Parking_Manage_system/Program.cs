@@ -1,7 +1,13 @@
-
-
 using Event_And_Parking_Manage_system.Data;
+using Event_And_Parking_Manage_system.Repositories;
+using Event_And_Parking_Manage_system.Repositories.Implementation;
+using Event_And_Parking_Manage_system.Repositories.Interfaces;
+using Event_And_Parking_Manage_system.Services;
+using Event_And_Parking_Manage_system.Services.Implementation;
+using Event_And_Parking_Manage_system.Services.Interfaces;
+//using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
+
 
 namespace Event_And_Parking_Manage_system
 {
@@ -14,6 +20,30 @@ namespace Event_And_Parking_Manage_system
             //EF core context configuration
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            //Dependency Injection for Repositories and Services
+            //Services
+           //builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+
+
+            //Repositories
+            //builder.Services.AddScoped<ICustomerService, CustomerService>();
+
+            // auth service
+           // builder.Services.AddScoped<IAuthService, AuthService>();
+
+            //member 2
+            //builder.Services.AddScoped<IVenueRepository, VenueRepository>();
+
+            //builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+
+            //builder.Services.AddScoped<IEventRepository, EventRepository>();
+
+            //builder.Services.AddScoped<IVenueService, VenueService>();
+
+            //builder.Services.AddScoped<ICategoryService, CategoryService>();
+
+            //builder.Services.AddScoped<IEventService, EventService>();
 
             // Add services to the container.
 
