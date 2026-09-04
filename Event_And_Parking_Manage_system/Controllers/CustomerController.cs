@@ -102,20 +102,30 @@ namespace Event_And_Parking_Manage_system.Controllers
                 return Forbid();
             }
 
-            var result = await _customerService.UpdateAsync(id, dto);
-
-            if (!result)
+            try
             {
-                return NotFound(new
+                var result = await _customerService.UpdateAsync(id, dto);
+
+                if (!result)
                 {
-                    message = "Customer not found."
+                    return NotFound(new
+                    {
+                        message = "Customer not found."
+                    });
+                }
+
+                return Ok(new
+                {
+                    message = "Customer updated successfully."
                 });
             }
-
-            return Ok(new
+            catch (InvalidOperationException ex)
             {
-                message = "Customer updated successfully."
-            });
+                return Conflict(new
+                {
+                    message = ex.Message
+                });
+            }
         }
 
         [Authorize(Roles = "Administrator")]
