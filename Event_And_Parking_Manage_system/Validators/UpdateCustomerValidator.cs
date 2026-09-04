@@ -18,7 +18,7 @@ namespace Event_And_Parking_Manage_system.Validators
                 .WithMessage("Email is required.")
                 .EmailAddress()
                 .WithMessage("Enter a valid email address.")
-                .MaximumLength(255)
+                .MaximumLength(100)
                 .WithMessage("Email must not exceed 255 characters.");
 
             RuleFor(x => x.Phone)

@@ -1,5 +1,6 @@
 ﻿using Event_And_Parking_Manage_system.Data;
 using Event_And_Parking_Manage_system.Models.Entities;
+using Event_And_Parking_Manage_system.Models.Enums;
 using Event_And_Parking_Manage_system.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -65,6 +66,52 @@ namespace Event_And_Parking_Manage_system.Repositories
         {
             return await _context.Customers
                 .AnyAsync(c => c.Email == email);
+        }
+
+        public async Task<bool> HasActiveFutureBookingsAsync(int customerId)
+        {
+            return await _context.Bookings
+                .Include(b => b.Event)
+                .AnyAsync(b =>
+                    b.CustomerId == customerId &&
+                    (b.Status == BookingStatus.Pending ||
+                     b.Status == BookingStatus.Confirmed) &&
+                    b.Event.EventDate >= DateTime.UtcNow.Date);
+        }
+
+        public async Task<int> GetUpcomingBookingsCountAsync(int customerId)
+        {
+            return await _context.Bookings
+                .Include(b => b.Event)
+                .CountAsync(b =>
+                    b.CustomerId == customerId &&
+                    (b.Status == BookingStatus.Pending ||
+                     b.Status == BookingStatus.Confirmed) &&
+                    b.Event.EventDate >= DateTime.UtcNow.Date);
+        }
+
+        public async Task<int> GetReservedParkingCountAsync(int customerId)
+        {
+            return await _context.ParkingReservations
+                .Include(p => p.Booking)
+                .CountAsync(p =>
+                    p.Booking.CustomerId == customerId);
+        }
+
+        public async Task<int> GetRecentPaymentsCountAsync(int customerId)
+        {
+            return await _context.Payments
+                .Include(p => p.Booking)
+                .CountAsync(p =>
+                    p.Booking.CustomerId == customerId);
+        }
+
+        public async Task<int> GetUnreadNotificationsCountAsync(int customerId)
+        {
+            return await _context.Notifications
+                .CountAsync(n =>
+                    n.CustomerId == customerId &&
+                    !n.IsRead);
         }
     }
 }

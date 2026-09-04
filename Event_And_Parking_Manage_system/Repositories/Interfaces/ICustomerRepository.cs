@@ -17,6 +17,15 @@ namespace Event_And_Parking_Manage_system.Repositories.Interfaces
         Task DeleteAsync(Customer customer);
 
         Task<bool> ExistsByEmailAsync(string email);
+        Task<bool> HasActiveFutureBookingsAsync(int customerId);
+
+        Task<int> GetUpcomingBookingsCountAsync(int customerId);
+
+        Task<int> GetReservedParkingCountAsync(int customerId);
+
+        Task<int> GetRecentPaymentsCountAsync(int customerId);
+
+        Task<int> GetUnreadNotificationsCountAsync(int customerId);
 
     }
 }
