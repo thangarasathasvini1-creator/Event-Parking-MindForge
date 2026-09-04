@@ -1,9 +1,7 @@
-
-
 using Event_And_Parking_Manage_system.Data;
-using Event_And_Parking_Manage_system.Repositories;
+using Event_And_Parking_Manage_system.Repositories.Implementation;
 using Event_And_Parking_Manage_system.Repositories.Interfaces;
-using Event_And_Parking_Manage_system.Services;
+using Event_And_Parking_Manage_system.Services.Implementation;
 using Event_And_Parking_Manage_system.Services.Interfaces;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -20,27 +18,53 @@ namespace Event_And_Parking_Manage_system
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            //EF core context configuration
+            // EF Core context configuration
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(
+                    builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            //Dependency Injection for Repositories and Services
-            
-            //Repositories
+            // ==========================================
+            // Dependency Injection - Repositories
+            // ==========================================
+
+            // Member 1 - Customer
             builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 
+            // Member 2 - Venue, Category, Event
+            builder.Services.AddScoped<IVenueRepository, VenueRepository>();
+            builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+            builder.Services.AddScoped<IEventRepository, EventRepository>();
 
-            //Services
+            // Member 3 - Seat, Parking
+            builder.Services.AddScoped<ISeatRepository, SeatRepository>();
+            builder.Services.AddScoped<IParkingRepository, ParkingRepository>();
+
+            // ==========================================
+            // Dependency Injection - Services
+            // ==========================================
+
+            // Member 1 - Customer, Dashboard, Email, Auth
             builder.Services.AddScoped<ICustomerService, CustomerService>();
             builder.Services.AddScoped<ICustomerDashboardService, CustomerDashboardService>();
             builder.Services.AddScoped<IEmailService, EmailService>();
-
-            // auth service
             builder.Services.AddScoped<IAuthService, AuthService>();
 
-            //jwt 
+            // Member 2 - Venue, Category, Event
+            builder.Services.AddScoped<IVenueService, VenueService>();
+            builder.Services.AddScoped<ICategoryService, CategoryService>();
+            builder.Services.AddScoped<IEventService, EventService>();
+
+            // Member 3 - Seat, Parking
+            builder.Services.AddScoped<ISeatService, SeatService>();
+            builder.Services.AddScoped<IParkingService, ParkingService>();
+
+            // ==========================================
+            // JWT Authentication
+            // ==========================================
+
             var jwtKey = builder.Configuration["Jwt:Key"]
-                ?? throw new InvalidOperationException("JWT Key is not configured.");
+                ?? throw new InvalidOperationException(
+                    "JWT Key is not configured.");
 
             var jwtIssuer = builder.Configuration["Jwt:Issuer"];
             var jwtAudience = builder.Configuration["Jwt:Audience"];
@@ -49,71 +73,80 @@ namespace Event_And_Parking_Manage_system
                 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(jwtKey)),
+                    options.TokenValidationParameters =
+                        new TokenValidationParameters
+                        {
+                            ValidateIssuerSigningKey = true,
 
-                        ValidateIssuer = true,
-                        ValidIssuer = jwtIssuer,
+                            IssuerSigningKey =
+                                new SymmetricSecurityKey(
+                                    Encoding.UTF8.GetBytes(jwtKey)),
 
-                        ValidateAudience = true,
-                        ValidAudience = jwtAudience,
+                            ValidateIssuer = true,
+                            ValidIssuer = jwtIssuer,
 
-                        ValidateLifetime = true,
-                        ClockSkew = TimeSpan.Zero
-                    };
+                            ValidateAudience = true,
+                            ValidAudience = jwtAudience,
+
+                            ValidateLifetime = true,
+                            ClockSkew = TimeSpan.Zero
+                        };
                 });
 
-
-
-            // Add services to the container.
+            // ==========================================
+            // Controllers & Validation
+            // ==========================================
 
             builder.Services.AddControllers();
 
             builder.Services.AddFluentValidationAutoValidation();
 
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
+            // ==========================================
+            // Swagger / OpenAPI
+            // ==========================================
 
-            // barer token
             builder.Services.AddEndpointsApiExplorer();
 
             builder.Services.AddSwaggerGen(options =>
             {
-                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-                {
-                    Name = "Authorization",
-                    Type = SecuritySchemeType.Http,
-                    Scheme = "bearer",
-                    BearerFormat = "JWT",
-                    In = ParameterLocation.Header,
-                    Description = "Enter JWT token. Example: Bearer {your token}"
-                });
+                options.AddSecurityDefinition(
+                    "Bearer",
+                    new OpenApiSecurityScheme
+                    {
+                        Name = "Authorization",
+                        Type = SecuritySchemeType.Http,
+                        Scheme = "bearer",
+                        BearerFormat = "JWT",
+                        In = ParameterLocation.Header,
+                        Description =
+                            "Enter JWT token. Example: Bearer {your token}"
+                    });
 
-                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                options.AddSecurityRequirement(
+                    new OpenApiSecurityRequirement
                     {
                         {
                             new OpenApiSecurityScheme
                             {
-                                Reference = new OpenApiReference
-                                {
-                                    Type = ReferenceType.SecurityScheme,
-                                    Id = "Bearer"
-                                }
+                                Reference =
+                                    new OpenApiReference
+                                    {
+                                        Type = ReferenceType.SecurityScheme,
+                                        Id = "Bearer"
+                                    }
                             },
                             Array.Empty<string>()
                         }
                     });
             });
 
-
-            builder.Services.AddSwaggerGen();
+            // ==========================================
+            // Build Application
+            // ==========================================
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            // Configure HTTP request pipeline
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -122,11 +155,9 @@ namespace Event_And_Parking_Manage_system
 
             app.UseHttpsRedirection();
 
-            // Enable authentication and authorization middleware
-
+            // Authentication & Authorization
             app.UseAuthentication();
             app.UseAuthorization();
-
 
             app.MapControllers();
 
