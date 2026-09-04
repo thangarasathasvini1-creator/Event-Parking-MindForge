@@ -8,10 +8,14 @@ namespace Event_And_Parking_Manage_system.Services
     public class CustomerService : ICustomerService
     {
         private readonly ICustomerRepository _customerRepository;
+        private readonly IEmailService _emailService;
 
-        public CustomerService(ICustomerRepository customerRepository)
+        public CustomerService(
+            ICustomerRepository customerRepository,
+            IEmailService emailService)
         {
             _customerRepository = customerRepository;
+            _emailService = emailService;
         }
 
         public async Task<CustomerDto?> GetByIdAsync(int customerId)
@@ -40,6 +44,8 @@ namespace Event_And_Parking_Manage_system.Services
                 throw new InvalidOperationException("Email already exists.");
             }
 
+            var verificationToken = Guid.NewGuid().ToString("N");
+
             var customer = new Customer
             {
                 Name = dto.Name,
@@ -47,10 +53,17 @@ namespace Event_And_Parking_Manage_system.Services
                 Phone = dto.Phone,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 EmailVerified = false,
+                EmailVerificationTokenHash = BCrypt.Net.BCrypt.HashPassword(verificationToken),
+                EmailVerificationTokenExpiresAt = DateTime.UtcNow.AddHours(24),
                 CreatedAt = DateTime.UtcNow
             };
 
             await _customerRepository.AddAsync(customer);
+
+            await _emailService.SendVerificationEmailAsync(
+                customer.Email,
+                customer.Name,
+                verificationToken);
 
             return MapToDto(customer);
         }
@@ -61,6 +74,15 @@ namespace Event_And_Parking_Manage_system.Services
 
             if (customer == null)
                 return false;
+
+            var existingCustomer =
+                await _customerRepository.GetByEmailAsync(dto.Email);
+
+            if (existingCustomer != null &&
+                existingCustomer.CustomerId != customerId)
+            {
+                throw new InvalidOperationException("Email already exists.");
+            }
 
             customer.Name = dto.Name;
             customer.Email = dto.Email;
@@ -79,7 +101,19 @@ namespace Event_And_Parking_Manage_system.Services
             if (customer == null)
                 return false;
 
-            await _customerRepository.DeleteAsync(customer);
+            var hasActiveFutureBookings =
+                await _customerRepository.HasActiveFutureBookingsAsync(customerId);
+
+            if (hasActiveFutureBookings)
+            {
+                throw new InvalidOperationException(
+                    "Customer cannot be deactivated because they have active future bookings.");
+            }
+
+            customer.Status = Models.Enums.CustomerStatus.Deactivated;
+            customer.UpdatedAt = DateTime.UtcNow;
+
+            await _customerRepository.UpdateAsync(customer);
 
             return true;
         }
@@ -98,6 +132,21 @@ namespace Event_And_Parking_Manage_system.Services
                 CreatedAt = customer.CreatedAt,
                 UpdatedAt = customer.UpdatedAt
             };
+        }
+
+        public async Task<bool> ReactivateAsync(int customerId)
+        {
+            var customer = await _customerRepository.GetByIdAsync(customerId);
+
+            if (customer == null)
+                return false;
+
+            customer.Status = Models.Enums.CustomerStatus.Active;
+            customer.UpdatedAt = DateTime.UtcNow;
+
+            await _customerRepository.UpdateAsync(customer);
+
+            return true;
         }
     }
 }

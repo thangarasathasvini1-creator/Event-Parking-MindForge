@@ -15,6 +15,22 @@ namespace Event_And_Parking_Manage_system.Controllers
             _authService = authService;
         }
 
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginCustomerDto dto)
+        {
+            var result = await _authService.LoginAsync(dto);
+
+            if (result == null)
+            {
+                return Unauthorized(new
+                {
+                    message = "Invalid email or password."
+                });
+            }
+
+            return Ok(result);
+        }
+
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] string email)
         {

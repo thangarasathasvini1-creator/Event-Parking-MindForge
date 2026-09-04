@@ -13,5 +13,7 @@ namespace Event_And_Parking_Manage_system.Services.Interfaces
         Task<bool> UpdateAsync(int customerId, UpdateCustomerDto dto);
 
         Task<bool> DeleteAsync(int customerId);
+
+        Task<bool> ReactivateAsync(int customerId);
     }
 }
