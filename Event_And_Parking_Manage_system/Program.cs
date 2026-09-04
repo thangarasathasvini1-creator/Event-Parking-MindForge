@@ -2,9 +2,11 @@ using Event_And_Parking_Manage_system.Data;
 using Event_And_Parking_Manage_system.Repositories;
 using Event_And_Parking_Manage_system.Repositories.Implementation;
 using Event_And_Parking_Manage_system.Repositories.Interfaces;
+using Event_And_Parking_Manage_system.Repositories.Implementation;
 using Event_And_Parking_Manage_system.Services;
 using Event_And_Parking_Manage_system.Services.Implementation;
 using Event_And_Parking_Manage_system.Services.Interfaces;
+using Event_And_Parking_Manage_system.Services.Implementation;
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,9 +27,13 @@ namespace Event_And_Parking_Manage_system
 
             // Customer Repository
             builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+            builder.Services.AddScoped<ISeatRepository, SeatRepository>();
+            builder.Services.AddScoped<IParkingRepository, ParkingRepository>();
 
             // Customer Service
             builder.Services.AddScoped<ICustomerService, CustomerService>();
+            builder.Services.AddScoped<ISeatService, SeatService>();
+            builder.Services.AddScoped<IParkingService, ParkingService>();
 
             // Auth Service
             builder.Services.AddScoped<IAuthService, AuthService>();
