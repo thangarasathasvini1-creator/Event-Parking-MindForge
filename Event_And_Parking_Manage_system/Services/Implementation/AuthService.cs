@@ -197,9 +197,31 @@ namespace Event_And_Parking_Manage_system.Services
             return false;
         }
 
-        public async Task<bool> ResendVerificationAsync(string email)
+        private static string GenerateEmailVerificationOtp()
         {
-            var customer = await _customerRepository.GetByEmailAsync(email);
+            return Random.Shared
+                .Next(100000, 1000000)
+                .ToString();
+        }
+
+        public async Task<bool> VerifyEmailOtpAsync(
+    string email,
+    string otp)
+        {
+            if (string.IsNullOrWhiteSpace(email) ||
+                string.IsNullOrWhiteSpace(otp))
+            {
+                return false;
+            }
+
+            if (otp.Length != 6 ||
+                !otp.All(char.IsDigit))
+            {
+                return false;
+            }
+
+            var customer =
+                await _customerRepository.GetByEmailAsync(email);
 
             if (customer == null)
                 return false;
@@ -207,24 +229,92 @@ namespace Event_And_Parking_Manage_system.Services
             if (customer.EmailVerified)
                 return false;
 
-            var verificationToken = Guid.NewGuid().ToString("N");
+            if (string.IsNullOrWhiteSpace(
+                    customer.EmailVerificationOtpHash))
+            {
+                return false;
+            }
 
-            customer.EmailVerificationTokenHash =
-                BCrypt.Net.BCrypt.HashPassword(verificationToken);
+            if (!customer.EmailVerificationOtpExpiresAt.HasValue)
+            {
+                return false;
+            }
 
-            customer.EmailVerificationTokenExpiresAt =
-                DateTime.UtcNow.AddHours(24);
+            if (customer.EmailVerificationOtpExpiresAt.Value
+                <= DateTime.UtcNow)
+            {
+                return false;
+            }
+
+            if (customer.EmailVerificationOtpAttempts >= 5)
+            {
+                return false;
+            }
+
+            customer.EmailVerificationOtpAttempts++;
+
+            if (!BCrypt.Net.BCrypt.Verify(
+                    otp,
+                    customer.EmailVerificationOtpHash))
+            {
+                await _customerRepository.UpdateAsync(customer);
+
+                return false;
+            }
+
+            customer.EmailVerified = true;
+
+            customer.EmailVerificationOtpHash = null;
+
+            customer.EmailVerificationOtpExpiresAt = null;
+
+            customer.EmailVerificationOtpAttempts = 0;
 
             customer.UpdatedAt = DateTime.UtcNow;
 
             await _customerRepository.UpdateAsync(customer);
 
-            await _emailService.SendVerificationEmailAsync(
+            return true;
+        }
+
+        public async Task<bool> ResendVerificationAsync(string email)
+        {
+            var customer =
+                await _customerRepository.GetByEmailAsync(email);
+
+            if (customer == null)
+                return false;
+
+            if (customer.EmailVerified)
+                return false;
+
+            // Generate a new 6-digit OTP
+            var otp = GenerateEmailVerificationOtp();
+
+            // Store only the hashed OTP
+            customer.EmailVerificationOtpHash =
+                BCrypt.Net.BCrypt.HashPassword(otp);
+
+            // OTP expires after 10 minutes
+            customer.EmailVerificationOtpExpiresAt =
+                DateTime.UtcNow.AddMinutes(10);
+
+            // Reset failed attempt count
+            customer.EmailVerificationOtpAttempts = 0;
+
+            customer.UpdatedAt = DateTime.UtcNow;
+
+            await _customerRepository.UpdateAsync(customer);
+
+            // Send OTP to customer's email
+            await _emailService.SendVerificationOtpEmailAsync(
                 customer.Email,
                 customer.Name,
-                verificationToken);
+                otp);
 
             return true;
         }
+
+
     }
 }

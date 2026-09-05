@@ -11,6 +11,8 @@ namespace Event_And_Parking_Manage_system.Services.Interfaces
 
         Task<bool> VerifyEmailAsync(string token);
 
+        Task<bool> VerifyEmailOtpAsync(string email, string otp);
+
         Task<bool> ResendVerificationAsync(string email);
 
         
