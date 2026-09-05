@@ -14,6 +14,9 @@ namespace Event_And_Parking_Manage_system.Models.Entities
         public bool EmailVerified { get; set; } = false;
         public string? EmailVerificationTokenHash { get; set; }
         public DateTime? EmailVerificationTokenExpiresAt { get; set; }
+        public string? EmailVerificationOtpHash { get; set; }
+        public DateTime? EmailVerificationOtpExpiresAt { get; set; }
+        public int EmailVerificationOtpAttempts { get; set; } = 0;
         public string? PasswordResetTokenHash { get; set; }
         public DateTime? PasswordResetTokenExpiresAt { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

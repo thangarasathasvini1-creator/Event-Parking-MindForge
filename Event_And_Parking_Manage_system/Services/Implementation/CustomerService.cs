@@ -37,33 +37,54 @@ namespace Event_And_Parking_Manage_system.Services
 
         public async Task<CustomerDto> CreateAsync(RegisterCustomerDto dto)
         {
-            var emailExists = await _customerRepository.ExistsByEmailAsync(dto.Email);
+            var emailExists =
+                await _customerRepository.ExistsByEmailAsync(dto.Email);
 
             if (emailExists)
             {
-                throw new InvalidOperationException("Email already exists.");
+                throw new InvalidOperationException(
+                    "Email already exists.");
             }
 
-            var verificationToken = Guid.NewGuid().ToString("N");
+            // Generate a 6-digit email verification OTP
+            var verificationOtp =
+                Random.Shared
+                    .Next(100000, 1000000)
+                    .ToString();
 
             var customer = new Customer
             {
                 Name = dto.Name,
                 Email = dto.Email,
                 Phone = dto.Phone,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+
+                PasswordHash =
+                    BCrypt.Net.BCrypt.HashPassword(
+                        dto.Password),
+
                 EmailVerified = false,
-                EmailVerificationTokenHash = BCrypt.Net.BCrypt.HashPassword(verificationToken),
-                EmailVerificationTokenExpiresAt = DateTime.UtcNow.AddHours(24),
+
+                // Store only the hashed OTP
+                EmailVerificationOtpHash =
+                    BCrypt.Net.BCrypt.HashPassword(
+                        verificationOtp),
+
+                // OTP expires after 10 minutes
+                EmailVerificationOtpExpiresAt =
+                    DateTime.UtcNow.AddMinutes(10),
+
+                EmailVerificationOtpAttempts = 0,
+
                 CreatedAt = DateTime.UtcNow
             };
 
             await _customerRepository.AddAsync(customer);
 
-            await _emailService.SendVerificationEmailAsync(
+            // Send OTP email
+            await _emailService.SendVerificationOtpEmailAsync(
                 customer.Email,
                 customer.Name,
-                verificationToken);
+                verificationOtp);
 
             return MapToDto(customer);
         }

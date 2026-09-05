@@ -7,6 +7,11 @@
             string name,
             string token);
 
+        Task SendVerificationOtpEmailAsync(
+            string email,
+            string name,
+            string otp);
+
         Task SendPasswordResetEmailAsync(
             string email,
             string name,
