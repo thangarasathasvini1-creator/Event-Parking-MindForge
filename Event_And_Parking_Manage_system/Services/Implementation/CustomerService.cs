@@ -91,7 +91,8 @@ namespace Event_And_Parking_Manage_system.Services
 
         public async Task<bool> UpdateAsync(int customerId, UpdateCustomerDto dto)
         {
-            var customer = await _customerRepository.GetByIdAsync(customerId);
+            var customer =
+                await _customerRepository.GetByIdAsync(customerId);
 
             if (customer == null)
                 return false;
@@ -102,15 +103,52 @@ namespace Event_And_Parking_Manage_system.Services
             if (existingCustomer != null &&
                 existingCustomer.CustomerId != customerId)
             {
-                throw new InvalidOperationException("Email already exists.");
+                throw new InvalidOperationException(
+                    "Email already exists.");
             }
 
+            var emailChanged =
+                !string.Equals(
+                    customer.Email,
+                    dto.Email,
+                    StringComparison.OrdinalIgnoreCase);
+
             customer.Name = dto.Name;
-            customer.Email = dto.Email;
             customer.Phone = dto.Phone;
             customer.UpdatedAt = DateTime.UtcNow;
 
-            await _customerRepository.UpdateAsync(customer);
+            if (emailChanged)
+            {
+                customer.Email = dto.Email;
+
+                // Require verification for the new email
+                customer.EmailVerified = false;
+
+                var verificationOtp =
+                    Random.Shared
+                        .Next(100000, 1000000)
+                        .ToString();
+
+                customer.EmailVerificationOtpHash =
+                    BCrypt.Net.BCrypt.HashPassword(
+                        verificationOtp);
+
+                customer.EmailVerificationOtpExpiresAt =
+                    DateTime.UtcNow.AddMinutes(10);
+
+                customer.EmailVerificationOtpAttempts = 0;
+
+                await _customerRepository.UpdateAsync(customer);
+
+                await _emailService.SendVerificationOtpEmailAsync(
+                    customer.Email,
+                    customer.Name,
+                    verificationOtp);
+            }
+            else
+            {
+                await _customerRepository.UpdateAsync(customer);
+            }
 
             return true;
         }

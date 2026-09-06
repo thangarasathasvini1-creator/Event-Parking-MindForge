@@ -40,6 +40,8 @@ namespace Event_And_Parking_Manage_system
             builder.Services.AddScoped<
                 ICustomerRepository,
                 CustomerRepository>();
+            // Member 1 - Notification
+            builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
             // Member 2 - Venue, Category, Event
             builder.Services.AddScoped<
@@ -86,6 +88,9 @@ namespace Event_And_Parking_Manage_system
             builder.Services.AddScoped<
                 ICustomerService,
                 CustomerService>();
+
+            //member 1 - notification
+            builder.Services.AddScoped<INotificationService, NotificationService>();
 
             builder.Services.AddScoped<
                 ICustomerDashboardService,
