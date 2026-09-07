@@ -1,24 +1,46 @@
-﻿using Event_And_Parking_Manage_system.DTOs.Seats;
+﻿using Event_And_Parking_Manage_system.Data;
+using Event_And_Parking_Manage_system.DTOs.Seats;
 using Event_And_Parking_Manage_system.Models.Entities;
 using Event_And_Parking_Manage_system.Models.Enums;
 using Event_And_Parking_Manage_system.Repositories.Interfaces;
 using Event_And_Parking_Manage_system.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace Event_And_Parking_Manage_system.Services.Implementation
 {
     public class SeatService : ISeatService
     {
         private readonly ISeatRepository _seatRepository;
+        private readonly IBookingRepository _bookingRepository;
+        private readonly IEventRepository _eventRepository;
+        private readonly ApplicationDbContext _context;
 
-        public SeatService(ISeatRepository seatRepository)
+        public SeatService(
+            ISeatRepository seatRepository,
+            IBookingRepository bookingRepository,
+            IEventRepository eventRepository,
+            ApplicationDbContext context)
         {
             _seatRepository = seatRepository;
+            _bookingRepository = bookingRepository;
+            _eventRepository = eventRepository;
+            _context = context;
         }
 
         // Get all seats for an event
         public async Task<IEnumerable<SeatDto>> GetSeatsByEventIdAsync(
             int eventId)
         {
+            var eventEntity = await _eventRepository
+                .GetByIdAsync(eventId);
+
+            if (eventEntity == null)
+            {
+                throw new KeyNotFoundException(
+                    "Event not found.");
+            }
+
             var seats = await _seatRepository
                 .GetSeatsByEventIdAsync(eventId);
 
@@ -26,7 +48,8 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
         }
 
         // Get a single seat
-        public async Task<SeatDto?> GetByIdAsync(int seatId)
+        public async Task<SeatDto?> GetByIdAsync(
+            int seatId)
         {
             var seat = await _seatRepository
                 .GetByIdAsync(seatId);
@@ -42,6 +65,15 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             int eventId,
             CreateSeatDto dto)
         {
+            var eventEntity = await _eventRepository
+                .GetByIdAsync(eventId);
+
+            if (eventEntity == null)
+            {
+                throw new KeyNotFoundException(
+                    "Event not found.");
+            }
+
             if (string.IsNullOrWhiteSpace(dto.SeatNumber))
             {
                 throw new ArgumentException(
@@ -83,6 +115,15 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             int seatId,
             UpdateSeatDto dto)
         {
+            var eventEntity = await _eventRepository
+                .GetByIdAsync(eventId);
+
+            if (eventEntity == null)
+            {
+                throw new KeyNotFoundException(
+                    "Event not found.");
+            }
+
             var seat = await _seatRepository
                 .GetByIdAsync(seatId);
 
@@ -112,8 +153,6 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                     "Seat number already exists for this event.");
             }
 
-            // Do not modify a confirmed/booked seat
-            // into another state.
             if (seat.Status == SeatStatus.Booked &&
                 dto.Status != SeatStatus.Booked)
             {
@@ -128,7 +167,16 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             seat.UpdatedAt = DateTime.UtcNow;
 
             await _seatRepository.UpdateAsync(seat);
-            await _seatRepository.SaveChangesAsync();
+
+            try
+            {
+                await _seatRepository.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new InvalidOperationException(
+                    "The seat was modified by another user. Please refresh and try again.");
+            }
 
             return MapToDto(seat);
         }
@@ -138,6 +186,15 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             int eventId,
             int seatId)
         {
+            var eventEntity = await _eventRepository
+                .GetByIdAsync(eventId);
+
+            if (eventEntity == null)
+            {
+                throw new KeyNotFoundException(
+                    "Event not found.");
+            }
+
             var seat = await _seatRepository
                 .GetByIdAsync(seatId);
 
@@ -152,19 +209,125 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             }
 
             await _seatRepository.DeleteAsync(seat);
-            await _seatRepository.SaveChangesAsync();
+
+            try
+            {
+                await _seatRepository.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new InvalidOperationException(
+                    "The seat was modified by another user. Please refresh and try again.");
+            }
 
             return true;
         }
 
-        // Booking seat assignment will be integrated
-        // with Member 4's Booking module.
-        public Task<bool> AssignSeatsAsync(
+        // Booking seat assignment
+        public async Task<bool> AssignSeatsAsync(
             int bookingId,
+            int customerId,
             AssignSeatDto dto)
         {
-            throw new NotImplementedException(
-                "Seat assignment will be implemented during Booking integration.");
+            if (dto == null ||
+                dto.SeatIds == null ||
+                dto.SeatIds.Count == 0)
+            {
+                throw new ArgumentException(
+                    "At least one seat must be selected.");
+            }
+
+            var booking = await _bookingRepository
+                .GetByIdAsync(bookingId);
+
+            if (booking == null)
+            {
+                throw new KeyNotFoundException(
+                    "Booking not found.");
+            }
+
+            // Customer can only assign seats to their own booking.
+            if (booking.CustomerId != customerId)
+            {
+                throw new UnauthorizedAccessException(
+                    "You are not authorized to modify this booking.");
+            }
+
+            if (booking.Status != BookingStatus.Pending)
+            {
+                throw new InvalidOperationException(
+                    "Seats can only be assigned to a pending booking.");
+            }
+
+            var seatIds = dto.SeatIds
+                .Distinct()
+                .ToList();
+
+            if (seatIds.Count != dto.SeatIds.Count)
+            {
+                throw new InvalidOperationException(
+                    "Duplicate seat IDs are not allowed.");
+            }
+
+            await using var transaction =
+                await _context.Database.BeginTransactionAsync(
+                    IsolationLevel.Serializable);
+
+            try
+            {
+                var seats = (await _seatRepository
+                    .GetByIdsAsync(seatIds))
+                    .ToList();
+
+                if (seats.Count != seatIds.Count)
+                {
+                    throw new KeyNotFoundException(
+                        "One or more seats were not found.");
+                }
+
+                foreach (var seat in seats)
+                {
+                    if (seat.EventId != booking.EventId)
+                    {
+                        throw new InvalidOperationException(
+                            $"Seat {seat.SeatNumber} does not belong to the booking event.");
+                    }
+
+                    if (seat.Status != SeatStatus.Available)
+                    {
+                        throw new InvalidOperationException(
+                            $"Seat {seat.SeatNumber} is not available.");
+                    }
+                }
+
+                var now = DateTime.UtcNow;
+
+                foreach (var seat in seats)
+                {
+                    seat.Status = SeatStatus.Held;
+                    seat.UpdatedAt = now;
+
+                    await _seatRepository.UpdateAsync(seat);
+                }
+
+                await _seatRepository.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                return true;
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                await transaction.RollbackAsync();
+
+                throw new InvalidOperationException(
+                    "One or more selected seats were modified by another user. Please refresh the seat list and try again.");
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         // Entity -> DTO mapping

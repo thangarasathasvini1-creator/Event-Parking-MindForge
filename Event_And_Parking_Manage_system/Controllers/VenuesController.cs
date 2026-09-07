@@ -1,5 +1,6 @@
 ﻿using Event_And_Parking_Manage_system.DTOs.Venues;
 using Event_And_Parking_Manage_system.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Event_And_Parking_Manage_system.Controllers
@@ -19,6 +20,7 @@ namespace Event_And_Parking_Manage_system.Controllers
         public async Task<IActionResult> GetAll()
         {
             var venues = await _venueService.GetAllAsync();
+
             return Ok(venues);
         }
 
@@ -28,7 +30,12 @@ namespace Event_And_Parking_Manage_system.Controllers
             var venue = await _venueService.GetByIdAsync(id);
 
             if (venue == null)
-                return NotFound(new { message = "Venue not found." });
+            {
+                return NotFound(new
+                {
+                    message = "Venue not found."
+                });
+            }
 
             return Ok(venue);
         }
@@ -55,6 +62,7 @@ namespace Event_And_Parking_Manage_system.Controllers
             return Ok(venues);
         }
 
+        [Authorize(Roles = "Administrator")]
         [HttpPost]
         public async Task<IActionResult> Create(CreateVenueDto dto)
         {
@@ -69,10 +77,14 @@ namespace Event_And_Parking_Manage_system.Controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
         }
 
+        [Authorize(Roles = "Administrator")]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(
             int id,
@@ -83,23 +95,37 @@ namespace Event_And_Parking_Manage_system.Controllers
                 var updated = await _venueService.UpdateAsync(id, dto);
 
                 if (!updated)
-                    return NotFound(new { message = "Venue not found." });
+                {
+                    return NotFound(new
+                    {
+                        message = "Venue not found."
+                    });
+                }
 
                 return NoContent();
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
         }
 
+        [Authorize(Roles = "Administrator")]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
             var deleted = await _venueService.DeleteAsync(id);
 
             if (!deleted)
-                return NotFound(new { message = "Venue not found." });
+            {
+                return NotFound(new
+                {
+                    message = "Venue not found."
+                });
+            }
 
             return NoContent();
         }

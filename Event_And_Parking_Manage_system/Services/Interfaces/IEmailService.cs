@@ -16,5 +16,10 @@
             string email,
             string name,
             string token);
+
+        Task SendPasswordResetOtpEmailAsync(
+        string email,
+        string name,
+        string otp);
     }
 }

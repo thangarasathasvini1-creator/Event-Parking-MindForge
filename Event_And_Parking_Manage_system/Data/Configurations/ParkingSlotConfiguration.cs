@@ -29,6 +29,10 @@ namespace Event_And_Parking_Manage_system.Data.Configurations
             builder.Property(x => x.Status)
                 .IsRequired();
 
+            // Concurrency control
+            builder.Property(x => x.RowVersion)
+                .IsRowVersion();
+
             // Prevent duplicate slot numbers inside same Event
             builder.HasIndex(x => new
             {

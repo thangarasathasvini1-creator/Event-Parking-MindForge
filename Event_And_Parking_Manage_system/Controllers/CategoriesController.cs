@@ -1,5 +1,6 @@
 ﻿using Event_And_Parking_Manage_system.DTOs.Categories;
 using Event_And_Parking_Manage_system.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Event_And_Parking_Manage_system.Controllers
@@ -19,6 +20,7 @@ namespace Event_And_Parking_Manage_system.Controllers
         public async Task<IActionResult> GetAll()
         {
             var categories = await _categoryService.GetAllAsync();
+
             return Ok(categories);
         }
 
@@ -28,11 +30,17 @@ namespace Event_And_Parking_Manage_system.Controllers
             var category = await _categoryService.GetByIdAsync(id);
 
             if (category == null)
-                return NotFound(new { message = "Category not found." });
+            {
+                return NotFound(new
+                {
+                    message = "Category not found."
+                });
+            }
 
             return Ok(category);
         }
 
+        [Authorize(Roles = "Administrator")]
         [HttpPost]
         public async Task<IActionResult> Create(CreateCategoryDto dto)
         {
@@ -47,14 +55,21 @@ namespace Event_And_Parking_Manage_system.Controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return Conflict(new
+                {
+                    message = ex.Message
+                });
             }
         }
 
+        [Authorize(Roles = "Administrator")]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(
             int id,
@@ -65,27 +80,44 @@ namespace Event_And_Parking_Manage_system.Controllers
                 var updated = await _categoryService.UpdateAsync(id, dto);
 
                 if (!updated)
-                    return NotFound(new { message = "Category not found." });
+                {
+                    return NotFound(new
+                    {
+                        message = "Category not found."
+                    });
+                }
 
                 return NoContent();
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return Conflict(new
+                {
+                    message = ex.Message
+                });
             }
         }
 
+        [Authorize(Roles = "Administrator")]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
             var deleted = await _categoryService.DeleteAsync(id);
 
             if (!deleted)
-                return NotFound(new { message = "Category not found." });
+            {
+                return NotFound(new
+                {
+                    message = "Category not found."
+                });
+            }
 
             return NoContent();
         }

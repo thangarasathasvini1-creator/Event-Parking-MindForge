@@ -20,10 +20,13 @@ namespace Event_And_Parking_Manage_system.Models.Entities
 
         public DateTime? UpdatedAt { get; set; }
 
+        // Concurrency control
+        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+
         // Navigation Property
         public Event Event { get; set; } = null!;
 
         public ICollection<BookingSeat> BookingSeats { get; set; }
-           = new List<BookingSeat>();
+            = new List<BookingSeat>();
     }
 }

@@ -11,16 +11,29 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
         private readonly IEventRepository _eventRepository;
         private readonly IVenueRepository _venueRepository;
         private readonly ICategoryRepository _categoryRepository;
+        private readonly IBookingRepository _bookingRepository;
+        private readonly INotificationService _notificationService;
+        private readonly ILogger<EventService> _logger;
 
         public EventService(
             IEventRepository eventRepository,
             IVenueRepository venueRepository,
-            ICategoryRepository categoryRepository)
+            ICategoryRepository categoryRepository,
+            IBookingRepository bookingRepository,
+            INotificationService notificationService,
+            ILogger<EventService> logger)
         {
             _eventRepository = eventRepository;
             _venueRepository = venueRepository;
             _categoryRepository = categoryRepository;
+            _bookingRepository = bookingRepository;
+            _notificationService = notificationService;
+            _logger = logger;
         }
+
+        // =========================================================
+        // GET ALL EVENTS
+        // =========================================================
 
         public async Task<IEnumerable<EventDto>> GetAllAsync()
         {
@@ -41,9 +54,14 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             });
         }
 
+        // =========================================================
+        // GET EVENT BY ID
+        // =========================================================
+
         public async Task<EventDetailsDto?> GetByIdAsync(int id)
         {
-            var eventEntity = await _eventRepository.GetByIdAsync(id);
+            var eventEntity =
+                await _eventRepository.GetByIdAsync(id);
 
             if (eventEntity == null)
                 return null;
@@ -65,17 +83,22 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             };
         }
 
+        // =========================================================
+        // SEARCH EVENTS
+        // =========================================================
+
         public async Task<IEnumerable<EventDto>> SearchAsync(
             string? name,
             int? categoryId,
             int? venueId,
             DateTime? eventDate)
         {
-            var events = await _eventRepository.SearchAsync(
-                name,
-                categoryId,
-                venueId,
-                eventDate);
+            var events =
+                await _eventRepository.SearchAsync(
+                    name,
+                    categoryId,
+                    venueId,
+                    eventDate);
 
             return events.Select(e => new EventDto
             {
@@ -92,37 +115,75 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             });
         }
 
-        public async Task<EventDetailsDto> CreateAsync(CreateEventDto dto)
+        // =========================================================
+        // CREATE EVENT
+        // =========================================================
+
+        public async Task<EventDetailsDto> CreateAsync(
+            CreateEventDto dto)
         {
-            var validationError = EventValidator.Validate(dto);
+            var validationError =
+                EventValidator.Validate(dto);
 
             if (validationError != null)
                 throw new ArgumentException(validationError);
 
-            var venue = await _venueRepository.GetByIdAsync(dto.VenueId);
+            // -----------------------------------------
+            // Check Venue
+            // -----------------------------------------
+
+            var venue =
+                await _venueRepository.GetByIdAsync(
+                    dto.VenueId);
 
             if (venue == null)
-                throw new InvalidOperationException("Venue not found.");
+                throw new InvalidOperationException(
+                    "Venue not found.");
+
+            // -----------------------------------------
+            // Check Category
+            // -----------------------------------------
 
             var category =
-                await _categoryRepository.GetByIdAsync(dto.CategoryId);
+                await _categoryRepository.GetByIdAsync(
+                    dto.CategoryId);
 
             if (category == null)
-                throw new InvalidOperationException("Category not found.");
+                throw new InvalidOperationException(
+                    "Category not found.");
+
+            // -----------------------------------------
+            // Validate Capacity
+            // -----------------------------------------
 
             if (dto.Capacity > venue.TotalCapacity)
+            {
                 throw new InvalidOperationException(
                     "Event capacity cannot exceed venue capacity.");
+            }
 
-            var hasOverlap = await _eventRepository.HasOverlapAsync(
-                dto.VenueId,
-                dto.EventDate,
-                dto.StartTime,
-                dto.EndTime);
+            // -----------------------------------------
+            // Check Venue Schedule Overlap
+            // -----------------------------------------
+
+            var hasOverlap =
+                await _eventRepository.HasOverlapAsync(
+                    dto.VenueId,
+                    dto.EventDate,
+                    dto.StartTime,
+                    dto.EndTime);
 
             if (hasOverlap)
+            {
                 throw new InvalidOperationException(
                     "Another event is already scheduled at this venue for the selected time.");
+            }
+
+            // -----------------------------------------
+            // Create Event
+            // -----------------------------------------
+
+            var now = DateTime.UtcNow;
 
             var eventEntity = new Event
             {
@@ -135,12 +196,17 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 TicketPrice = dto.TicketPrice,
                 ParkingFee = dto.ParkingFee,
                 Capacity = dto.Capacity,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                CreatedAt = now,
+                UpdatedAt = now
             };
 
             await _eventRepository.AddAsync(eventEntity);
+
             await _eventRepository.SaveChangesAsync();
+
+            // -----------------------------------------
+            // Return Created Event
+            // -----------------------------------------
 
             return new EventDetailsDto
             {
@@ -159,45 +225,89 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             };
         }
 
+        // =========================================================
+        // UPDATE EVENT
+        // =========================================================
+
         public async Task<bool> UpdateAsync(
             int id,
             UpdateEventDto dto)
         {
-            var validationError = EventValidator.Validate(dto);
+            var validationError =
+                EventValidator.Validate(dto);
 
             if (validationError != null)
                 throw new ArgumentException(validationError);
 
-            var eventEntity = await _eventRepository.GetByIdAsync(id);
+            // -----------------------------------------
+            // Get Existing Event
+            // -----------------------------------------
+
+            var eventEntity =
+                await _eventRepository.GetByIdAsync(id);
 
             if (eventEntity == null)
                 return false;
 
-            var venue = await _venueRepository.GetByIdAsync(dto.VenueId);
+            // -----------------------------------------
+            // Check Venue
+            // -----------------------------------------
+
+            var venue =
+                await _venueRepository.GetByIdAsync(
+                    dto.VenueId);
 
             if (venue == null)
-                throw new InvalidOperationException("Venue not found.");
+            {
+                throw new InvalidOperationException(
+                    "Venue not found.");
+            }
+
+            // -----------------------------------------
+            // Check Category
+            // -----------------------------------------
 
             var category =
-                await _categoryRepository.GetByIdAsync(dto.CategoryId);
+                await _categoryRepository.GetByIdAsync(
+                    dto.CategoryId);
 
             if (category == null)
-                throw new InvalidOperationException("Category not found.");
+            {
+                throw new InvalidOperationException(
+                    "Category not found.");
+            }
+
+            // -----------------------------------------
+            // Validate Capacity
+            // -----------------------------------------
 
             if (dto.Capacity > venue.TotalCapacity)
+            {
                 throw new InvalidOperationException(
                     "Event capacity cannot exceed venue capacity.");
+            }
 
-            var hasOverlap = await _eventRepository.HasOverlapAsync(
-                dto.VenueId,
-                dto.EventDate,
-                dto.StartTime,
-                dto.EndTime,
-                id);
+            // -----------------------------------------
+            // Check Venue Schedule Overlap
+            // -----------------------------------------
+
+            var hasOverlap =
+                await _eventRepository.HasOverlapAsync(
+                    dto.VenueId,
+                    dto.EventDate,
+                    dto.StartTime,
+                    dto.EndTime,
+                    id);
 
             if (hasOverlap)
+            {
                 throw new InvalidOperationException(
                     "Another event is already scheduled at this venue for the selected time.");
+            }
+
+            // -----------------------------------------
+            // Update Event
+            // -----------------------------------------
 
             eventEntity.Name = dto.Name;
             eventEntity.VenueId = dto.VenueId;
@@ -212,12 +322,54 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
             _eventRepository.Update(eventEntity);
 
-            return await _eventRepository.SaveChangesAsync();
+            var updated =
+                await _eventRepository.SaveChangesAsync();
+
+            if (!updated)
+                return false;
+
+            // =====================================================
+            // EVENT UPDATED NOTIFICATIONS
+            // =====================================================
+
+            var customerIds =
+                await _bookingRepository
+                    .GetCustomerIdsByEventIdAsync(id);
+
+            foreach (var customerId in customerIds)
+            {
+                try
+                {
+                    await _notificationService
+                        .CreateNotificationAsync(
+                            customerId,
+                            "EventUpdated",
+                            $"The event '{eventEntity.Name}' has been updated. Please check the latest event details.");
+                }
+                catch (Exception ex)
+                {
+                    // Event update already succeeded.
+                    // Notification failure must not undo
+                    // the successful event update.
+                    _logger.LogError(
+                        ex,
+                        "Event {EventId} was updated successfully, but notification could not be created for customer {CustomerId}.",
+                        id,
+                        customerId);
+                }
+            }
+
+            return true;
         }
+
+        // =========================================================
+        // DELETE EVENT
+        // =========================================================
 
         public async Task<bool> DeleteAsync(int id)
         {
-            var eventEntity = await _eventRepository.GetByIdAsync(id);
+            var eventEntity =
+                await _eventRepository.GetByIdAsync(id);
 
             if (eventEntity == null)
                 return false;

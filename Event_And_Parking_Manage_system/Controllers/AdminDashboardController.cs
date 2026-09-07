@@ -7,7 +7,7 @@ namespace Event_And_Parking_Manage_system.Controllers
 {
     [ApiController]
     [Route("api/admin/dashboard")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Administrator")]
     public class AdminDashboardController : ControllerBase
     {
         private readonly IAdminDashboardService _dashboardService;
@@ -21,7 +21,7 @@ namespace Event_And_Parking_Manage_system.Controllers
         // ==========================================
         // GET: api/admin/dashboard
         // Get admin dashboard summary
-        // ==========================================ojo
+        // ==========================================
 
         [HttpGet]
         public async Task<IActionResult> GetDashboard()

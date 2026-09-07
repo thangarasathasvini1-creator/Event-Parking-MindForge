@@ -1,5 +1,6 @@
 ﻿using Event_And_Parking_Manage_system.DTOs.Events;
 using Event_And_Parking_Manage_system.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Event_And_Parking_Manage_system.Controllers
@@ -15,6 +16,11 @@ namespace Event_And_Parking_Manage_system.Controllers
             _eventService = eventService;
         }
 
+        // ==========================================
+        // GET: api/events
+        // Get All / Search Events
+        // ==========================================
+
         [HttpGet]
         public async Task<IActionResult> GetAll(
             [FromQuery] string? name,
@@ -27,36 +33,57 @@ namespace Event_And_Parking_Manage_system.Controllers
                 venueId.HasValue ||
                 eventDate.HasValue)
             {
-                var filteredEvents = await _eventService.SearchAsync(
-                    name,
-                    categoryId,
-                    venueId,
-                    eventDate);
+                var filteredEvents =
+                    await _eventService.SearchAsync(
+                        name,
+                        categoryId,
+                        venueId,
+                        eventDate);
 
                 return Ok(filteredEvents);
             }
 
             var events = await _eventService.GetAllAsync();
+
             return Ok(events);
         }
+
+        // ==========================================
+        // GET: api/events/{id}
+        // Get Event By ID
+        // ==========================================
 
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var eventDetails = await _eventService.GetByIdAsync(id);
+            var eventDetails =
+                await _eventService.GetByIdAsync(id);
 
             if (eventDetails == null)
-                return NotFound(new { message = "Event not found." });
+            {
+                return NotFound(new
+                {
+                    message = "Event not found."
+                });
+            }
 
             return Ok(eventDetails);
         }
 
+        // ==========================================
+        // POST: api/events
+        // Create Event - Administrator Only
+        // ==========================================
+
+        [Authorize(Roles = "Administrator")]
         [HttpPost]
-        public async Task<IActionResult> Create(CreateEventDto dto)
+        public async Task<IActionResult> Create(
+            [FromBody] CreateEventDto dto)
         {
             try
             {
-                var eventDetails = await _eventService.CreateAsync(dto);
+                var eventDetails =
+                    await _eventService.CreateAsync(dto);
 
                 return CreatedAtAction(
                     nameof(GetById),
@@ -65,45 +92,81 @@ namespace Event_And_Parking_Manage_system.Controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return Conflict(new
+                {
+                    message = ex.Message
+                });
             }
         }
 
+        // ==========================================
+        // PUT: api/events/{id}
+        // Update Event - Administrator Only
+        // ==========================================
+
+        [Authorize(Roles = "Administrator")]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(
             int id,
-            UpdateEventDto dto)
+            [FromBody] UpdateEventDto dto)
         {
             try
             {
-                var updated = await _eventService.UpdateAsync(id, dto);
+                var updated =
+                    await _eventService.UpdateAsync(id, dto);
 
                 if (!updated)
-                    return NotFound(new { message = "Event not found." });
+                {
+                    return NotFound(new
+                    {
+                        message = "Event not found."
+                    });
+                }
 
                 return NoContent();
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return Conflict(new
+                {
+                    message = ex.Message
+                });
             }
         }
 
+        // ==========================================
+        // DELETE: api/events/{id}
+        // Delete Event - Administrator Only
+        // ==========================================
+
+        [Authorize(Roles = "Administrator")]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var deleted = await _eventService.DeleteAsync(id);
+            var deleted =
+                await _eventService.DeleteAsync(id);
 
             if (!deleted)
-                return NotFound(new { message = "Event not found." });
+            {
+                return NotFound(new
+                {
+                    message = "Event not found."
+                });
+            }
 
             return NoContent();
         }
