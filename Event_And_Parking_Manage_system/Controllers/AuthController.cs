@@ -16,6 +16,11 @@ namespace Event_And_Parking_Manage_system.Controllers
             _authService = authService;
         }
 
+        // ==========================================
+        // POST: api/Auth/login
+        // Customer Login
+        // ==========================================
+
         [HttpPost("login")]
         public async Task<IActionResult> Login(
             [FromBody] LoginCustomerDto dto)
@@ -34,6 +39,11 @@ namespace Event_And_Parking_Manage_system.Controllers
             return Ok(result);
         }
 
+        // ==========================================
+        // POST: api/Auth/forgot-password
+        // Send Password Reset OTP
+        // ==========================================
+
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword(
             [FromBody] string email)
@@ -43,9 +53,14 @@ namespace Event_And_Parking_Manage_system.Controllers
             return Ok(new
             {
                 message =
-                    "If the email exists, a password reset link will be sent."
+                    "If the email exists, a password reset OTP will be sent."
             });
         }
+
+        // ==========================================
+        // POST: api/Auth/reset-password
+        // Reset Password
+        // ==========================================
 
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword(
@@ -61,7 +76,7 @@ namespace Event_And_Parking_Manage_system.Controllers
                 return BadRequest(new
                 {
                     message =
-                        "Invalid or expired reset token."
+                        "Invalid or expired reset authorization token."
                 });
             }
 
@@ -71,6 +86,11 @@ namespace Event_And_Parking_Manage_system.Controllers
                     "Password reset successfully."
             });
         }
+
+        // ==========================================
+        // GET: api/Auth/verify-email
+        // Verify Email using Token
+        // ==========================================
 
         [HttpGet("verify-email")]
         public async Task<IActionResult> VerifyEmail(
@@ -105,8 +125,61 @@ namespace Event_And_Parking_Manage_system.Controllers
         }
 
         // ==========================================
+        // POST: api/Auth/verify-password-reset-otp
+        // Verify Password Reset OTP
+        // ==========================================
+
+        [HttpPost("verify-password-reset-otp")]
+        public async Task<IActionResult> VerifyPasswordResetOtp(
+            [FromBody] VerifyEmailOtpDto dto)
+        {
+            if (dto == null)
+            {
+                return BadRequest(new
+                {
+                    message =
+                        "Verification data is required."
+                });
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.Email))
+            {
+                return BadRequest(new
+                {
+                    message =
+                        "Email is required."
+                });
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.Otp))
+            {
+                return BadRequest(new
+                {
+                    message =
+                        "OTP is required."
+                });
+            }
+
+            var result =
+                await _authService.VerifyPasswordResetOtpAsync(
+                    dto.Email,
+                    dto.Otp);
+
+            if (result == null)
+            {
+                return BadRequest(new
+                {
+                    message =
+                        "Invalid, expired, or maximum-attempts-exceeded OTP."
+                });
+            }
+
+            return Ok(result);
+        }
+
+        // ==========================================
         // POST: api/Auth/verify-email-otp
-        // Verify email using 6-digit OTP
+        // Verify Email using 6-digit OTP
         // ==========================================
 
         [HttpPost("verify-email-otp")]
@@ -160,6 +233,11 @@ namespace Event_And_Parking_Manage_system.Controllers
                     "Email verified successfully."
             });
         }
+
+        // ==========================================
+        // POST: api/Auth/resend-verification
+        // Resend Email Verification OTP
+        // ==========================================
 
         [HttpPost("resend-verification")]
         public async Task<IActionResult> ResendVerification(

@@ -128,18 +128,6 @@ namespace Event_And_Parking_Manage_system.Repositories.Implementation
                     var totalParkingSlots =
                         e.ParkingSlots.Count;
 
-                    var occupancyPercentage =
-                        totalSeats > 0
-                            ? (decimal)seatsBooked /
-                              totalSeats * 100
-                            : 0m;
-
-                    var parkingUtilizationPercentage =
-                        totalParkingSlots > 0
-                            ? (decimal)parkingReservations /
-                              totalParkingSlots * 100
-                            : 0m;
-
                     return new EventBookingSummaryData
                     {
                         EventId = e.EventId,

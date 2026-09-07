@@ -20,9 +20,10 @@ namespace Event_And_Parking_Manage_system.Controllers
 
         // ==========================================
         // POST: api/bookings
-        // Create a new booking
+        // Customer - Create a new booking
         // ==========================================
 
+        [Authorize(Roles = "Customer")]
         [HttpPost]
         public async Task<IActionResult> CreateBooking(
             [FromBody] CreateBookingDto dto)
@@ -86,8 +87,8 @@ namespace Event_And_Parking_Manage_system.Controllers
 
             var customerId = GetCustomerId();
 
-            // Admin can view any booking
-            if (User.IsInRole("Admin"))
+            // Administrator can view any booking
+            if (User.IsInRole("Administrator"))
             {
                 return Ok(booking);
             }
@@ -113,8 +114,8 @@ namespace Event_And_Parking_Manage_system.Controllers
         {
             var currentCustomerId = GetCustomerId();
 
-            // Admin can view any customer's booking history
-            if (User.IsInRole("Admin"))
+            // Administrator can view any customer's booking history
+            if (User.IsInRole("Administrator"))
             {
                 var adminBookings =
                     await _bookingService
@@ -125,7 +126,10 @@ namespace Event_And_Parking_Manage_system.Controllers
 
             if (currentCustomerId == null)
             {
-                return Unauthorized();
+                return Unauthorized(new
+                {
+                    message = "Customer identity could not be determined."
+                });
             }
 
             // Customer can view only their own history
@@ -143,9 +147,10 @@ namespace Event_And_Parking_Manage_system.Controllers
 
         // ==========================================
         // DELETE: api/bookings/{id}
-        // Cancel booking
+        // Customer - Cancel booking
         // ==========================================
 
+        [Authorize(Roles = "Customer")]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> CancelBooking(
             int id,
@@ -155,7 +160,10 @@ namespace Event_And_Parking_Manage_system.Controllers
 
             if (customerId == null)
             {
-                return Unauthorized();
+                return Unauthorized(new
+                {
+                    message = "Customer identity could not be determined."
+                });
             }
 
             try
@@ -201,11 +209,11 @@ namespace Event_And_Parking_Manage_system.Controllers
 
         // ==========================================
         // GET: api/bookings?eventId={eventId}
-        // Admin - Get bookings by event
+        // Administrator - Get bookings by event
         // ==========================================
 
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> GetBookingsByEvent(
             [FromQuery] int eventId)
         {
@@ -234,7 +242,9 @@ namespace Event_And_Parking_Manage_system.Controllers
                 User.FindFirst("CustomerId")?.Value
                 ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (int.TryParse(customerIdClaim, out var customerId))
+            if (int.TryParse(
+                customerIdClaim,
+                out var customerId))
             {
                 return customerId;
             }

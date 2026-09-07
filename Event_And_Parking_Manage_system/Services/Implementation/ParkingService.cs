@@ -1,21 +1,34 @@
-﻿using Event_And_Parking_Manage_system.DTOs.Parking;
+﻿using Event_And_Parking_Manage_system.Data;
+using Event_And_Parking_Manage_system.DTOs.Parking;
 using Event_And_Parking_Manage_system.Models.Entities;
 using Event_And_Parking_Manage_system.Models.Enums;
 using Event_And_Parking_Manage_system.Repositories.Interfaces;
 using Event_And_Parking_Manage_system.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace Event_And_Parking_Manage_system.Services.Implementation
 {
     public class ParkingService : IParkingService
     {
         private readonly IParkingRepository _parkingRepository;
+        private readonly IBookingRepository _bookingRepository;
+        private readonly ApplicationDbContext _context;
 
-        public ParkingService(IParkingRepository parkingRepository)
+        public ParkingService(
+            IParkingRepository parkingRepository,
+            IBookingRepository bookingRepository,
+            ApplicationDbContext context)
         {
             _parkingRepository = parkingRepository;
+            _bookingRepository = bookingRepository;
+            _context = context;
         }
 
+        // ==========================================
         // Get all parking slots for an event
+        // ==========================================
+
         public async Task<IEnumerable<ParkingSlotDto>>
             GetSlotsByEventIdAsync(int eventId)
         {
@@ -25,7 +38,10 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             return slots.Select(MapToDto);
         }
 
+        // ==========================================
         // Get a single parking slot
+        // ==========================================
+
         public async Task<ParkingSlotDto?> GetByIdAsync(
             int parkingSlotId)
         {
@@ -38,7 +54,10 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             return MapToDto(slot);
         }
 
+        // ==========================================
         // Create parking slot
+        // ==========================================
+
         public async Task<ParkingSlotDto> CreateAsync(
             int eventId,
             CreateParkingSlotDto dto)
@@ -84,7 +103,10 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             return MapToDto(slot);
         }
 
+        // ==========================================
         // Update parking slot
+        // ==========================================
+
         public async Task<ParkingSlotDto?> UpdateAsync(
             int eventId,
             int parkingSlotId,
@@ -141,12 +163,24 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             slot.UpdatedAt = DateTime.UtcNow;
 
             await _parkingRepository.UpdateAsync(slot);
-            await _parkingRepository.SaveChangesAsync();
+
+            try
+            {
+                await _parkingRepository.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new InvalidOperationException(
+                    "The parking slot was modified by another user. Please refresh and try again.");
+            }
 
             return MapToDto(slot);
         }
 
+        // ==========================================
         // Delete parking slot
+        // ==========================================
+
         public async Task<bool> DeleteAsync(
             int eventId,
             int parkingSlotId)
@@ -165,30 +199,329 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             }
 
             await _parkingRepository.DeleteAsync(slot);
-            await _parkingRepository.SaveChangesAsync();
+
+            try
+            {
+                await _parkingRepository.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new InvalidOperationException(
+                    "The parking slot was modified by another user. Please refresh and try again.");
+            }
 
             return true;
         }
 
-        // Booking parking assignment will be integrated
-        // with Member 4's Booking module.
-        public Task<bool> AssignParkingAsync(
+        // ==========================================
+        // Assign parking slot to booking
+        // ==========================================
+
+        public async Task<bool> AssignParkingAsync(
             int bookingId,
+            int customerId,
             AssignParkingDto dto)
         {
-            throw new NotImplementedException(
-                "Parking assignment will be implemented during Booking integration.");
+            if (dto == null ||
+                dto.ParkingSlotId <= 0)
+            {
+                throw new ArgumentException(
+                    "A valid parking slot is required.");
+            }
+
+            await using var transaction =
+                await _context.Database.BeginTransactionAsync(
+                    IsolationLevel.Serializable);
+
+            try
+            {
+                // -----------------------------------------
+                // Check Booking
+                // -----------------------------------------
+
+                var booking = await _bookingRepository
+                    .GetByIdAsync(bookingId);
+
+                if (booking == null)
+                {
+                    throw new KeyNotFoundException(
+                        "Booking not found.");
+                }
+
+                // -----------------------------------------
+                // Check Booking Ownership
+                // -----------------------------------------
+
+                if (booking.CustomerId != customerId)
+                {
+                    throw new UnauthorizedAccessException(
+                        "You are not authorized to modify this booking.");
+                }
+
+                // -----------------------------------------
+                // Booking must be Pending
+                // -----------------------------------------
+
+                if (booking.Status != BookingStatus.Pending)
+                {
+                    throw new InvalidOperationException(
+                        "Parking can only be assigned to a pending booking.");
+                }
+
+                // -----------------------------------------
+                // One Booking = One Parking Reservation
+                // -----------------------------------------
+
+                if (booking.ParkingReservation != null)
+                {
+                    throw new InvalidOperationException(
+                        "This booking already has a parking reservation.");
+                }
+
+                // -----------------------------------------
+                // Get Parking Slot
+                // -----------------------------------------
+
+                var parkingSlot = await _parkingRepository
+                    .GetByIdAsync(dto.ParkingSlotId);
+
+                if (parkingSlot == null)
+                {
+                    throw new KeyNotFoundException(
+                        "Parking slot not found.");
+                }
+
+                // -----------------------------------------
+                // Validate Event Ownership
+                // -----------------------------------------
+
+                if (parkingSlot.EventId != booking.EventId)
+                {
+                    throw new InvalidOperationException(
+                        "Parking slot does not belong to the booking event.");
+                }
+
+                // -----------------------------------------
+                // Check Availability
+                // -----------------------------------------
+
+                if (parkingSlot.Status != ParkingSlotStatus.Available)
+                {
+                    throw new InvalidOperationException(
+                        $"Parking slot {parkingSlot.SlotNumber} is not available.");
+                }
+
+                // -----------------------------------------
+                // Create Parking Reservation
+                // -----------------------------------------
+
+                var parkingReservation = new ParkingReservation
+                {
+                    BookingId = booking.BookingId,
+                    ParkingSlotId = parkingSlot.ParkingSlotId,
+
+                    // Store the parking fee at reservation time.
+                    ReservedFee = parkingSlot.Fee,
+
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                booking.ParkingReservation =
+                    parkingReservation;
+
+                // -----------------------------------------
+                // Update Booking Total Amount
+                // -----------------------------------------
+
+                booking.TotalAmount += parkingSlot.Fee;
+                booking.UpdatedAt = DateTime.UtcNow;
+
+                // -----------------------------------------
+                // Hold Parking Slot
+                // -----------------------------------------
+
+                parkingSlot.Status =
+                    ParkingSlotStatus.Held;
+
+                parkingSlot.UpdatedAt =
+                    DateTime.UtcNow;
+
+                // -----------------------------------------
+                // Save Changes
+                // -----------------------------------------
+
+                await _parkingRepository
+                    .UpdateAsync(parkingSlot);
+
+                await _bookingRepository
+                    .UpdateAsync(booking);
+
+                await _context.SaveChangesAsync();
+
+                // -----------------------------------------
+                // Commit
+                // -----------------------------------------
+
+                await transaction.CommitAsync();
+
+                return true;
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                await transaction.RollbackAsync();
+
+                throw new InvalidOperationException(
+                    "The parking slot was modified by another user. Please refresh the parking list and try again.");
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
-        // Parking removal will be integrated
-        // with Member 4's Booking module.
-        public Task<bool> RemoveParkingAsync(int bookingId)
+        // ==========================================
+        // Remove parking from booking
+        // ==========================================
+
+        public async Task<bool> RemoveParkingAsync(
+            int bookingId,
+            int customerId)
         {
-            throw new NotImplementedException(
-                "Parking removal will be implemented during Booking integration.");
+            await using var transaction =
+                await _context.Database.BeginTransactionAsync(
+                    IsolationLevel.Serializable);
+
+            try
+            {
+                // -----------------------------------------
+                // Get Booking
+                // -----------------------------------------
+
+                var booking = await _bookingRepository
+                    .GetByIdAsync(bookingId);
+
+                if (booking == null)
+                {
+                    throw new KeyNotFoundException(
+                        "Booking not found.");
+                }
+
+                // -----------------------------------------
+                // Check Booking Ownership
+                // -----------------------------------------
+
+                if (booking.CustomerId != customerId)
+                {
+                    throw new UnauthorizedAccessException(
+                        "You are not authorized to modify this booking.");
+                }
+
+                // -----------------------------------------
+                // Check Existing Reservation
+                // -----------------------------------------
+
+                if (booking.ParkingReservation == null)
+                {
+                    throw new InvalidOperationException(
+                        "This booking does not have a parking reservation.");
+                }
+
+                // -----------------------------------------
+                // Booking must be Pending
+                // -----------------------------------------
+
+                if (booking.Status != BookingStatus.Pending)
+                {
+                    throw new InvalidOperationException(
+                        "Parking can only be removed from a pending booking.");
+                }
+
+                var parkingReservation =
+                    booking.ParkingReservation;
+
+                // -----------------------------------------
+                // Get Parking Slot
+                // -----------------------------------------
+
+                var parkingSlot = await _parkingRepository
+                    .GetByIdAsync(
+                        parkingReservation.ParkingSlotId);
+
+                if (parkingSlot != null)
+                {
+                    // -----------------------------------------
+                    // Release Parking Slot
+                    // -----------------------------------------
+
+                    if (parkingSlot.Status ==
+                        ParkingSlotStatus.Held)
+                    {
+                        parkingSlot.Status =
+                            ParkingSlotStatus.Available;
+
+                        parkingSlot.UpdatedAt =
+                            DateTime.UtcNow;
+
+                        await _parkingRepository
+                            .UpdateAsync(parkingSlot);
+                    }
+                }
+
+                // -----------------------------------------
+                // Remove Reserved Parking Fee
+                // -----------------------------------------
+
+                booking.TotalAmount -=
+                    parkingReservation.ReservedFee;
+
+                if (booking.TotalAmount < 0)
+                {
+                    booking.TotalAmount = 0;
+                }
+
+                // -----------------------------------------
+                // Remove Reservation
+                // -----------------------------------------
+
+                booking.ParkingReservation = null;
+                booking.UpdatedAt = DateTime.UtcNow;
+
+                await _bookingRepository
+                    .UpdateAsync(booking);
+
+                // -----------------------------------------
+                // Save Changes
+                // -----------------------------------------
+
+                await _context.SaveChangesAsync();
+
+                // -----------------------------------------
+                // Commit
+                // -----------------------------------------
+
+                await transaction.CommitAsync();
+
+                return true;
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                await transaction.RollbackAsync();
+
+                throw new InvalidOperationException(
+                    "The parking slot or booking was modified by another user. Please refresh and try again.");
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
+        // ==========================================
         // Entity -> DTO mapping
+        // ==========================================
+
         private static ParkingSlotDto MapToDto(
             ParkingSlot slot)
         {
