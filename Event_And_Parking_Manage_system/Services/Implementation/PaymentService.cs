@@ -4,6 +4,8 @@ using Event_And_Parking_Manage_system.Models.Entities;
 using Event_And_Parking_Manage_system.Models.Enums;
 using Event_And_Parking_Manage_system.Repositories.Interfaces;
 using Event_And_Parking_Manage_system.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace Event_And_Parking_Manage_system.Services.Implementation
 {
@@ -11,113 +13,167 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
     {
         private readonly IPaymentRepository _paymentRepository;
         private readonly IBookingRepository _bookingRepository;
+        private readonly INotificationService _notificationService;
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<PaymentService> _logger;
 
         public PaymentService(
             IPaymentRepository paymentRepository,
             IBookingRepository bookingRepository,
-            ApplicationDbContext context)
+            INotificationService notificationService,
+            ApplicationDbContext context,
+            ILogger<PaymentService> logger)
         {
             _paymentRepository = paymentRepository;
             _bookingRepository = bookingRepository;
+            _notificationService = notificationService;
             _context = context;
+            _logger = logger;
         }
+
+        // =========================================================
+        // PROCESS PAYMENT
+        // =========================================================
 
         public async Task<PaymentDto> ProcessPaymentAsync(
             int customerId,
             int bookingId,
             CreatePaymentDto dto)
         {
-            // 1. Get booking
-            var booking =
-                await _bookingRepository.GetByIdAsync(bookingId);
-
-            if (booking == null)
+            if (dto == null)
             {
-                throw new KeyNotFoundException(
-                    "Booking not found.");
+                throw new InvalidOperationException(
+                    "Payment data is required.");
             }
 
-            // 2. Check ownership
-            if (booking.CustomerId != customerId)
-            {
-                throw new UnauthorizedAccessException(
-                    "You are not allowed to make payment for this booking.");
-            }
-
-            // 3. Validate payment method
             if (string.IsNullOrWhiteSpace(dto.PaymentMethod))
             {
                 throw new InvalidOperationException(
                     "Payment method is required.");
             }
 
-            // 4. Check existing payment
-            var existingPayment =
-                await _paymentRepository
-                    .GetByBookingIdAsync(bookingId);
+            await using var transaction =
+                await _context.Database.BeginTransactionAsync(
+                    IsolationLevel.Serializable);
 
-            // 5. Idempotency
-            if (existingPayment != null &&
-                existingPayment.Status == PaymentStatus.Completed)
+            try
             {
-                return MapToDto(existingPayment);
-            }
+                // =================================================
+                // 1. Get Booking
+                // =================================================
 
-            // 6. Booking must be pending
-            if (booking.Status != BookingStatus.Pending)
-            {
-                throw new InvalidOperationException(
-                    "Payment is only allowed for pending bookings.");
-            }
+                var booking =
+                    await _bookingRepository.GetByIdAsync(
+                        bookingId);
 
-            // 7. Check hold expiry
-            if (booking.HoldExpiresAt.HasValue &&
-                booking.HoldExpiresAt.Value <= DateTime.UtcNow)
-            {
-                throw new InvalidOperationException(
-                    "Booking hold has expired.");
-            }
-
-            // 8. Mock payment processing
-            var paymentStatus =
-                dto.SimulateSuccess
-                    ? PaymentStatus.Completed
-                    : PaymentStatus.Failed;
-
-            // 9. Existing failed payment retry
-            if (existingPayment != null &&
-                existingPayment.Status == PaymentStatus.Failed)
-            {
-                existingPayment.Status = paymentStatus;
-
-                existingPayment.PaymentMethod =
-                    dto.PaymentMethod.Trim();
-
-                existingPayment.TransactionReference =
-                    $"TXN-{Guid.NewGuid():N}"
-                        .ToUpperInvariant();
-
-                existingPayment.PaidAt =
-                    paymentStatus == PaymentStatus.Completed
-                        ? DateTime.UtcNow
-                        : null;
-
-                booking.UpdatedAt =
-                    DateTime.UtcNow;
-
-                if (paymentStatus == PaymentStatus.Completed)
+                if (booking == null)
                 {
-                    booking.Status =
-                        BookingStatus.Confirmed;
+                    throw new KeyNotFoundException(
+                        "Booking not found.");
                 }
 
-                await using var retryTransaction =
-                    await _context.Database
-                        .BeginTransactionAsync();
+                // =================================================
+                // 2. Check Ownership
+                // =================================================
 
-                try
+                if (booking.CustomerId != customerId)
                 {
+                    throw new UnauthorizedAccessException(
+                        "You are not allowed to make payment for this booking.");
+                }
+
+                // =================================================
+                // 3. Get Existing Payment
+                // =================================================
+
+                var existingPayment =
+                    await _paymentRepository
+                        .GetByBookingIdAsync(bookingId);
+
+                // =================================================
+                // 4. Idempotency
+                // =================================================
+
+                if (existingPayment != null &&
+                    existingPayment.Status == PaymentStatus.Completed)
+                {
+                    await transaction.CommitAsync();
+
+                    return MapToDto(existingPayment);
+                }
+
+                // =================================================
+                // 5. Booking Must Be Pending
+                // =================================================
+
+                if (booking.Status != BookingStatus.Pending)
+                {
+                    throw new InvalidOperationException(
+                        "Payment is only allowed for pending bookings.");
+                }
+
+                // =================================================
+                // 6. Check Hold Expiry
+                // =================================================
+
+                if (booking.HoldExpiresAt.HasValue &&
+                    booking.HoldExpiresAt.Value <= DateTime.UtcNow)
+                {
+                    throw new InvalidOperationException(
+                        "Booking hold has expired.");
+                }
+
+                // =================================================
+                // 7. Mock Payment Processing
+                // =================================================
+
+                var paymentStatus =
+                    dto.SimulateSuccess
+                        ? PaymentStatus.Completed
+                        : PaymentStatus.Failed;
+
+                // =================================================
+                // 8. Existing Failed Payment Retry
+                // =================================================
+
+                if (existingPayment != null &&
+                    existingPayment.Status == PaymentStatus.Failed)
+                {
+                    existingPayment.Status =
+                        paymentStatus;
+
+                    existingPayment.PaymentMethod =
+                        dto.PaymentMethod.Trim();
+
+                    existingPayment.TransactionReference =
+                        $"TXN-{Guid.NewGuid():N}"
+                            .ToUpperInvariant();
+
+                    existingPayment.PaidAt =
+                        paymentStatus == PaymentStatus.Completed
+                            ? DateTime.UtcNow
+                            : null;
+
+                    booking.UpdatedAt =
+                        DateTime.UtcNow;
+
+                    // ---------------------------------------------
+                    // Successful retry
+                    // ---------------------------------------------
+
+                    if (paymentStatus ==
+                        PaymentStatus.Completed)
+                    {
+                        booking.Status =
+                            BookingStatus.Confirmed;
+
+                        SetResourcesAsBooked(booking);
+                    }
+
+                    // ---------------------------------------------
+                    // Save payment + booking + resources
+                    // ---------------------------------------------
+
                     await _paymentRepository
                         .UpdateAsync(existingPayment);
 
@@ -126,62 +182,78 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
                     await _context.SaveChangesAsync();
 
-                    await retryTransaction.CommitAsync();
+                    // ---------------------------------------------
+                    // Commit transaction
+                    // ---------------------------------------------
+
+                    await transaction.CommitAsync();
+
+                    // ---------------------------------------------
+                    // Notifications after successful commit
+                    // ---------------------------------------------
+
+                    if (paymentStatus ==
+                        PaymentStatus.Completed)
+                    {
+                        await SendPaymentSuccessNotificationsAsync(
+                            booking.CustomerId,
+                            booking.BookingNumber);
+                    }
+
+                    return MapToDto(existingPayment);
                 }
-                catch
+
+                // =================================================
+                // 9. Create New Payment
+                // =================================================
+
+                var payment = new Payment
                 {
-                    await retryTransaction.RollbackAsync();
-                    throw;
+                    BookingId =
+                        booking.BookingId,
+
+                    Amount =
+                        booking.TotalAmount,
+
+                    Status =
+                        paymentStatus,
+
+                    PaymentMethod =
+                        dto.PaymentMethod.Trim(),
+
+                    TransactionReference =
+                        $"TXN-{Guid.NewGuid():N}"
+                            .ToUpperInvariant(),
+
+                    PaidAt =
+                        paymentStatus == PaymentStatus.Completed
+                            ? DateTime.UtcNow
+                            : null,
+
+                    CreatedAt =
+                        DateTime.UtcNow
+                };
+
+                // =================================================
+                // 10. Confirm Booking After Successful Payment
+                // =================================================
+
+                if (paymentStatus ==
+                    PaymentStatus.Completed)
+                {
+                    booking.Status =
+                        BookingStatus.Confirmed;
+
+                    SetResourcesAsBooked(booking);
                 }
 
-                return MapToDto(existingPayment);
-            }
+                booking.UpdatedAt =
+                    DateTime.UtcNow;
 
-            // 10. Create new payment
-            var payment = new Payment
-            {
-                BookingId =
-                    booking.BookingId,
+                // =================================================
+                // 11. Save Payment + Booking + Resources
+                // =================================================
 
-                Amount =
-                    booking.TotalAmount,
-
-                Status =
-                    paymentStatus,
-
-                PaymentMethod =
-                    dto.PaymentMethod.Trim(),
-
-                TransactionReference =
-                    $"TXN-{Guid.NewGuid():N}"
-                        .ToUpperInvariant(),
-
-                PaidAt =
-                    paymentStatus == PaymentStatus.Completed
-                        ? DateTime.UtcNow
-                        : null,
-
-                CreatedAt =
-                    DateTime.UtcNow
-            };
-
-            // 11. Confirm booking only after successful payment
-            if (paymentStatus == PaymentStatus.Completed)
-            {
-                booking.Status =
-                    BookingStatus.Confirmed;
-            }
-
-            booking.UpdatedAt =
-                DateTime.UtcNow;
-
-            // 12. Save payment and booking together
-            await using var transaction =
-                await _context.Database
-                    .BeginTransactionAsync();
-
-            try
-            {
                 await _paymentRepository
                     .AddAsync(payment);
 
@@ -190,17 +262,93 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
                 await _context.SaveChangesAsync();
 
+                // =================================================
+                // 12. Commit Transaction
+                // =================================================
+
                 await transaction.CommitAsync();
+
+                // =================================================
+                // 13. Notifications After Successful Commit
+                // =================================================
+
+                if (paymentStatus ==
+                    PaymentStatus.Completed)
+                {
+                    await SendPaymentSuccessNotificationsAsync(
+                        booking.CustomerId,
+                        booking.BookingNumber);
+                }
+
+                // =================================================
+                // 14. Return Payment
+                // =================================================
+
+                return MapToDto(payment);
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                await transaction.RollbackAsync();
+
+                _logger.LogWarning(
+                    ex,
+                    "Concurrency conflict while processing payment for booking {BookingId}.",
+                    bookingId);
+
+                throw new InvalidOperationException(
+                    "The booking or its resources were modified by another request. Please try again.");
             }
             catch
             {
                 await transaction.RollbackAsync();
                 throw;
             }
-
-            // 13. Return payment
-            return MapToDto(payment);
         }
+
+        // =========================================================
+        // SEND PAYMENT SUCCESS NOTIFICATIONS
+        // =========================================================
+
+        private async Task SendPaymentSuccessNotificationsAsync(
+            int customerId,
+            string bookingNumber)
+        {
+            try
+            {
+                // -------------------------------------------------
+                // Payment Completed Notification
+                // -------------------------------------------------
+
+                await _notificationService
+                    .CreateNotificationAsync(
+                        customerId,
+                        "PaymentCompleted",
+                        $"Payment completed successfully for booking {bookingNumber}.");
+
+                // -------------------------------------------------
+                // Booking Confirmed Notification
+                // -------------------------------------------------
+
+                await _notificationService
+                    .CreateNotificationAsync(
+                        customerId,
+                        "BookingConfirmed",
+                        $"Your booking {bookingNumber} has been confirmed successfully.");
+            }
+            catch (Exception ex)
+            {
+                // Payment and booking have already been committed.
+                // Notification failure must not undo the payment.
+                _logger.LogError(
+                    ex,
+                    "Payment for booking {BookingNumber} was completed successfully, but notification creation failed.",
+                    bookingNumber);
+            }
+        }
+
+        // =========================================================
+        // GET PAYMENT BY BOOKING ID
+        // =========================================================
 
         public async Task<PaymentDto?> GetPaymentByBookingIdAsync(
             int bookingId)
@@ -215,8 +363,13 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             return MapToDto(payment);
         }
 
+        // =========================================================
+        // GET CUSTOMER PAYMENTS
+        // =========================================================
+
         public async Task<List<PaymentDto>>
-            GetCustomerPaymentsAsync(int customerId)
+            GetCustomerPaymentsAsync(
+                int customerId)
         {
             var payments =
                 await _paymentRepository
@@ -226,6 +379,10 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 .Select(MapToDto)
                 .ToList();
         }
+
+        // =========================================================
+        // GET PAYMENT BY ID
+        // =========================================================
 
         public async Task<PaymentDto?> GetPaymentByIdAsync(
             int paymentId)
@@ -239,6 +396,47 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
             return MapToDto(payment);
         }
+
+        // =========================================================
+        // SET BOOKING RESOURCES AS BOOKED
+        // =========================================================
+
+        private static void SetResourcesAsBooked(
+            Booking booking)
+        {
+            // -----------------------------------------------------
+            // Seats → Booked
+            // -----------------------------------------------------
+
+            foreach (var bookingSeat in booking.BookingSeats)
+            {
+                if (bookingSeat.Seat != null)
+                {
+                    bookingSeat.Seat.Status =
+                        SeatStatus.Booked;
+
+                    bookingSeat.Seat.UpdatedAt =
+                        DateTime.UtcNow;
+                }
+            }
+
+            // -----------------------------------------------------
+            // Parking → Occupied
+            // -----------------------------------------------------
+
+            if (booking.ParkingReservation?.ParkingSlot != null)
+            {
+                booking.ParkingReservation.ParkingSlot.Status =
+                    ParkingSlotStatus.Occupied;
+
+                booking.ParkingReservation.ParkingSlot.UpdatedAt =
+                    DateTime.UtcNow;
+            }
+        }
+
+        // =========================================================
+        // PAYMENT DTO MAPPING
+        // =========================================================
 
         private static PaymentDto MapToDto(
             Payment payment)

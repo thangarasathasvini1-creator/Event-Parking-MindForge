@@ -15,6 +15,10 @@ namespace Event_And_Parking_Manage_system.Repositories.Implementation
             _context = context;
         }
 
+        // =========================================================
+        // GET BOOKING BY ID
+        // =========================================================
+
         public async Task<Booking?> GetByIdAsync(int bookingId)
         {
             return await _context.Bookings
@@ -24,8 +28,13 @@ namespace Event_And_Parking_Manage_system.Repositories.Implementation
                     .ThenInclude(pr => pr!.ParkingSlot)
                 .Include(b => b.Payment)
                 .Include(b => b.Event)
-                .FirstOrDefaultAsync(b => b.BookingId == bookingId);
+                .FirstOrDefaultAsync(
+                    b => b.BookingId == bookingId);
         }
+
+        // =========================================================
+        // GET BOOKING BY BOOKING NUMBER
+        // =========================================================
 
         public async Task<Booking?> GetByBookingNumberAsync(
             string bookingNumber)
@@ -34,6 +43,10 @@ namespace Event_And_Parking_Manage_system.Repositories.Implementation
                 .FirstOrDefaultAsync(
                     b => b.BookingNumber == bookingNumber);
         }
+
+        // =========================================================
+        // GET BOOKINGS BY CUSTOMER
+        // =========================================================
 
         public async Task<List<Booking>> GetByCustomerIdAsync(
             int customerId)
@@ -48,6 +61,10 @@ namespace Event_And_Parking_Manage_system.Repositories.Implementation
                 .ToListAsync();
         }
 
+        // =========================================================
+        // GET BOOKINGS BY EVENT
+        // =========================================================
+
         public async Task<List<Booking>> GetByEventIdAsync(
             int eventId)
         {
@@ -60,10 +77,35 @@ namespace Event_And_Parking_Manage_system.Repositories.Implementation
                 .ToListAsync();
         }
 
+        // =========================================================
+        // GET CUSTOMER IDS BY EVENT
+        // =========================================================
+
+        public async Task<List<int>> GetCustomerIdsByEventIdAsync(
+            int eventId)
+        {
+            return await _context.Bookings
+                .Where(b =>
+                    b.EventId == eventId &&
+                    b.Status != BookingStatus.Cancelled &&
+                    b.Status != BookingStatus.Expired)
+                .Select(b => b.CustomerId)
+                .Distinct()
+                .ToListAsync();
+        }
+
+        // =========================================================
+        // ADD BOOKING
+        // =========================================================
+
         public async Task AddAsync(Booking booking)
         {
             await _context.Bookings.AddAsync(booking);
         }
+
+        // =========================================================
+        // UPDATE BOOKING
+        // =========================================================
 
         public async Task UpdateAsync(Booking booking)
         {
@@ -71,6 +113,10 @@ namespace Event_And_Parking_Manage_system.Repositories.Implementation
 
             await Task.CompletedTask;
         }
+
+        // =========================================================
+        // CHECK ACTIVE SEAT BOOKING
+        // =========================================================
 
         public async Task<bool> HasActiveSeatBookingAsync(
             int seatId,
@@ -84,6 +130,10 @@ namespace Event_And_Parking_Manage_system.Repositories.Implementation
                     bs.Booking.Status != BookingStatus.Expired);
         }
 
+        // =========================================================
+        // CHECK ACTIVE PARKING RESERVATION
+        // =========================================================
+
         public async Task<bool> HasActiveParkingReservationAsync(
             int parkingSlotId,
             int eventId)
@@ -95,6 +145,10 @@ namespace Event_And_Parking_Manage_system.Repositories.Implementation
                     pr.Booking.Status != BookingStatus.Cancelled &&
                     pr.Booking.Status != BookingStatus.Expired);
         }
+
+        // =========================================================
+        // SAVE CHANGES
+        // =========================================================
 
         public async Task SaveChangesAsync()
         {

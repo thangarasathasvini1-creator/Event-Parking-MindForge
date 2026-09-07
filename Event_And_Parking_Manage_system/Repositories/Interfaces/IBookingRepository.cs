@@ -12,13 +12,19 @@ namespace Event_And_Parking_Manage_system.Repositories.Interfaces
 
         Task<List<Booking>> GetByEventIdAsync(int eventId);
 
+        Task<List<int>> GetCustomerIdsByEventIdAsync(int eventId);
+
         Task AddAsync(Booking booking);
 
         Task UpdateAsync(Booking booking);
 
-        Task<bool> HasActiveSeatBookingAsync(int seatId, int eventId);
+        Task<bool> HasActiveSeatBookingAsync(
+            int seatId,
+            int eventId);
 
-        Task<bool> HasActiveParkingReservationAsync(int parkingSlotId, int eventId);
+        Task<bool> HasActiveParkingReservationAsync(
+            int parkingSlotId,
+            int eventId);
 
         Task SaveChangesAsync();
     }

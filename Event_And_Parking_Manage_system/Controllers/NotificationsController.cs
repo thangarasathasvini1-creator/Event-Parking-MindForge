@@ -18,6 +18,11 @@ namespace Event_And_Parking_Manage_system.Controllers
             _notificationService = notificationService;
         }
 
+        // ==========================================
+        // GET: api/notifications/customer/{customerId}
+        // Get Customer Notifications
+        // ==========================================
+
         [HttpGet("customer/{customerId:int}")]
         public async Task<IActionResult> GetCustomerNotifications(
             int customerId)
@@ -25,10 +30,14 @@ namespace Event_And_Parking_Manage_system.Controllers
             var currentCustomerId = GetCustomerId();
 
             if (currentCustomerId == null)
+            {
                 return Unauthorized();
+            }
 
+            // Customer can view only their own notifications.
+            // Administrator can view any customer's notifications.
             if (currentCustomerId.Value != customerId &&
-                !User.IsInRole("Admin"))
+                !User.IsInRole("Administrator"))
             {
                 return Forbid();
             }
@@ -40,19 +49,28 @@ namespace Event_And_Parking_Manage_system.Controllers
             return Ok(notifications);
         }
 
+        // ==========================================
+        // PUT: api/notifications/{id}/read
+        // Mark Notification as Read
+        // ==========================================
+
         [HttpPut("{id:int}/read")]
         public async Task<IActionResult> MarkAsRead(int id)
         {
             var customerId = GetCustomerId();
 
             if (customerId == null)
+            {
                 return Unauthorized();
+            }
 
             try
             {
                 var result =
                     await _notificationService
-                        .MarkAsReadAsync(id, customerId.Value);
+                        .MarkAsReadAsync(
+                            id,
+                            customerId.Value);
 
                 if (!result)
                 {
@@ -73,14 +91,22 @@ namespace Event_And_Parking_Manage_system.Controllers
             }
         }
 
+        // ==========================================
+        // Helper - Get Customer ID from JWT
+        // ==========================================
+
         private int? GetCustomerId()
         {
             var customerIdClaim =
                 User.FindFirst("CustomerId")?.Value
                 ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (int.TryParse(customerIdClaim, out var customerId))
+            if (int.TryParse(
+                customerIdClaim,
+                out var customerId))
+            {
                 return customerId;
+            }
 
             return null;
         }

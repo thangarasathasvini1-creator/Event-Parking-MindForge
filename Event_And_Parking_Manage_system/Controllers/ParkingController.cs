@@ -2,6 +2,7 @@
 using Event_And_Parking_Manage_system.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Event_And_Parking_Manage_system.Controllers
 {
@@ -18,8 +19,7 @@ namespace Event_And_Parking_Manage_system.Controllers
 
         // GET: api/events/{eventId}/parking-slots
         [HttpGet]
-        public async Task<IActionResult> GetParkingSlots(
-            int eventId)
+        public async Task<IActionResult> GetParkingSlots(int eventId)
         {
             var slots = await _parkingService
                 .GetSlotsByEventIdAsync(eventId);
@@ -148,6 +148,137 @@ namespace Event_And_Parking_Manage_system.Controllers
                 return Ok(new
                 {
                     message = "Parking slot deleted successfully."
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
+        // ==========================================
+        // Assign parking to booking
+        // POST: api/bookings/{bookingId}/parking
+        // ==========================================
+
+        [Authorize]
+        [HttpPost("~/api/bookings/{bookingId:int}/parking")]
+        public async Task<IActionResult> AssignParking(
+            int bookingId,
+            [FromBody] AssignParkingDto dto)
+        {
+            var customerIdClaim = User.FindFirst("CustomerId")?.Value
+                ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!int.TryParse(customerIdClaim, out var customerId))
+            {
+                return Unauthorized(new
+                {
+                    message = "Invalid customer identity."
+                });
+            }
+
+            try
+            {
+                var result = await _parkingService
+                    .AssignParkingAsync(
+                        bookingId,
+                        customerId,
+                        dto);
+
+                if (!result)
+                {
+                    return NotFound(new
+                    {
+                        message = "Booking or parking slot not found."
+                    });
+                }
+
+                return Ok(new
+                {
+                    message = "Parking assigned successfully."
+                });
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
+        // ==========================================
+        // Remove parking from booking
+        // DELETE: api/bookings/{bookingId}/parking
+        // ==========================================
+
+        [Authorize]
+        [HttpDelete("~/api/bookings/{bookingId:int}/parking")]
+        public async Task<IActionResult> RemoveParking(
+            int bookingId)
+        {
+            var customerIdClaim = User.FindFirst("CustomerId")?.Value
+                ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!int.TryParse(customerIdClaim, out var customerId))
+            {
+                return Unauthorized(new
+                {
+                    message = "Invalid customer identity."
+                });
+            }
+
+            try
+            {
+                var result = await _parkingService
+                    .RemoveParkingAsync(
+                        bookingId,
+                        customerId);
+
+                if (!result)
+                {
+                    return NotFound(new
+                    {
+                        message = "Booking or parking reservation not found."
+                    });
+                }
+
+                return Ok(new
+                {
+                    message = "Parking removed successfully."
+                });
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    message = ex.Message
                 });
             }
             catch (InvalidOperationException ex)

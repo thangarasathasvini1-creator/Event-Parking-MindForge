@@ -16,6 +16,10 @@ namespace Event_And_Parking_Manage_system.Data.Configurations
             builder.Property(x => x.PasswordHash).IsRequired().HasMaxLength(500);
             builder.Property(x => x.EmailVerificationTokenHash).HasMaxLength(500);
             builder.Property(x => x.PasswordResetTokenHash).HasMaxLength(500);
+            builder.Property(x => x.PasswordResetOtpHash).HasMaxLength(500);
+            builder.Property(x => x.PasswordResetAuthorizationTokenHash).HasMaxLength(500);
+            builder.Property(x => x.PasswordResetAuthorizationTokenExpiresAt);
+
         }
     }
 }

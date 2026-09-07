@@ -111,6 +111,53 @@ namespace Event_And_Parking_Manage_system.Services
                 body);
         }
 
+        public async Task SendPasswordResetOtpEmailAsync(
+                string email,
+                string name,
+                string otp)
+        {
+            var subject =
+                "Password Reset OTP - Event & Parking Reservation System";
+
+            var body = $@"
+                        <h2>Hello {name},</h2>
+
+                        <p>
+                            We received a request to reset
+                            your password.
+                        </p>
+
+                        <p>
+                            Your password reset OTP is:
+                        </p>
+
+                        <h1>{otp}</h1>
+
+                        <p>
+                            Please enter this 6-digit OTP
+                            in the application to reset your password.
+                        </p>
+
+                        <p>
+                            This OTP will expire in 10 minutes.
+                        </p>
+
+                        <p>
+                            You have a maximum of 5 attempts.
+                        </p>
+
+                        <p>
+                            If you did not request a password reset,
+                            please ignore this email.
+                        </p>
+                    ";
+
+            await SendEmailAsync(
+                email,
+                subject,
+                body);
+        }
+
         public async Task SendPasswordResetEmailAsync(
             string email,
             string name,

@@ -10,5 +10,10 @@ namespace Event_And_Parking_Manage_system.Services.Interfaces
         Task<bool> MarkAsReadAsync(
             int notificationId,
             int customerId);
+
+        Task CreateNotificationAsync(
+            int customerId,
+            string type,
+            string message);
     }
 }

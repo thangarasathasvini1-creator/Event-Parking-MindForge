@@ -19,6 +19,20 @@ namespace Event_And_Parking_Manage_system.Models.Entities
         public int EmailVerificationOtpAttempts { get; set; } = 0;
         public string? PasswordResetTokenHash { get; set; }
         public DateTime? PasswordResetTokenExpiresAt { get; set; }
+
+
+        public string? PasswordResetOtpHash { get; set; }
+
+        public DateTime? PasswordResetOtpExpiresAt { get; set; }
+
+        public int PasswordResetOtpAttempts { get; set; } = 0;
+
+
+        public string? PasswordResetAuthorizationTokenHash { get; set; }
+
+        public DateTime? PasswordResetAuthorizationTokenExpiresAt { get; set; }
+
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
         public ICollection<Booking> Bookings { get; set; }

@@ -1,4 +1,3 @@
-using Event_And_Parking_Manage_system.BackgroundServices;
 using Event_And_Parking_Manage_system.Data;
 using Event_And_Parking_Manage_system.Repositories;
 using Event_And_Parking_Manage_system.Repositories.Implementation;
@@ -19,7 +18,7 @@ namespace Event_And_Parking_Manage_system
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -40,8 +39,11 @@ namespace Event_And_Parking_Manage_system
             builder.Services.AddScoped<
                 ICustomerRepository,
                 CustomerRepository>();
+
             // Member 1 - Notification
-            builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+            builder.Services.AddScoped<
+                INotificationRepository,
+                NotificationRepository>();
 
             // Member 2 - Venue, Category, Event
             builder.Services.AddScoped<
@@ -89,8 +91,10 @@ namespace Event_And_Parking_Manage_system
                 ICustomerService,
                 CustomerService>();
 
-            //member 1 - notification
-            builder.Services.AddScoped<INotificationService, NotificationService>();
+            // Member 1 - Notification
+            builder.Services.AddScoped<
+                INotificationService,
+                NotificationService>();
 
             builder.Services.AddScoped<
                 ICustomerDashboardService,
@@ -154,8 +158,7 @@ namespace Event_And_Parking_Manage_system
             // CORS Configuration
             // ==========================================
 
-            // Allow Angular 19 frontend
-            // running on localhost:4200
+            // Allow Angular frontend running on localhost:4200
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AngularPolicy", policy =>
@@ -273,6 +276,22 @@ namespace Event_And_Parking_Manage_system
             var app = builder.Build();
 
             // ==========================================
+            // Database Migration & Seed
+            // ==========================================
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider
+                    .GetRequiredService<ApplicationDbContext>();
+
+                // Apply pending EF Core migrations
+                await context.Database.MigrateAsync();
+
+                // Seed initial application data
+                await DbSeeder.SeedAsync(context);
+            }
+
+            // ==========================================
             // Configure HTTP Request Pipeline
             // ==========================================
 
@@ -310,7 +329,7 @@ namespace Event_And_Parking_Manage_system
             // Run Application
             // ==========================================
 
-            app.Run();
+            await app.RunAsync();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Event_And_Parking_Manage_system.DTOs.Customers;
+﻿using Event_And_Parking_Manage_system.DTOs.Auth;
+using Event_And_Parking_Manage_system.DTOs.Customers;
 using Event_And_Parking_Manage_system.Models.Entities;
 using Event_And_Parking_Manage_system.Repositories.Interfaces;
 using Event_And_Parking_Manage_system.Services.Interfaces;
@@ -96,59 +97,90 @@ namespace Event_And_Parking_Manage_system.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        
+
 
         public async Task<bool> ForgotPasswordAsync(string email)
         {
             var customer = await _customerRepository.GetByEmailAsync(email);
 
+            // Do not reveal whether the email exists
             if (customer == null)
                 return true;
 
-            var resetToken = Guid.NewGuid().ToString("N");
+            // Generate a new 6-digit OTP
+            var otp = GeneratePasswordResetOtp();
 
-            customer.PasswordResetTokenHash =
-                BCrypt.Net.BCrypt.HashPassword(resetToken);
+            // Store only the hashed OTP
+            customer.PasswordResetOtpHash =
+                BCrypt.Net.BCrypt.HashPassword(otp);
 
-            customer.PasswordResetTokenExpiresAt =
-                DateTime.UtcNow.AddHours(1);
+            // OTP expires after 10 minutes
+            customer.PasswordResetOtpExpiresAt =
+                DateTime.UtcNow.AddMinutes(10);
+
+            // Reset failed attempt count
+            customer.PasswordResetOtpAttempts = 0;
+
+            // Invalidate old token-based reset data
+            customer.PasswordResetTokenHash = null;
+            customer.PasswordResetTokenExpiresAt = null;
 
             customer.UpdatedAt = DateTime.UtcNow;
 
             await _customerRepository.UpdateAsync(customer);
 
-            await _emailService.SendPasswordResetEmailAsync(
+            // Send OTP to customer's email
+            await _emailService.SendPasswordResetOtpEmailAsync(
                 customer.Email,
                 customer.Name,
-                resetToken);
+                otp);
 
             return true;
         }
 
-        public async Task<bool> ResetPasswordAsync(string token, string newPassword)
+        public async Task<bool> ResetPasswordAsync(
+    string token,
+    string newPassword)
         {
-            if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(newPassword))
+            if (string.IsNullOrWhiteSpace(token) ||
+                string.IsNullOrWhiteSpace(newPassword))
+            {
                 return false;
+            }
 
-            var customers = await _customerRepository.GetAllAsync();
+            var customers =
+                await _customerRepository.GetAllAsync();
 
             foreach (var customer in customers)
             {
-                if (string.IsNullOrWhiteSpace(customer.PasswordResetTokenHash))
-                    continue;
-
-                if (customer.PasswordResetTokenExpiresAt == null)
-                    continue;
-
-                if (customer.PasswordResetTokenExpiresAt < DateTime.UtcNow)
-                    continue;
-
-                if (BCrypt.Net.BCrypt.Verify(token, customer.PasswordResetTokenHash))
+                if (string.IsNullOrWhiteSpace(
+                        customer.PasswordResetAuthorizationTokenHash))
                 {
-                    customer.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+                    continue;
+                }
 
-                    customer.PasswordResetTokenHash = null;
-                    customer.PasswordResetTokenExpiresAt = null;
+                if (!customer.PasswordResetAuthorizationTokenExpiresAt.HasValue)
+                {
+                    continue;
+                }
+
+                if (customer.PasswordResetAuthorizationTokenExpiresAt.Value
+                    <= DateTime.UtcNow)
+                {
+                    continue;
+                }
+
+                if (BCrypt.Net.BCrypt.Verify(
+                        token,
+                        customer.PasswordResetAuthorizationTokenHash))
+                {
+                    customer.PasswordHash =
+                        BCrypt.Net.BCrypt.HashPassword(newPassword);
+
+                    // Invalidate the reset authorization token
+                    customer.PasswordResetAuthorizationTokenHash = null;
+
+                    customer.PasswordResetAuthorizationTokenExpiresAt = null;
 
                     customer.UpdatedAt = DateTime.UtcNow;
 
@@ -160,6 +192,9 @@ namespace Event_And_Parking_Manage_system.Services
 
             return false;
         }
+
+
+
 
         public async Task<bool> VerifyEmailAsync(string token)
         {
@@ -204,9 +239,96 @@ namespace Event_And_Parking_Manage_system.Services
                 .ToString();
         }
 
+        private static string GeneratePasswordResetOtp()
+        {
+            return Random.Shared
+                .Next(100000, 1000000)
+                .ToString();
+        }
+
+        public async Task<VerifyPasswordResetOtpResponseDto?>
+    VerifyPasswordResetOtpAsync(
+        string email,
+        string otp)
+        {
+            if (string.IsNullOrWhiteSpace(email) ||
+                string.IsNullOrWhiteSpace(otp))
+            {
+                return null;
+            }
+
+            if (otp.Length != 6 ||
+                !otp.All(char.IsDigit))
+            {
+                return null;
+            }
+
+            var customer =
+                await _customerRepository.GetByEmailAsync(email);
+
+            if (customer == null)
+                return null;
+
+            if (string.IsNullOrWhiteSpace(
+                    customer.PasswordResetOtpHash))
+            {
+                return null;
+            }
+
+            if (!customer.PasswordResetOtpExpiresAt.HasValue)
+            {
+                return null;
+            }
+
+            if (customer.PasswordResetOtpExpiresAt.Value
+                <= DateTime.UtcNow)
+            {
+                return null;
+            }
+
+            if (customer.PasswordResetOtpAttempts >= 5)
+            {
+                return null;
+            }
+
+            customer.PasswordResetOtpAttempts++;
+
+            if (!BCrypt.Net.BCrypt.Verify(
+                    otp,
+                    customer.PasswordResetOtpHash))
+            {
+                await _customerRepository.UpdateAsync(customer);
+
+                return null;
+            }
+
+            // Generate a short-lived authorization token
+            var resetToken = Guid.NewGuid().ToString("N");
+
+            customer.PasswordResetAuthorizationTokenHash =
+                BCrypt.Net.BCrypt.HashPassword(resetToken);
+
+            customer.PasswordResetAuthorizationTokenExpiresAt =
+                DateTime.UtcNow.AddMinutes(10);
+
+            // OTP can no longer be reused
+            customer.PasswordResetOtpHash = null;
+            customer.PasswordResetOtpExpiresAt = null;
+            customer.PasswordResetOtpAttempts = 0;
+
+            customer.UpdatedAt = DateTime.UtcNow;
+
+            await _customerRepository.UpdateAsync(customer);
+
+            return new VerifyPasswordResetOtpResponseDto
+            {
+                ResetToken = resetToken
+            };
+        }
+
         public async Task<bool> VerifyEmailOtpAsync(
-    string email,
-    string otp)
+            string email,
+            string otp)
         {
             if (string.IsNullOrWhiteSpace(email) ||
                 string.IsNullOrWhiteSpace(otp))

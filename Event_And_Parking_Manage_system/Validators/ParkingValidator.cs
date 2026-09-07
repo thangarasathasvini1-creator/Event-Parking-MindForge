@@ -12,10 +12,10 @@ namespace Event_And_Parking_Manage_system.Validators
                     "Parking slot number is required.");
             }
 
-            if (dto.SlotNumber.Length > 50)
+            if (dto.SlotNumber.Length > 20)
             {
                 throw new ArgumentException(
-                    "Parking slot number cannot exceed 50 characters.");
+                    "Parking slot number cannot exceed 20 characters.");
             }
 
             if (dto.Fee < 0)
@@ -33,10 +33,10 @@ namespace Event_And_Parking_Manage_system.Validators
                     "Parking slot number is required.");
             }
 
-            if (dto.SlotNumber.Length > 50)
+            if (dto.SlotNumber.Length > 20)
             {
                 throw new ArgumentException(
-                    "Parking slot number cannot exceed 50 characters.");
+                    "Parking slot number cannot exceed 20 characters.");
             }
 
             if (dto.Fee < 0)

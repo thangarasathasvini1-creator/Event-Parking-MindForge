@@ -1,4 +1,5 @@
-﻿using Event_And_Parking_Manage_system.DTOs.Customers;
+﻿using Event_And_Parking_Manage_system.DTOs.Auth;
+using Event_And_Parking_Manage_system.DTOs.Customers;
 
 namespace Event_And_Parking_Manage_system.Services.Interfaces
 {
@@ -11,6 +12,9 @@ namespace Event_And_Parking_Manage_system.Services.Interfaces
 
         Task<bool> VerifyEmailAsync(string token);
 
+        Task<VerifyPasswordResetOtpResponseDto?> VerifyPasswordResetOtpAsync(
+    string email,
+    string otp);
         Task<bool> VerifyEmailOtpAsync(string email, string otp);
 
         Task<bool> ResendVerificationAsync(string email);
