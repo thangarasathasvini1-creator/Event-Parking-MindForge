@@ -253,22 +253,71 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 return false;
 
             // -----------------------------------------
-            // Check Booking Restrictions (VenueId, EventDate, StartTime, EndTime, TicketPrice)
+            // Get Existing Bookings
             // -----------------------------------------
 
-            var existingBookingsList = await _bookingRepository.GetByEventIdAsync(id);
-            if (existingBookingsList.Any())
-            {
-                bool venueChanged = dto.VenueId != eventEntity.VenueId;
-                bool dateChanged = dto.EventDate.Date != eventEntity.EventDate.Date;
-                bool startTimeChanged = dto.StartTime != eventEntity.StartTime;
-                bool endTimeChanged = dto.EndTime != eventEntity.EndTime;
-                bool ticketPriceChanged = dto.TicketPrice != eventEntity.TicketPrice;
+            var existingBookings =
+                await _bookingRepository.GetByEventIdAsync(id);
 
-                if (venueChanged || dateChanged || startTimeChanged || endTimeChanged || ticketPriceChanged)
+            // -----------------------------------------
+            // Check Booking Restrictions
+            // -----------------------------------------
+            // Once bookings exist, changes that could
+            // invalidate existing bookings are blocked.
+            // Capacity is also included because the
+            // event seat map must remain consistent.
+            // -----------------------------------------
+
+            if (existingBookings.Any())
+            {
+                bool venueChanged =
+                    dto.VenueId != eventEntity.VenueId;
+
+                bool dateChanged =
+                    dto.EventDate.Date != eventEntity.EventDate.Date;
+
+                bool startTimeChanged =
+                    dto.StartTime != eventEntity.StartTime;
+
+                bool endTimeChanged =
+                    dto.EndTime != eventEntity.EndTime;
+
+                bool ticketPriceChanged =
+                    dto.TicketPrice != eventEntity.TicketPrice;
+
+                bool capacityChanged =
+                    dto.Capacity != eventEntity.Capacity;
+
+                if (venueChanged ||
+                    dateChanged ||
+                    startTimeChanged ||
+                    endTimeChanged ||
+                    ticketPriceChanged ||
+                    capacityChanged)
                 {
                     throw new InvalidOperationException(
                         "Event details cannot be changed because bookings already exist for this event.");
+                }
+            }
+
+            // -----------------------------------------
+            // Check Seat Map Restriction
+            // -----------------------------------------
+            // Even if there are no bookings yet, once
+            // seats have been created the event capacity
+            // must remain equal to the seat-map size.
+            // Therefore capacity cannot be changed.
+            // -----------------------------------------
+
+            if (dto.Capacity != eventEntity.Capacity)
+            {
+                var existingSeats =
+                    await _seatRepository.GetSeatsByEventIdAsync(id);
+
+                if (existingSeats.Any())
+                {
+                    throw new InvalidOperationException(
+                        "Event capacity cannot be changed because seats already exist for this event.");
                 }
             }
 
@@ -308,22 +357,6 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             {
                 throw new InvalidOperationException(
                     "Event capacity cannot exceed venue capacity.");
-            }
-
-            var existingBookings = await _bookingRepository.GetByEventIdAsync(id);
-            var now = DateTime.UtcNow;
-            var activeBookings = existingBookings.Where(b =>
-                b.Status != Models.Enums.BookingStatus.Cancelled &&
-                b.Status != Models.Enums.BookingStatus.Expired &&
-                !(b.Status == Models.Enums.BookingStatus.Pending &&
-                  b.HoldExpiresAt.HasValue &&
-                  b.HoldExpiresAt.Value <= now)).ToList();
-
-            int totalBookedSeats = activeBookings.Sum(b => b.BookingSeats.Count);
-            if (dto.Capacity < totalBookedSeats)
-            {
-                throw new InvalidOperationException(
-                    "Event capacity cannot be reduced below the number of seats already booked.");
             }
 
             // -----------------------------------------
@@ -413,7 +446,13 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             if (eventEntity == null)
                 return false;
 
-            var existingBookings = await _bookingRepository.GetByEventIdAsync(id);
+            // -----------------------------------------
+            // Prevent deletion when bookings exist
+            // -----------------------------------------
+
+            var existingBookings =
+                await _bookingRepository.GetByEventIdAsync(id);
+
             if (existingBookings.Any())
             {
                 throw new InvalidOperationException(
