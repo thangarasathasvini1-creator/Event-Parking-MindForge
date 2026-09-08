@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.DTOs.Venues;
+using Event_And_Parking_Manage_system.DTOs.Venues;
 using Event_And_Parking_Manage_system.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -82,6 +82,13 @@ namespace Event_And_Parking_Manage_system.Controllers
                     message = ex.Message
                 });
             }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new
+                {
+                    message = ex.Message
+                });
+            }
         }
 
         [Authorize(Roles = "Administrator")]
@@ -107,6 +114,13 @@ namespace Event_And_Parking_Manage_system.Controllers
             catch (ArgumentException ex)
             {
                 return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new
                 {
                     message = ex.Message
                 });

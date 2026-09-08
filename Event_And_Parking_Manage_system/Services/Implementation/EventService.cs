@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.DTOs.Events;
+using Event_And_Parking_Manage_system.DTOs.Events;
 using Event_And_Parking_Manage_system.Models.Entities;
 using Event_And_Parking_Manage_system.Repositories.Interfaces;
 using Event_And_Parking_Manage_system.Services.Interfaces;
@@ -12,6 +12,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
         private readonly IVenueRepository _venueRepository;
         private readonly ICategoryRepository _categoryRepository;
         private readonly IBookingRepository _bookingRepository;
+        private readonly ISeatRepository _seatRepository;
         private readonly INotificationService _notificationService;
         private readonly ILogger<EventService> _logger;
 
@@ -20,6 +21,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             IVenueRepository venueRepository,
             ICategoryRepository categoryRepository,
             IBookingRepository bookingRepository,
+            ISeatRepository seatRepository,
             INotificationService notificationService,
             ILogger<EventService> logger)
         {
@@ -27,6 +29,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             _venueRepository = venueRepository;
             _categoryRepository = categoryRepository;
             _bookingRepository = bookingRepository;
+            _seatRepository = seatRepository;
             _notificationService = notificationService;
             _logger = logger;
         }
@@ -285,6 +288,22 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             {
                 throw new InvalidOperationException(
                     "Event capacity cannot exceed venue capacity.");
+            }
+
+            var existingSeats = await _seatRepository.GetSeatsByEventIdAsync(id);
+            var existingSeatsCount = existingSeats.Count();
+            if (dto.Capacity < existingSeatsCount)
+            {
+                throw new InvalidOperationException(
+                    $"Event capacity cannot be lower than existing seats count ({existingSeatsCount}).");
+            }
+
+            var existingBookings = await _bookingRepository.GetByEventIdAsync(id);
+            var activeBookings = existingBookings.Where(b => b.Status == Models.Enums.BookingStatus.Confirmed || b.Status == Models.Enums.BookingStatus.Pending).ToList();
+            if (dto.Capacity < activeBookings.Count)
+            {
+                throw new InvalidOperationException(
+                    $"Event capacity cannot be lower than active bookings count ({activeBookings.Count}).");
             }
 
             // -----------------------------------------
