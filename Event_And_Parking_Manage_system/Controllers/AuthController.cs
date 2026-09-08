@@ -1,7 +1,10 @@
 ﻿using Event_And_Parking_Manage_system.DTOs.Auth;
 using Event_And_Parking_Manage_system.DTOs.Customers;
 using Event_And_Parking_Manage_system.Services.Interfaces;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Event_And_Parking_Manage_system.Controllers
 {
@@ -16,17 +19,15 @@ namespace Event_And_Parking_Manage_system.Controllers
             _authService = authService;
         }
 
-        // ==========================================
-        // POST: api/Auth/login
-        // Customer Login
-        // ==========================================
+        // =========================================================
+        // NORMAL LOGIN
+        // =========================================================
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(
             [FromBody] LoginCustomerDto dto)
         {
-            var result =
-                await _authService.LoginAsync(dto);
+            var result = await _authService.LoginAsync(dto);
 
             if (result == null)
             {
@@ -39,10 +40,95 @@ namespace Event_And_Parking_Manage_system.Controllers
             return Ok(result);
         }
 
-        // ==========================================
-        // POST: api/Auth/forgot-password
-        // Send Password Reset OTP
-        // ==========================================
+        // =========================================================
+        // GOOGLE LOGIN - START
+        // =========================================================
+
+        [HttpGet("google")]
+        public IActionResult GoogleLogin()
+        {
+            var properties =
+                new AuthenticationProperties
+                {
+                    RedirectUri = "/api/Auth/google-callback"
+                };
+
+            return Challenge(
+                properties,
+                GoogleDefaults.AuthenticationScheme);
+        }
+
+        // =========================================================
+        // GOOGLE LOGIN - CALLBACK
+        // =========================================================
+
+        [HttpGet("google-callback")]
+        public async Task<IActionResult> GoogleCallback()
+        {
+            var authenticateResult =
+                await HttpContext.AuthenticateAsync("GoogleCookie");
+
+            if (!authenticateResult.Succeeded ||
+                authenticateResult.Principal == null)
+            {
+                return Unauthorized(new
+                {
+                    message = "Google authentication failed."
+                });
+            }
+
+            var principal = authenticateResult.Principal;
+
+            var email =
+                principal.FindFirstValue(
+                    ClaimTypes.Email);
+
+            var name =
+                principal.FindFirstValue(
+                    ClaimTypes.Name);
+
+            var googleId =
+                principal.FindFirstValue(
+                    ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrWhiteSpace(email) ||
+                string.IsNullOrWhiteSpace(name) ||
+                string.IsNullOrWhiteSpace(googleId))
+            {
+                await HttpContext.SignOutAsync("GoogleCookie");
+
+                return BadRequest(new
+                {
+                    message =
+                        "Required Google account information is missing."
+                });
+            }
+
+            var result =
+                await _authService.GoogleLoginAsync(
+                    email,
+                    name,
+                    googleId);
+
+            // Remove temporary Google authentication cookie
+            await HttpContext.SignOutAsync("GoogleCookie");
+
+            if (result == null)
+            {
+                return Unauthorized(new
+                {
+                    message =
+                        "Google login failed. Your account may be deactivated."
+                });
+            }
+
+            // Temporary testing response
+            return Ok(result);
+        }
+
+        // =========================================================
+        // FORGOT PASSWORD
+        // =========================================================
 
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword(
@@ -57,10 +143,9 @@ namespace Event_And_Parking_Manage_system.Controllers
             });
         }
 
-        // ==========================================
-        // POST: api/Auth/reset-password
-        // Reset Password
-        // ==========================================
+        // =========================================================
+        // RESET PASSWORD
+        // =========================================================
 
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword(
@@ -87,10 +172,9 @@ namespace Event_And_Parking_Manage_system.Controllers
             });
         }
 
-        // ==========================================
-        // GET: api/Auth/verify-email
-        // Verify Email using Token
-        // ==========================================
+        // =========================================================
+        // VERIFY EMAIL USING TOKEN
+        // =========================================================
 
         [HttpGet("verify-email")]
         public async Task<IActionResult> VerifyEmail(
@@ -124,10 +208,9 @@ namespace Event_And_Parking_Manage_system.Controllers
             });
         }
 
-        // ==========================================
-        // POST: api/Auth/verify-password-reset-otp
-        // Verify Password Reset OTP
-        // ==========================================
+        // =========================================================
+        // VERIFY PASSWORD RESET OTP
+        // =========================================================
 
         [HttpPost("verify-password-reset-otp")]
         public async Task<IActionResult> VerifyPasswordResetOtp(
@@ -177,10 +260,9 @@ namespace Event_And_Parking_Manage_system.Controllers
             return Ok(result);
         }
 
-        // ==========================================
-        // POST: api/Auth/verify-email-otp
-        // Verify Email using 6-digit OTP
-        // ==========================================
+        // =========================================================
+        // VERIFY EMAIL OTP
+        // =========================================================
 
         [HttpPost("verify-email-otp")]
         public async Task<IActionResult> VerifyEmailOtp(
@@ -234,10 +316,9 @@ namespace Event_And_Parking_Manage_system.Controllers
             });
         }
 
-        // ==========================================
-        // POST: api/Auth/resend-verification
-        // Resend Email Verification OTP
-        // ==========================================
+        // =========================================================
+        // RESEND VERIFICATION
+        // =========================================================
 
         [HttpPost("resend-verification")]
         public async Task<IActionResult> ResendVerification(
