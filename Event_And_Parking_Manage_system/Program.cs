@@ -8,6 +8,8 @@ using Event_And_Parking_Manage_system.Services.Interfaces;
 using Event_And_Parking_Manage_system.Validators;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -171,7 +173,7 @@ namespace Event_And_Parking_Manage_system
             });
 
             // ==========================================
-            // JWT Authentication
+            // JWT Configuration
             // ==========================================
 
             var jwtKey = builder.Configuration["Jwt:Key"]
@@ -182,9 +184,17 @@ namespace Event_And_Parking_Manage_system
 
             var jwtAudience = builder.Configuration["Jwt:Audience"];
 
+            // ==========================================
+            // Authentication
+            // ==========================================
+
             builder.Services
                 .AddAuthentication(
                     JwtBearerDefaults.AuthenticationScheme)
+
+                // ------------------------------------------
+                // JWT Authentication
+                // ------------------------------------------
                 .AddJwtBearer(options =>
                 {
                     options.TokenValidationParameters =
@@ -206,7 +216,39 @@ namespace Event_And_Parking_Manage_system
 
                             ClockSkew = TimeSpan.Zero
                         };
-                });
+                })
+
+                // ------------------------------------------
+                // Temporary Cookie for Google External Login
+                // ------------------------------------------
+                .AddCookie("GoogleCookie")
+
+                // ------------------------------------------
+                // Google Authentication
+                // ------------------------------------------
+                .AddGoogle(
+                    GoogleDefaults.AuthenticationScheme,
+                    options =>
+                    {
+                        options.ClientId =
+                            builder.Configuration[
+                                "Authentication:Google:ClientId"]
+                            ?? throw new InvalidOperationException(
+                                "Google ClientId is not configured.");
+
+                        options.ClientSecret =
+                            builder.Configuration[
+                                "Authentication:Google:ClientSecret"]
+                            ?? throw new InvalidOperationException(
+                                "Google ClientSecret is not configured.");
+
+                        // Temporary cookie used during
+                        // Google external authentication.
+                        options.SignInScheme = "GoogleCookie";
+
+                        // Google will return here after authentication.
+                        options.CallbackPath = "/signin-google";
+                    });
 
             // ==========================================
             // Controllers & Validation
