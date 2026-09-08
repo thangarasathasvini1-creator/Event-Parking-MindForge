@@ -189,18 +189,70 @@ namespace Event_And_Parking_Manage_system.Data
 
                 foreach (var eventItem in events)
                 {
-                    // Create 10 parking slots per event
-                    for (int i = 1; i <= 10; i++)
+                    // -----------------------------------------
+                    // Car Slots - 4
+                    // -----------------------------------------
+
+                    for (int i = 1; i <= 4; i++)
                     {
                         parkingSlots.Add(new ParkingSlot
                         {
                             EventId = eventItem.EventId,
-                            SlotNumber = $"P-{i:00}",
-                            Zone = i <= 5 ? "A" : "B",
+                            SlotNumber = $"C-{i:00}",
+                            Zone = "A",
+                            VehicleType = VehicleType.Car,
                             Fee = eventItem.ParkingFee,
                             Status = ParkingSlotStatus.Available
                         });
                     }
+
+                    // -----------------------------------------
+                    // Bike Slots - 3
+                    // -----------------------------------------
+
+                    for (int i = 1; i <= 3; i++)
+                    {
+                        parkingSlots.Add(new ParkingSlot
+                        {
+                            EventId = eventItem.EventId,
+                            SlotNumber = $"B-{i:00}",
+                            Zone = "B",
+                            VehicleType = VehicleType.Bike,
+                            Fee = eventItem.ParkingFee * 0.5m,
+                            Status = ParkingSlotStatus.Available
+                        });
+                    }
+
+                    // -----------------------------------------
+                    // Bus Slots - 2
+                    // -----------------------------------------
+
+                    for (int i = 1; i <= 2; i++)
+                    {
+                        parkingSlots.Add(new ParkingSlot
+                        {
+                            EventId = eventItem.EventId,
+                            SlotNumber = $"BUS-{i:00}",
+                            Zone = "C",
+                            VehicleType = VehicleType.Bus,
+                            Fee = eventItem.ParkingFee * 2m,
+                            Status = ParkingSlotStatus.Available
+                        });
+                    }
+
+                    // -----------------------------------------
+                    // Van Slot - 1
+                    // -----------------------------------------
+
+                    parkingSlots.Add(new ParkingSlot
+                    {
+                        EventId = eventItem.EventId,
+                        SlotNumber = "V-01",
+                        Zone = "C",
+                        VehicleType = VehicleType.Van,
+                        Fee = eventItem.ParkingFee * 1.5m,
+                        Status = ParkingSlotStatus.Available
+                    });
                 }
 
                 await context.ParkingSlots.AddRangeAsync(parkingSlots);
