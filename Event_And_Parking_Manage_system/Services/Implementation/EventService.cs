@@ -304,20 +304,20 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                     "Event capacity cannot exceed venue capacity.");
             }
 
-            var existingSeats = await _seatRepository.GetSeatsByEventIdAsync(id);
-            var existingSeatsCount = existingSeats.Count();
-            if (dto.Capacity < existingSeatsCount)
-            {
-                throw new InvalidOperationException(
-                    $"Event capacity cannot be lower than existing seats count ({existingSeatsCount}).");
-            }
-
             var existingBookings = await _bookingRepository.GetByEventIdAsync(id);
-            var activeBookings = existingBookings.Where(b => b.Status == Models.Enums.BookingStatus.Confirmed || b.Status == Models.Enums.BookingStatus.Pending).ToList();
-            if (dto.Capacity < activeBookings.Count)
+            var now = DateTime.UtcNow;
+            var activeBookings = existingBookings.Where(b =>
+                b.Status != Models.Enums.BookingStatus.Cancelled &&
+                b.Status != Models.Enums.BookingStatus.Expired &&
+                !(b.Status == Models.Enums.BookingStatus.Pending &&
+                  b.HoldExpiresAt.HasValue &&
+                  b.HoldExpiresAt.Value <= now)).ToList();
+
+            int totalBookedSeats = activeBookings.Sum(b => b.BookingSeats.Count);
+            if (dto.Capacity < totalBookedSeats)
             {
                 throw new InvalidOperationException(
-                    $"Event capacity cannot be lower than active bookings count ({activeBookings.Count}).");
+                    "Event capacity cannot be reduced below the number of seats already booked.");
             }
 
             // -----------------------------------------
@@ -406,6 +406,13 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
             if (eventEntity == null)
                 return false;
+
+            var existingBookings = await _bookingRepository.GetByEventIdAsync(id);
+            if (existingBookings.Any())
+            {
+                throw new InvalidOperationException(
+                    "Event cannot be deleted because bookings exist for this event.");
+            }
 
             _eventRepository.Delete(eventEntity);
 
