@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.Services.Interfaces;
+using Event_And_Parking_Manage_system.Services.Interfaces;
 using System.Net;
 using System.Net.Mail;
 
@@ -7,10 +7,14 @@ namespace Event_And_Parking_Manage_system.Services
     public class EmailService : IEmailService
     {
         private readonly IConfiguration _configuration;
+        private readonly ILogger<EmailService> _logger;
 
-        public EmailService(IConfiguration configuration)
+        public EmailService(
+            IConfiguration configuration,
+            ILogger<EmailService> logger)
         {
             _configuration = configuration;
+            _logger = logger;
         }
 
         public async Task SendVerificationEmailAsync(
@@ -255,7 +259,18 @@ namespace Event_And_Parking_Manage_system.Services
 
             smtp.EnableSsl = enableSsl;
 
-            await smtp.SendMailAsync(message);
+            try
+            {
+                await smtp.SendMailAsync(message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to send email to {RecipientEmail} with subject '{Subject}'.",
+                    recipientEmail,
+                    subject);
+            }
         }
     }
 }
