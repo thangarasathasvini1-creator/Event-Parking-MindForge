@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.DTOs.Auth;
+using Event_And_Parking_Manage_system.DTOs.Auth;
 using Event_And_Parking_Manage_system.DTOs.Customers;
 using Event_And_Parking_Manage_system.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication;
@@ -13,10 +13,14 @@ namespace Event_And_Parking_Manage_system.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IConfiguration _configuration;
 
-        public AuthController(IAuthService authService)
+        public AuthController(
+            IAuthService authService,
+            IConfiguration configuration)
         {
             _authService = authService;
+            _configuration = configuration;
         }
 
         // =========================================================
@@ -68,13 +72,13 @@ namespace Event_And_Parking_Manage_system.Controllers
             var authenticateResult =
                 await HttpContext.AuthenticateAsync("GoogleCookie");
 
+            var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:4200";
+
             if (!authenticateResult.Succeeded ||
                 authenticateResult.Principal == null)
             {
-                return Unauthorized(new
-                {
-                    message = "Google authentication failed."
-                });
+                return Redirect($"{frontendUrl}/login?error=" +
+                    Uri.EscapeDataString("Google authentication failed."));
             }
 
             var principal = authenticateResult.Principal;
@@ -97,11 +101,8 @@ namespace Event_And_Parking_Manage_system.Controllers
             {
                 await HttpContext.SignOutAsync("GoogleCookie");
 
-                return BadRequest(new
-                {
-                    message =
-                        "Required Google account information is missing."
-                });
+                return Redirect($"{frontendUrl}/login?error=" +
+                    Uri.EscapeDataString("Required Google account information is missing."));
             }
 
             var result =
@@ -115,15 +116,18 @@ namespace Event_And_Parking_Manage_system.Controllers
 
             if (result == null)
             {
-                return Unauthorized(new
-                {
-                    message =
-                        "Google login failed. Your account may be deactivated."
-                });
+                return Redirect($"{frontendUrl}/login?error=" +
+                    Uri.EscapeDataString("Google login failed. Your account may be deactivated."));
             }
 
-            // Temporary testing response
-            return Ok(result);
+            var callbackUrl = $"{frontendUrl}/login/callback" +
+                $"?token={Uri.EscapeDataString(result.Token)}" +
+                $"&customerId={result.CustomerId}" +
+                $"&email={Uri.EscapeDataString(result.Email)}" +
+                $"&name={Uri.EscapeDataString(result.Name)}" +
+                $"&role={Uri.EscapeDataString(result.Role)}";
+
+            return Redirect(callbackUrl);
         }
 
         // =========================================================

@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.DTOs.Events;
+using Event_And_Parking_Manage_system.DTOs.Events;
 
 namespace Event_And_Parking_Manage_system.Validators
 {
@@ -14,6 +14,9 @@ namespace Event_And_Parking_Manage_system.Validators
 
             if (dto.CategoryId <= 0)
                 return "Valid category is required.";
+
+            if (dto.EventDate.Date < DateTime.UtcNow.Date)
+                return "Event date cannot be in the past.";
 
             if (dto.Capacity <= 0)
                 return "Event capacity must be greater than zero.";
@@ -40,6 +43,9 @@ namespace Event_And_Parking_Manage_system.Validators
 
             if (dto.CategoryId <= 0)
                 return "Valid category is required.";
+
+            if (dto.EventDate.Date < DateTime.UtcNow.Date)
+                return "Event date cannot be in the past.";
 
             if (dto.Capacity <= 0)
                 return "Event capacity must be greater than zero.";
