@@ -253,6 +253,20 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 return false;
 
             // -----------------------------------------
+            // Check Ticket Price Change
+            // -----------------------------------------
+
+            if (dto.TicketPrice != eventEntity.TicketPrice)
+            {
+                var existingBookingsList = await _bookingRepository.GetByEventIdAsync(id);
+                if (existingBookingsList.Any())
+                {
+                    throw new InvalidOperationException(
+                        "Event ticket price cannot be changed because bookings already exist for this event.");
+                }
+            }
+
+            // -----------------------------------------
             // Check Venue
             // -----------------------------------------
 
