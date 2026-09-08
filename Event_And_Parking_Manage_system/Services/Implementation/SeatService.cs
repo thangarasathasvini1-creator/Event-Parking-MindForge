@@ -145,6 +145,20 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
             var seatNumber = dto.SeatNumber.Trim();
 
+            var existingBookings = await _bookingRepository.GetByEventIdAsync(eventId);
+            if (existingBookings.Any())
+            {
+                bool seatNumberChanged = !string.Equals(seat.SeatNumber, seatNumber, StringComparison.OrdinalIgnoreCase);
+                bool rowChanged = !string.Equals(seat.Row, dto.Row, StringComparison.OrdinalIgnoreCase);
+                bool columnChanged = !string.Equals(seat.Column, dto.Column, StringComparison.OrdinalIgnoreCase);
+
+                if (seatNumberChanged || rowChanged || columnChanged)
+                {
+                    throw new InvalidOperationException(
+                        "Seat map cannot be modified because bookings already exist for this event.");
+                }
+            }
+
             var duplicate = await _seatRepository
                 .ExistsBySeatNumberAsync(
                     eventId,
@@ -213,6 +227,13 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             {
                 throw new InvalidOperationException(
                     "Held or booked seats cannot be deleted.");
+            }
+
+            var eventBookings = await _bookingRepository.GetByEventIdAsync(eventId);
+            if (eventBookings.Any())
+            {
+                throw new InvalidOperationException(
+                    "Seat map cannot be modified because bookings already exist for this event.");
             }
 
             await _seatRepository.DeleteAsync(seat);

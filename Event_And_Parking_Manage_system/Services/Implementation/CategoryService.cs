@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.DTOs.Categories;
+using Event_And_Parking_Manage_system.DTOs.Categories;
 using Event_And_Parking_Manage_system.Models.Entities;
 using Event_And_Parking_Manage_system.Repositories.Interfaces;
 using Event_And_Parking_Manage_system.Services.Interfaces;
@@ -9,10 +9,14 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
     public class CategoryService : ICategoryService
     {
         private readonly ICategoryRepository _categoryRepository;
+        private readonly IEventRepository _eventRepository;
 
-        public CategoryService(ICategoryRepository categoryRepository)
+        public CategoryService(
+            ICategoryRepository categoryRepository,
+            IEventRepository eventRepository)
         {
             _categoryRepository = categoryRepository;
+            _eventRepository = eventRepository;
         }
 
         public async Task<IEnumerable<CategoryDto>> GetAllAsync()
@@ -116,6 +120,13 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
             if (category == null)
                 return false;
+
+            var categoryEvents = await _eventRepository.SearchAsync(null, id, null, null);
+            if (categoryEvents.Any())
+            {
+                throw new InvalidOperationException(
+                    "Event category cannot be deleted because events are using this category.");
+            }
 
             _categoryRepository.Delete(category);
 

@@ -131,17 +131,27 @@ namespace Event_And_Parking_Manage_system.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var deleted = await _venueService.DeleteAsync(id);
-
-            if (!deleted)
+            try
             {
-                return NotFound(new
+                var deleted = await _venueService.DeleteAsync(id);
+
+                if (!deleted)
                 {
-                    message = "Venue not found."
+                    return NotFound(new
+                    {
+                        message = "Venue not found."
+                    });
+                }
+
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new
+                {
+                    message = ex.Message
                 });
             }
-
-            return NoContent();
         }
     }
 }

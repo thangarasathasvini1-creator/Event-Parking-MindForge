@@ -18,6 +18,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
         private readonly ApplicationDbContext _context;
         private readonly INotificationService _notificationService;
         private readonly ILogger<BookingService> _logger;
+        private readonly IConfiguration _configuration;
 
         public BookingService(
             IBookingRepository bookingRepository,
@@ -26,7 +27,8 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             IParkingRepository parkingRepository,
             ApplicationDbContext context,
             INotificationService notificationService,
-            ILogger<BookingService> logger)
+            ILogger<BookingService> logger,
+            IConfiguration configuration)
         {
             _bookingRepository = bookingRepository;
             _eventRepository = eventRepository;
@@ -35,6 +37,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             _context = context;
             _notificationService = notificationService;
             _logger = logger;
+            _configuration = configuration;
         }
 
         // =========================================================
@@ -247,7 +250,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                         totalAmount,
 
                     HoldExpiresAt =
-                        now.AddMinutes(10),
+                        now.AddMinutes(GetConfiguredHoldMinutes()),
 
                     CreatedAt =
                         now
@@ -748,6 +751,17 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                     booking.Payment
                         ?.Status.ToString()
             };
+        }
+
+        // Helper - Read configured booking hold duration in minutes
+        private int GetConfiguredHoldMinutes()
+        {
+            var holdMinutesStr = _configuration["Booking:HoldMinutes"];
+            if (int.TryParse(holdMinutesStr, out var holdMinutes) && holdMinutes > 0)
+            {
+                return holdMinutes;
+            }
+            return 10;
         }
     }
 }
