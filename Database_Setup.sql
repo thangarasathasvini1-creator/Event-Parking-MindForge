@@ -272,7 +272,7 @@ BEGIN
         'System Administrator',
         'admin@eventparking.com',
         '+1234567890',
-        '$2a$11$qRzN7LqX7D4Z5YqW.7X6EO7oG/6.1n5/xX2mP5tL8z.6Y5/uJ7X2O', -- BCrypt hash for Admin@123
+        '$2a$11$JxKVvz.zhFWkSez5klHtNOFK0qe.3tIhOi96IDK13OETgsZFrkcbe', -- BCrypt hash for Admin@123
         2, -- Administrator
         1, -- Active
         1, -- EmailVerified
@@ -288,7 +288,7 @@ BEGIN
         'Demo Customer',
         'customer@eventparking.com',
         '+0987654321',
-        '$2a$11$qRzN7LqX7D4Z5YqW.7X6EO7oG/6.1n5/xX2mP5tL8z.6Y5/uJ7X2O', -- BCrypt hash for Customer@123
+        '$2a$11$5oeVwRQUloTm7KNmngnXduiB676uZflLCoQATC17I3JzU8aQ7oSMa', -- BCrypt hash for Customer@123
         1, -- Customer
         1, -- Active
         1, -- EmailVerified
