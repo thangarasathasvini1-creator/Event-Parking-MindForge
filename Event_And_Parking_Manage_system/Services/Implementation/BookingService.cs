@@ -64,6 +64,14 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                         "Event not found.");
                 }
 
+                // Verify event seat map completeness
+                var eventSeats = await _seatRepository.GetSeatsByEventIdAsync(dto.EventId);
+                if (eventSeats.Count() != eventEntity.Capacity)
+                {
+                    throw new InvalidOperationException(
+                        "Event seat map is incomplete. The number of seats must equal the event capacity before bookings can be created.");
+                }
+
                 // =================================================
                 // 2. Validate Seats
                 // =================================================
