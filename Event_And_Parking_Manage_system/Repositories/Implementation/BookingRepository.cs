@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.Data;
+using Event_And_Parking_Manage_system.Data;
 using Event_And_Parking_Manage_system.Models.Entities;
 using Event_And_Parking_Manage_system.Models.Enums;
 using Event_And_Parking_Manage_system.Repositories.Interfaces;
@@ -122,12 +122,17 @@ namespace Event_And_Parking_Manage_system.Repositories.Implementation
             int seatId,
             int eventId)
         {
+            var now = DateTime.UtcNow;
+
             return await _context.BookingSeats
                 .AnyAsync(bs =>
                     bs.SeatId == seatId &&
                     bs.Booking.EventId == eventId &&
                     bs.Booking.Status != BookingStatus.Cancelled &&
-                    bs.Booking.Status != BookingStatus.Expired);
+                    bs.Booking.Status != BookingStatus.Expired &&
+                    !(bs.Booking.Status == BookingStatus.Pending &&
+                      bs.Booking.HoldExpiresAt.HasValue &&
+                      bs.Booking.HoldExpiresAt.Value <= now));
         }
 
         // =========================================================
@@ -138,12 +143,17 @@ namespace Event_And_Parking_Manage_system.Repositories.Implementation
             int parkingSlotId,
             int eventId)
         {
+            var now = DateTime.UtcNow;
+
             return await _context.ParkingReservations
                 .AnyAsync(pr =>
                     pr.ParkingSlotId == parkingSlotId &&
                     pr.Booking.EventId == eventId &&
                     pr.Booking.Status != BookingStatus.Cancelled &&
-                    pr.Booking.Status != BookingStatus.Expired);
+                    pr.Booking.Status != BookingStatus.Expired &&
+                    !(pr.Booking.Status == BookingStatus.Pending &&
+                      pr.Booking.HoldExpiresAt.HasValue &&
+                      pr.Booking.HoldExpiresAt.Value <= now));
         }
 
         // =========================================================

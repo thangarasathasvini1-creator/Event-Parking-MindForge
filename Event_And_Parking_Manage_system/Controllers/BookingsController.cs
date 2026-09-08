@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.DTOs.Bookings;
+using Event_And_Parking_Manage_system.DTOs.Bookings;
 using Event_And_Parking_Manage_system.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -150,13 +150,24 @@ namespace Event_And_Parking_Manage_system.Controllers
         // Customer - Cancel booking
         // ==========================================
 
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "Customer,Administrator")]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> CancelBooking(
             int id,
             [FromBody] CancelBookingDto? dto)
         {
             var customerId = GetCustomerId();
+
+            if (User.IsInRole("Administrator"))
+            {
+                var targetBooking =
+                    await _bookingService.GetBookingByIdAsync(id);
+
+                if (targetBooking != null)
+                {
+                    customerId = targetBooking.CustomerId;
+                }
+            }
 
             if (customerId == null)
             {
