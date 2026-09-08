@@ -135,6 +135,17 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             if (venue == null)
                 return false;
 
+            var scheduledEvents = await _eventRepository.SearchAsync(null, null, id, null);
+            var now = DateTime.UtcNow;
+            var upcomingEvents = scheduledEvents.Where(e =>
+                e.EventDate.Date.Add(e.StartTime) >= now).ToList();
+
+            if (upcomingEvents.Any())
+            {
+                throw new InvalidOperationException(
+                    "Venue cannot be deleted because upcoming events exist for this venue.");
+            }
+
             _venueRepository.Delete(venue);
 
             return await _venueRepository.SaveChangesAsync();
