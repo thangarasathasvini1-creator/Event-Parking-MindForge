@@ -1,4 +1,5 @@
 ﻿using Event_And_Parking_Manage_system.DTOs.Parking;
+using Event_And_Parking_Manage_system.Models.Enums;
 using Event_And_Parking_Manage_system.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +18,11 @@ namespace Event_And_Parking_Manage_system.Controllers
             _parkingService = parkingService;
         }
 
+        // ==========================================
+        // Get all parking slots for an event
         // GET: api/events/{eventId}/parking-slots
+        // ==========================================
+
         [HttpGet]
         public async Task<IActionResult> GetParkingSlots(int eventId)
         {
@@ -27,7 +32,39 @@ namespace Event_And_Parking_Manage_system.Controllers
             return Ok(slots);
         }
 
+        // ==========================================
+        // Get available parking slots by vehicle type
+        // GET: api/events/{eventId}/parking-slots/available?vehicleType=Car
+        // ==========================================
+
+        [HttpGet("available")]
+        public async Task<IActionResult> GetAvailableParkingSlots(
+            int eventId,
+            [FromQuery] VehicleType vehicleType)
+        {
+            try
+            {
+                var slots = await _parkingService
+                    .GetAvailableSlotsByEventAndVehicleTypeAsync(
+                        eventId,
+                        vehicleType);
+
+                return Ok(slots);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
+        // ==========================================
+        // Get single parking slot
         // GET: api/events/{eventId}/parking-slots/{slotId}
+        // ==========================================
+
         [HttpGet("{slotId:int}")]
         public async Task<IActionResult> GetParkingSlot(
             int eventId,
@@ -47,7 +84,11 @@ namespace Event_And_Parking_Manage_system.Controllers
             return Ok(slot);
         }
 
+        // ==========================================
+        // Create parking slot
         // POST: api/events/{eventId}/parking-slots
+        // ==========================================
+
         [Authorize(Roles = "Administrator")]
         [HttpPost]
         public async Task<IActionResult> CreateParkingSlot(
@@ -84,7 +125,11 @@ namespace Event_And_Parking_Manage_system.Controllers
             }
         }
 
+        // ==========================================
+        // Update parking slot
         // PUT: api/events/{eventId}/parking-slots/{slotId}
+        // ==========================================
+
         [Authorize(Roles = "Administrator")]
         [HttpPut("{slotId:int}")]
         public async Task<IActionResult> UpdateParkingSlot(
@@ -125,7 +170,11 @@ namespace Event_And_Parking_Manage_system.Controllers
             }
         }
 
+        // ==========================================
+        // Delete parking slot
         // DELETE: api/events/{eventId}/parking-slots/{slotId}
+        // ==========================================
+
         [Authorize(Roles = "Administrator")]
         [HttpDelete("{slotId:int}")]
         public async Task<IActionResult> DeleteParkingSlot(

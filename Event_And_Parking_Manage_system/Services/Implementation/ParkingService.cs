@@ -39,6 +39,29 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
         }
 
         // ==========================================
+        // Get available parking slots by vehicle type
+        // ==========================================
+
+        public async Task<IEnumerable<ParkingSlotDto>>
+            GetAvailableSlotsByEventAndVehicleTypeAsync(
+                int eventId,
+                VehicleType vehicleType)
+        {
+            if (!Enum.IsDefined(typeof(VehicleType), vehicleType))
+            {
+                throw new ArgumentException(
+                    "Invalid vehicle type.");
+            }
+
+            var slots = await _parkingRepository
+                .GetAvailableSlotsByEventAndVehicleTypeAsync(
+                    eventId,
+                    vehicleType);
+
+            return slots.Select(MapToDto);
+        }
+
+        // ==========================================
         // Get a single parking slot
         // ==========================================
 
@@ -68,6 +91,14 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                     "Parking slot number is required.");
             }
 
+            if (!Enum.IsDefined(
+                    typeof(VehicleType),
+                    dto.VehicleType))
+            {
+                throw new ArgumentException(
+                    "Invalid vehicle type.");
+            }
+
             if (dto.Fee < 0)
             {
                 throw new ArgumentException(
@@ -91,8 +122,14 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             {
                 EventId = eventId,
                 SlotNumber = slotNumber,
-                Zone = dto.Zone,
+                Zone = dto.Zone?.Trim(),
+
+                // Vehicle type
+                VehicleType = dto.VehicleType,
+
+                // Parking fee
                 Fee = dto.Fee,
+
                 Status = ParkingSlotStatus.Available,
                 CreatedAt = DateTime.UtcNow
             };
@@ -124,6 +161,22 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                     "Parking slot number is required.");
             }
 
+            if (!Enum.IsDefined(
+                    typeof(VehicleType),
+                    dto.VehicleType))
+            {
+                throw new ArgumentException(
+                    "Invalid vehicle type.");
+            }
+
+            if (!Enum.IsDefined(
+                    typeof(ParkingSlotStatus),
+                    dto.Status))
+            {
+                throw new ArgumentException(
+                    "Invalid parking slot status.");
+            }
+
             if (dto.Fee < 0)
             {
                 throw new ArgumentException(
@@ -147,8 +200,10 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                     "Parking slot number already exists for this event.");
             }
 
-            // Do not modify an occupied slot
-            // into another state.
+            // ------------------------------------------
+            // Occupied slot protection
+            // ------------------------------------------
+
             if (slot.Status == ParkingSlotStatus.Occupied &&
                 dto.Status != ParkingSlotStatus.Occupied)
             {
@@ -156,9 +211,27 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                     "An occupied parking slot cannot be changed.");
             }
 
+            // ------------------------------------------
+            // Held/Occupied vehicle type protection
+            // ------------------------------------------
+
+            if ((slot.Status == ParkingSlotStatus.Held ||
+                 slot.Status == ParkingSlotStatus.Occupied) &&
+                slot.VehicleType != dto.VehicleType)
+            {
+                throw new InvalidOperationException(
+                    "Vehicle type cannot be changed for a held or occupied parking slot.");
+            }
+
             slot.SlotNumber = slotNumber;
-            slot.Zone = dto.Zone;
+            slot.Zone = dto.Zone?.Trim();
+
+            // Vehicle type
+            slot.VehicleType = dto.VehicleType;
+
+            // Parking fee
             slot.Fee = dto.Fee;
+
             slot.Status = dto.Status;
             slot.UpdatedAt = DateTime.UtcNow;
 
@@ -320,7 +393,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                     BookingId = booking.BookingId,
                     ParkingSlotId = parkingSlot.ParkingSlotId,
 
-                    // Store the parking fee at reservation time.
+                    // Store parking fee at reservation time
                     ReservedFee = parkingSlot.Fee,
 
                     CreatedAt = DateTime.UtcNow
@@ -531,6 +604,10 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 EventId = slot.EventId,
                 SlotNumber = slot.SlotNumber,
                 Zone = slot.Zone,
+
+                // Vehicle type
+                VehicleType = slot.VehicleType,
+
                 Fee = slot.Fee,
                 Status = slot.Status
             };

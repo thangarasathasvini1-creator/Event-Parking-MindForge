@@ -12,6 +12,8 @@ namespace Event_And_Parking_Manage_system.Models.Entities
 
         public string? Zone { get; set; }
 
+        public VehicleType VehicleType { get; set; }
+
         public decimal Fee { get; set; }
 
         public ParkingSlotStatus Status { get; set; }
@@ -30,7 +32,8 @@ namespace Event_And_Parking_Manage_system.Models.Entities
         public Event Event { get; set; } = null!;
 
         public ICollection<ParkingReservation> ParkingReservations
-        { get; set; }
-            = new List<ParkingReservation>();
+        {
+            get; set;
+        } = new List<ParkingReservation>();
     }
 }
