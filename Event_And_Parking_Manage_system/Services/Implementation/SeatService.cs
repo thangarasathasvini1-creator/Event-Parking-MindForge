@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.Data;
+using Event_And_Parking_Manage_system.Data;
 using Event_And_Parking_Manage_system.DTOs.Seats;
 using Event_And_Parking_Manage_system.Models.Entities;
 using Event_And_Parking_Manage_system.Models.Enums;
@@ -302,15 +302,32 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
                 var now = DateTime.UtcNow;
 
+                var eventEntity = await _eventRepository
+                    .GetByIdAsync(booking.EventId);
+
+                var ticketPrice = eventEntity?.TicketPrice ?? 0m;
+
                 foreach (var seat in seats)
                 {
                     seat.Status = SeatStatus.Held;
                     seat.UpdatedAt = now;
 
+                    booking.BookingSeats.Add(new BookingSeat
+                    {
+                        BookingId = booking.BookingId,
+                        SeatId = seat.SeatId,
+                        CreatedAt = now
+                    });
+
                     await _seatRepository.UpdateAsync(seat);
                 }
 
-                await _seatRepository.SaveChangesAsync();
+                booking.TotalAmount += ticketPrice * seats.Count;
+                booking.UpdatedAt = now;
+
+                await _bookingRepository.UpdateAsync(booking);
+
+                await _context.SaveChangesAsync();
 
                 await transaction.CommitAsync();
 

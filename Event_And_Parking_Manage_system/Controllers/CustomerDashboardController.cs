@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.Services.Interfaces;
+using Event_And_Parking_Manage_system.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -22,7 +22,8 @@ namespace Event_And_Parking_Manage_system.Controllers
         public async Task<IActionResult> GetCustomerDashboard()
         {
             var customerIdClaim =
-                User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                User.FindFirst("CustomerId")?.Value
+                ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (!int.TryParse(customerIdClaim, out var customerId))
             {
