@@ -106,6 +106,8 @@ namespace Event_And_Parking_Manage_system.Data
                         EndTime = new TimeSpan(22, 0, 0),
                         TicketPrice = 5000,
                         ParkingFee = 500,
+
+                        // 10 rows × 10 columns = 100 seats
                         Capacity = 100
                     },
 
@@ -119,6 +121,8 @@ namespace Event_And_Parking_Manage_system.Data
                         EndTime = new TimeSpan(17, 0, 0),
                         TicketPrice = 7500,
                         ParkingFee = 750,
+
+                        // 15 rows × 10 columns = 150 seats
                         Capacity = 150
                     },
 
@@ -132,6 +136,8 @@ namespace Event_And_Parking_Manage_system.Data
                         EndTime = new TimeSpan(21, 0, 0),
                         TicketPrice = 3000,
                         ParkingFee = 300,
+
+                        // 20 rows × 10 columns = 200 seats
                         Capacity = 200
                     }
                 };
@@ -154,18 +160,44 @@ namespace Event_And_Parking_Manage_system.Data
 
                 foreach (var eventItem in events)
                 {
-                    // Create 20 seats per event
-                    for (int row = 1; row <= 4; row++)
+                    /*
+                     * Seat count must be equal to Event.Capacity.
+                     *
+                     * Event 1 → Capacity 100 → 10 × 10
+                     * Event 2 → Capacity 150 → 15 × 10
+                     * Event 3 → Capacity 200 → 20 × 10
+                     */
+
+                    int columns = 10;
+                    int rows = (int)Math.Ceiling(
+                        (double)eventItem.Capacity / columns);
+
+                    int seatCounter = 0;
+
+                    for (int row = 1; row <= rows; row++)
                     {
-                        for (int column = 1; column <= 5; column++)
+                        for (int column = 1;
+                             column <= columns;
+                             column++)
                         {
+                            if (seatCounter >= eventItem.Capacity)
+                                break;
+
+                            seatCounter++;
+
                             seats.Add(new Seat
                             {
                                 EventId = eventItem.EventId,
+
                                 SeatNumber = $"R{row}-C{column}",
+
                                 Row = $"R{row}",
+
                                 Column = $"C{column}",
-                                Status = SeatStatus.Available
+
+                                Status = SeatStatus.Available,
+
+                                CreatedAt = DateTime.UtcNow
                             });
                         }
                     }
@@ -198,11 +230,18 @@ namespace Event_And_Parking_Manage_system.Data
                         parkingSlots.Add(new ParkingSlot
                         {
                             EventId = eventItem.EventId,
+
                             SlotNumber = $"C-{i:00}",
+
                             Zone = "A",
+
                             VehicleType = VehicleType.Car,
+
                             Fee = eventItem.ParkingFee,
-                            Status = ParkingSlotStatus.Available
+
+                            Status = ParkingSlotStatus.Available,
+
+                            CreatedAt = DateTime.UtcNow
                         });
                     }
 
@@ -215,11 +254,18 @@ namespace Event_And_Parking_Manage_system.Data
                         parkingSlots.Add(new ParkingSlot
                         {
                             EventId = eventItem.EventId,
+
                             SlotNumber = $"B-{i:00}",
+
                             Zone = "B",
+
                             VehicleType = VehicleType.Bike,
+
                             Fee = eventItem.ParkingFee * 0.5m,
-                            Status = ParkingSlotStatus.Available
+
+                            Status = ParkingSlotStatus.Available,
+
+                            CreatedAt = DateTime.UtcNow
                         });
                     }
 
@@ -232,11 +278,18 @@ namespace Event_And_Parking_Manage_system.Data
                         parkingSlots.Add(new ParkingSlot
                         {
                             EventId = eventItem.EventId,
+
                             SlotNumber = $"BUS-{i:00}",
+
                             Zone = "C",
+
                             VehicleType = VehicleType.Bus,
+
                             Fee = eventItem.ParkingFee * 2m,
-                            Status = ParkingSlotStatus.Available
+
+                            Status = ParkingSlotStatus.Available,
+
+                            CreatedAt = DateTime.UtcNow
                         });
                     }
 
@@ -247,11 +300,18 @@ namespace Event_And_Parking_Manage_system.Data
                     parkingSlots.Add(new ParkingSlot
                     {
                         EventId = eventItem.EventId,
+
                         SlotNumber = "V-01",
+
                         Zone = "C",
+
                         VehicleType = VehicleType.Van,
+
                         Fee = eventItem.ParkingFee * 1.5m,
-                        Status = ParkingSlotStatus.Available
+
+                        Status = ParkingSlotStatus.Available,
+
+                        CreatedAt = DateTime.UtcNow
                     });
                 }
 
@@ -264,11 +324,12 @@ namespace Event_And_Parking_Manage_system.Data
             // =========================
 
             var adminEmail = "psujee07@gmail.com";
+
             var customerEmail = "sujeepansujee07@gmail.com";
 
-            // -------------------------
+            // =========================
             // Administrator
-            // -------------------------
+            // =========================
 
             if (!await context.Customers
                 .AnyAsync(x => x.Email == adminEmail))
@@ -276,23 +337,31 @@ namespace Event_And_Parking_Manage_system.Data
                 var admin = new Customer
                 {
                     Name = "System Administrator",
+
                     Email = adminEmail,
+
                     Phone = "0771234567",
+
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(
                         "Admin@12345"),
+
                     Role = UserRole.Administrator,
+
                     Status = CustomerStatus.Active,
+
                     EmailVerified = true,
+
                     CreatedAt = DateTime.UtcNow
                 };
 
                 await context.Customers.AddAsync(admin);
+
                 await context.SaveChangesAsync();
             }
 
-            // -------------------------
+            // =========================
             // Customer
-            // -------------------------
+            // =========================
 
             if (!await context.Customers
                 .AnyAsync(x => x.Email == customerEmail))
@@ -300,17 +369,25 @@ namespace Event_And_Parking_Manage_system.Data
                 var customer = new Customer
                 {
                     Name = "Demo Customer",
+
                     Email = customerEmail,
+
                     Phone = "0777654321",
+
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(
                         "Customer@12345"),
+
                     Role = UserRole.Customer,
+
                     Status = CustomerStatus.Active,
+
                     EmailVerified = true,
+
                     CreatedAt = DateTime.UtcNow
                 };
 
                 await context.Customers.AddAsync(customer);
+
                 await context.SaveChangesAsync();
             }
         }

@@ -253,16 +253,22 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 return false;
 
             // -----------------------------------------
-            // Check Ticket Price Change
+            // Check Booking Restrictions (VenueId, EventDate, StartTime, EndTime, TicketPrice)
             // -----------------------------------------
 
-            if (dto.TicketPrice != eventEntity.TicketPrice)
+            var existingBookingsList = await _bookingRepository.GetByEventIdAsync(id);
+            if (existingBookingsList.Any())
             {
-                var existingBookingsList = await _bookingRepository.GetByEventIdAsync(id);
-                if (existingBookingsList.Any())
+                bool venueChanged = dto.VenueId != eventEntity.VenueId;
+                bool dateChanged = dto.EventDate.Date != eventEntity.EventDate.Date;
+                bool startTimeChanged = dto.StartTime != eventEntity.StartTime;
+                bool endTimeChanged = dto.EndTime != eventEntity.EndTime;
+                bool ticketPriceChanged = dto.TicketPrice != eventEntity.TicketPrice;
+
+                if (venueChanged || dateChanged || startTimeChanged || endTimeChanged || ticketPriceChanged)
                 {
                     throw new InvalidOperationException(
-                        "Event ticket price cannot be changed because bookings already exist for this event.");
+                        "Event details cannot be changed because bookings already exist for this event.");
                 }
             }
 

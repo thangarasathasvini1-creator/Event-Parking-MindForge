@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.Data;
+using Event_And_Parking_Manage_system.Data;
 using Event_And_Parking_Manage_system.DTOs.Parking;
 using Event_And_Parking_Manage_system.Models.Entities;
 using Event_And_Parking_Manage_system.Models.Enums;
@@ -201,26 +201,30 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             }
 
             // ------------------------------------------
-            // Occupied slot protection
+            // Active reservation protection (Occupied / Held)
             // ------------------------------------------
 
-            if (slot.Status == ParkingSlotStatus.Occupied &&
-                dto.Status != ParkingSlotStatus.Occupied)
+            if (slot.Status == ParkingSlotStatus.Occupied)
             {
-                throw new InvalidOperationException(
-                    "An occupied parking slot cannot be changed.");
+                if (dto.Status != ParkingSlotStatus.Occupied ||
+                    !string.Equals(slot.SlotNumber, slotNumber, StringComparison.OrdinalIgnoreCase) ||
+                    !string.Equals(slot.Zone?.Trim(), dto.Zone?.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                    slot.VehicleType != dto.VehicleType)
+                {
+                    throw new InvalidOperationException(
+                        "Parking slot cannot be modified because it has an active reservation.");
+                }
             }
 
-            // ------------------------------------------
-            // Held/Occupied vehicle type protection
-            // ------------------------------------------
-
-            if ((slot.Status == ParkingSlotStatus.Held ||
-                 slot.Status == ParkingSlotStatus.Occupied) &&
-                slot.VehicleType != dto.VehicleType)
+            if (slot.Status == ParkingSlotStatus.Held)
             {
-                throw new InvalidOperationException(
-                    "Vehicle type cannot be changed for a held or occupied parking slot.");
+                if (!string.Equals(slot.SlotNumber, slotNumber, StringComparison.OrdinalIgnoreCase) ||
+                    !string.Equals(slot.Zone?.Trim(), dto.Zone?.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                    slot.VehicleType != dto.VehicleType)
+                {
+                    throw new InvalidOperationException(
+                        "Parking slot cannot be modified because it has an active reservation.");
+                }
             }
 
             slot.SlotNumber = slotNumber;
@@ -268,7 +272,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 slot.Status == ParkingSlotStatus.Held)
             {
                 throw new InvalidOperationException(
-                    "Held or occupied parking slots cannot be deleted.");
+                    "Parking slot cannot be modified because it has an active reservation.");
             }
 
             await _parkingRepository.DeleteAsync(slot);

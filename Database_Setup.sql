@@ -297,93 +297,158 @@ BEGIN
 END
 
 -- 3. Seed Event Categories
-IF NOT EXISTS (SELECT 1 FROM dbo.EventCategories WHERE Name = 'Concerts')
+IF NOT EXISTS (SELECT 1 FROM dbo.EventCategories WHERE Name = 'Music')
 BEGIN
     INSERT INTO dbo.EventCategories (Name, Description, CreatedAt)
-    VALUES ('Concerts', 'Live music performances and orchestra shows', SYSUTCDATETIME());
+    VALUES ('Music', 'Music concerts and live performances', SYSUTCDATETIME());
+END
+
+IF NOT EXISTS (SELECT 1 FROM dbo.EventCategories WHERE Name = 'Conference')
+BEGIN
+    INSERT INTO dbo.EventCategories (Name, Description, CreatedAt)
+    VALUES ('Conference', 'Professional conferences and seminars', SYSUTCDATETIME());
 END
 
 IF NOT EXISTS (SELECT 1 FROM dbo.EventCategories WHERE Name = 'Sports')
 BEGIN
     INSERT INTO dbo.EventCategories (Name, Description, CreatedAt)
-    VALUES ('Sports', 'Athletic events, matches, and tournaments', SYSUTCDATETIME());
+    VALUES ('Sports', 'Sports events and competitions', SYSUTCDATETIME());
 END
 
-IF NOT EXISTS (SELECT 1 FROM dbo.EventCategories WHERE Name = 'Conferences')
-BEGIN
-    INSERT INTO dbo.EventCategories (Name, Description, CreatedAt)
-    VALUES ('Conferences', 'Tech summits, business seminars, and expos', SYSUTCDATETIME());
-END
-
--- 4. Seed Venue
-IF NOT EXISTS (SELECT 1 FROM dbo.Venues WHERE Name = 'Grand City Arena')
+-- 4. Seed Venues
+IF NOT EXISTS (SELECT 1 FROM dbo.Venues WHERE Name = 'Colombo Convention Centre')
 BEGIN
     INSERT INTO dbo.Venues (Name, Address, TotalCapacity, CreatedAt)
-    VALUES ('Grand City Arena', '100 Stadium Way, Tech City', 500, SYSUTCDATETIME());
+    VALUES ('Colombo Convention Centre', 'Colombo, Sri Lanka', 500, SYSUTCDATETIME());
 END
 
--- 5. Seed Event
-DECLARE @VenueId INT, @CategoryId INT, @EventId INT;
-
-SELECT TOP 1 @VenueId = VenueId FROM dbo.Venues WHERE Name = 'Grand City Arena';
-SELECT TOP 1 @CategoryId = CategoryId FROM dbo.EventCategories WHERE Name = 'Concerts';
-
-IF @VenueId IS NOT NULL AND @CategoryId IS NOT NULL
+IF NOT EXISTS (SELECT 1 FROM dbo.Venues WHERE Name = 'BMICH')
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM dbo.Events WHERE Name = 'Grand Symphony Concert 2026')
+    INSERT INTO dbo.Venues (Name, Address, TotalCapacity, CreatedAt)
+    VALUES ('BMICH', 'Bauddhaloka Mawatha, Colombo', 1000, SYSUTCDATETIME());
+END
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Venues WHERE Name = 'Sugathadasa Stadium')
+BEGIN
+    INSERT INTO dbo.Venues (Name, Address, TotalCapacity, CreatedAt)
+    VALUES ('Sugathadasa Stadium', 'Colombo, Sri Lanka', 2000, SYSUTCDATETIME());
+END
+
+-- 5. Seed Events
+DECLARE @ConventionCentreId INT, @BmichId INT, @StadiumId INT;
+DECLARE @MusicCatId INT, @ConfCatId INT, @SportsCatId INT;
+
+SELECT TOP 1 @ConventionCentreId = VenueId FROM dbo.Venues WHERE Name = 'Colombo Convention Centre';
+SELECT TOP 1 @BmichId = VenueId FROM dbo.Venues WHERE Name = 'BMICH';
+SELECT TOP 1 @StadiumId = VenueId FROM dbo.Venues WHERE Name = 'Sugathadasa Stadium';
+
+SELECT TOP 1 @MusicCatId = CategoryId FROM dbo.EventCategories WHERE Name = 'Music';
+SELECT TOP 1 @ConfCatId = CategoryId FROM dbo.EventCategories WHERE Name = 'Conference';
+SELECT TOP 1 @SportsCatId = CategoryId FROM dbo.EventCategories WHERE Name = 'Sports';
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Events WHERE Name = 'Colombo Music Festival')
+BEGIN
+    INSERT INTO dbo.Events (Name, VenueId, CategoryId, EventDate, StartTime, EndTime, TicketPrice, ParkingFee, Capacity, CreatedAt)
+    VALUES ('Colombo Music Festival', @ConventionCentreId, @MusicCatId, DATEADD(DAY, 30, SYSUTCDATETIME()), '18:00:00', '22:00:00', 5000.00, 500.00, 100, SYSUTCDATETIME());
+END
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Events WHERE Name = 'Technology Conference 2026')
+BEGIN
+    INSERT INTO dbo.Events (Name, VenueId, CategoryId, EventDate, StartTime, EndTime, TicketPrice, ParkingFee, Capacity, CreatedAt)
+    VALUES ('Technology Conference 2026', @BmichId, @ConfCatId, DATEADD(DAY, 45, SYSUTCDATETIME()), '09:00:00', '17:00:00', 7500.00, 750.00, 150, SYSUTCDATETIME());
+END
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Events WHERE Name = 'Colombo Sports Championship')
+BEGIN
+    INSERT INTO dbo.Events (Name, VenueId, CategoryId, EventDate, StartTime, EndTime, TicketPrice, ParkingFee, Capacity, CreatedAt)
+    VALUES ('Colombo Sports Championship', @StadiumId, @SportsCatId, DATEADD(DAY, 60, SYSUTCDATETIME()), '16:00:00', '21:00:00', 3000.00, 300.00, 200, SYSUTCDATETIME());
+END
+
+-- 6. Seed Seats matching Event Capacities (100, 150, 200 seats)
+IF NOT EXISTS (SELECT 1 FROM dbo.Seats)
+BEGIN
+    DECLARE @CurEventId INT, @Capacity INT;
+    DECLARE EventCursor CURSOR FOR 
+        SELECT EventId, Capacity FROM dbo.Events ORDER BY EventId;
+
+    OPEN EventCursor;
+    FETCH NEXT FROM EventCursor INTO @CurEventId, @Capacity;
+
+    WHILE @@FETCH_STATUS = 0
     BEGIN
-        INSERT INTO dbo.Events (Name, VenueId, CategoryId, EventDate, StartTime, EndTime, TicketPrice, ParkingFee, Capacity, CreatedAt)
-        VALUES (
-            'Grand Symphony Concert 2026',
-            @VenueId,
-            @CategoryId,
-            DATEADD(DAY, 30, SYSUTCDATETIME()),
-            '18:00:00',
-            '22:00:00',
-            150.00,
-            20.00,
-            10,
-            SYSUTCDATETIME()
-        );
+        DECLARE @Cols INT = 10;
+        DECLARE @Rows INT = CEILING(CAST(@Capacity AS FLOAT) / @Cols);
+        DECLARE @SeatCount INT = 0;
+        DECLARE @R INT = 1;
+
+        WHILE @R <= @Rows AND @SeatCount < @Capacity
+        BEGIN
+            DECLARE @C INT = 1;
+            WHILE @C <= @Cols AND @SeatCount < @Capacity
+            BEGIN
+                SET @SeatCount = @SeatCount + 1;
+                INSERT INTO dbo.Seats (EventId, SeatNumber, Row, Column, Status, CreatedAt)
+                VALUES (@CurEventId, CONCAT('R', @R, '-C', @C), CONCAT('R', @R), CONCAT('C', @C), 1, SYSUTCDATETIME());
+                SET @C = @C + 1;
+            END
+            SET @R = @R + 1;
+        END
+
+        FETCH NEXT FROM EventCursor INTO @CurEventId, @Capacity;
     END
 
-    SELECT TOP 1 @EventId = EventId FROM dbo.Events WHERE Name = 'Grand Symphony Concert 2026';
+    CLOSE EventCursor;
+    DEALLOCATE EventCursor;
+END
 
-    -- 6. Seed Seats for Event (Capacity = 10 seats)
-    IF @EventId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.Seats WHERE EventId = @EventId)
-    BEGIN
-        INSERT INTO dbo.Seats (EventId, SeatNumber, Row, Column, Status, CreatedAt)
-        VALUES
-            (@EventId, 'A-01', 'A', '1', 1, SYSUTCDATETIME()),
-            (@EventId, 'A-02', 'A', '2', 1, SYSUTCDATETIME()),
-            (@EventId, 'A-03', 'A', '3', 1, SYSUTCDATETIME()),
-            (@EventId, 'A-04', 'A', '4', 1, SYSUTCDATETIME()),
-            (@EventId, 'A-05', 'A', '5', 1, SYSUTCDATETIME()),
-            (@EventId, 'B-01', 'B', '1', 1, SYSUTCDATETIME()),
-            (@EventId, 'B-02', 'B', '2', 1, SYSUTCDATETIME()),
-            (@EventId, 'B-03', 'B', '3', 1, SYSUTCDATETIME()),
-            (@EventId, 'B-04', 'B', '4', 1, SYSUTCDATETIME()),
-            (@EventId, 'B-05', 'B', '5', 1, SYSUTCDATETIME());
-    END
+-- 7. Seed Parking Slots for each Event
+IF NOT EXISTS (SELECT 1 FROM dbo.ParkingSlots)
+BEGIN
+    DECLARE @PEventId INT, @PFee DECIMAL(10,2);
+    DECLARE ParkingCursor CURSOR FOR 
+        SELECT EventId, ParkingFee FROM dbo.Events ORDER BY EventId;
 
-    -- 7. Seed Parking Slots for Event demonstrating VehicleType
-    -- Car = 1, Bike = 2, Bus = 3, Van = 4
-    IF @EventId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.ParkingSlots WHERE EventId = @EventId)
+    OPEN ParkingCursor;
+    FETCH NEXT FROM ParkingCursor INTO @PEventId, @PFee;
+
+    WHILE @@FETCH_STATUS = 0
     BEGIN
+        -- 4 Car Slots
+        DECLARE @i INT = 1;
+        WHILE @i <= 4
+        BEGIN
+            INSERT INTO dbo.ParkingSlots (EventId, SlotNumber, Zone, VehicleType, Fee, Status, CreatedAt)
+            VALUES (@PEventId, CONCAT('C-', RIGHT('0' + CAST(@i AS VARCHAR(2)), 2)), 'A', 1, @PFee, 1, SYSUTCDATETIME());
+            SET @i = @i + 1;
+        END
+
+        -- 3 Bike Slots
+        SET @i = 1;
+        WHILE @i <= 3
+        BEGIN
+            INSERT INTO dbo.ParkingSlots (EventId, SlotNumber, Zone, VehicleType, Fee, Status, CreatedAt)
+            VALUES (@PEventId, CONCAT('B-', RIGHT('0' + CAST(@i AS VARCHAR(2)), 2)), 'B', 2, @PFee * 0.5, 1, SYSUTCDATETIME());
+            SET @i = @i + 1;
+        END
+
+        -- 2 Bus Slots
+        SET @i = 1;
+        WHILE @i <= 2
+        BEGIN
+            INSERT INTO dbo.ParkingSlots (EventId, SlotNumber, Zone, VehicleType, Fee, Status, CreatedAt)
+            VALUES (@PEventId, CONCAT('BUS-', RIGHT('0' + CAST(@i AS VARCHAR(2)), 2)), 'C', 3, @PFee * 2.0, 1, SYSUTCDATETIME());
+            SET @i = @i + 1;
+        END
+
+        -- 1 Van Slot
         INSERT INTO dbo.ParkingSlots (EventId, SlotNumber, Zone, VehicleType, Fee, Status, CreatedAt)
-        VALUES
-            -- Car Slots (VehicleType = 1)
-            (@EventId, 'C-01', 'Zone A', 1, 20.00, 1, SYSUTCDATETIME()),
-            (@EventId, 'C-02', 'Zone A', 1, 20.00, 1, SYSUTCDATETIME()),
-            (@EventId, 'C-03', 'Zone A', 1, 20.00, 1, SYSUTCDATETIME()),
-            -- Bike Slots (VehicleType = 2)
-            (@EventId, 'B-01', 'Zone B', 2, 10.00, 1, SYSUTCDATETIME()),
-            (@EventId, 'B-02', 'Zone B', 2, 10.00, 1, SYSUTCDATETIME()),
-            -- Bus Slot (VehicleType = 3)
-            (@EventId, 'BUS-01', 'Zone C', 3, 50.00, 1, SYSUTCDATETIME()),
-            -- Van Slot (VehicleType = 4)
-            (@EventId, 'V-01', 'Zone C', 4, 30.00, 1, SYSUTCDATETIME());
+        VALUES (@PEventId, 'V-01', 'C', 4, @PFee * 1.5, 1, SYSUTCDATETIME());
+
+        FETCH NEXT FROM ParkingCursor INTO @PEventId, @PFee;
     END
+
+    CLOSE ParkingCursor;
+    DEALLOCATE ParkingCursor;
 END
 GO
 
