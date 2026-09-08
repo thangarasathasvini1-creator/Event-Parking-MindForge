@@ -1,9 +1,15 @@
-﻿namespace Event_And_Parking_Manage_system.DTOs.Parking
+﻿using Event_And_Parking_Manage_system.Models.Enums;
+
+namespace Event_And_Parking_Manage_system.DTOs.Parking
 {
     public class CreateParkingSlotDto
     {
         public string SlotNumber { get; set; } = string.Empty;
+
         public string? Zone { get; set; }
+
+        public VehicleType VehicleType { get; set; }
+
         public decimal Fee { get; set; }
     }
 }

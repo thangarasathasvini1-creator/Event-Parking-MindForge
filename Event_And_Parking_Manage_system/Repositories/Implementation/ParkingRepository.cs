@@ -1,9 +1,10 @@
 ﻿using Event_And_Parking_Manage_system.Data;
 using Event_And_Parking_Manage_system.Models.Entities;
+using Event_And_Parking_Manage_system.Models.Enums;
 using Event_And_Parking_Manage_system.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace Event_And_Parking_Manage_system.Repositories.Implementation
+namespace Event_And_Parking_Manage_system.Repositories
 {
     public class ParkingRepository : IParkingRepository
     {
@@ -23,12 +24,24 @@ namespace Event_And_Parking_Manage_system.Repositories.Implementation
                 .ToListAsync();
         }
 
-        public async Task<ParkingSlot?> GetByIdAsync(
-            int parkingSlotId)
+        public async Task<IEnumerable<ParkingSlot>>
+            GetAvailableSlotsByEventAndVehicleTypeAsync(
+                int eventId,
+                VehicleType vehicleType)
         {
             return await _context.ParkingSlots
-                .FirstOrDefaultAsync(
-                    x => x.ParkingSlotId == parkingSlotId);
+                .Where(x =>
+                    x.EventId == eventId &&
+                    x.VehicleType == vehicleType &&
+                    x.Status == ParkingSlotStatus.Available)
+                .OrderBy(x => x.SlotNumber)
+                .ToListAsync();
+        }
+
+        public async Task<ParkingSlot?> GetByIdAsync(int parkingSlotId)
+        {
+            return await _context.ParkingSlots
+                .FirstOrDefaultAsync(x => x.ParkingSlotId == parkingSlotId);
         }
 
         public async Task<IEnumerable<ParkingSlot>> GetByIdsAsync(
@@ -60,16 +73,18 @@ namespace Event_And_Parking_Manage_system.Repositories.Implementation
             await _context.ParkingSlots.AddAsync(parkingSlot);
         }
 
-        public Task UpdateAsync(ParkingSlot parkingSlot)
+        public async Task UpdateAsync(ParkingSlot parkingSlot)
         {
             _context.ParkingSlots.Update(parkingSlot);
-            return Task.CompletedTask;
+
+            await Task.CompletedTask;
         }
 
-        public Task DeleteAsync(ParkingSlot parkingSlot)
+        public async Task DeleteAsync(ParkingSlot parkingSlot)
         {
             _context.ParkingSlots.Remove(parkingSlot);
-            return Task.CompletedTask;
+
+            await Task.CompletedTask;
         }
 
         public async Task SaveChangesAsync()

@@ -21,6 +21,10 @@ namespace Event_And_Parking_Manage_system.Data.Configurations
             builder.Property(x => x.Zone)
                 .HasMaxLength(50);
 
+            // Vehicle Type
+            builder.Property(x => x.VehicleType)
+                .IsRequired();
+
             // Parking Fee
             builder.Property(x => x.Fee)
                 .HasPrecision(10, 2);
