@@ -93,6 +93,13 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                     "Seat number already exists for this event.");
             }
 
+            var existingSeats = await _seatRepository.GetSeatsByEventIdAsync(eventId);
+            if (existingSeats.Count() >= eventEntity.Capacity)
+            {
+                throw new InvalidOperationException(
+                    "Seat count cannot exceed event capacity.");
+            }
+
             var seat = new Seat
             {
                 EventId = eventId,
@@ -257,6 +264,13 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             {
                 throw new InvalidOperationException(
                     "Seats can only be assigned to a pending booking.");
+            }
+
+            if (booking.HoldExpiresAt.HasValue &&
+                booking.HoldExpiresAt.Value <= DateTime.UtcNow)
+            {
+                throw new InvalidOperationException(
+                    "Booking hold has expired.");
             }
 
             var seatIds = dto.SeatIds

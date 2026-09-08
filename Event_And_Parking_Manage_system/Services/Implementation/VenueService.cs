@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.DTOs.Venues;
+using Event_And_Parking_Manage_system.DTOs.Venues;
 using Event_And_Parking_Manage_system.Models.Entities;
 using Event_And_Parking_Manage_system.Repositories.Interfaces;
 using Event_And_Parking_Manage_system.Services.Interfaces;
@@ -9,10 +9,14 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
     public class VenueService : IVenueService
     {
         private readonly IVenueRepository _venueRepository;
+        private readonly IEventRepository _eventRepository;
 
-        public VenueService(IVenueRepository venueRepository)
+        public VenueService(
+            IVenueRepository venueRepository,
+            IEventRepository eventRepository)
         {
             _venueRepository = venueRepository;
+            _eventRepository = eventRepository;
         }
 
         public async Task<IEnumerable<VenueDto>> GetAllAsync()
@@ -102,6 +106,17 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
             if (venue == null)
                 return false;
+
+            var scheduledEvents = await _eventRepository.SearchAsync(null, null, id, null);
+            if (scheduledEvents.Any())
+            {
+                var maxEventCapacity = scheduledEvents.Max(e => e.Capacity);
+                if (dto.TotalCapacity < maxEventCapacity)
+                {
+                    throw new InvalidOperationException(
+                        $"Venue capacity cannot be set lower than the capacity of scheduled events ({maxEventCapacity}).");
+                }
+            }
 
             venue.Name = dto.Name;
             venue.Address = dto.Address;

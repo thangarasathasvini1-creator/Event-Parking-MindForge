@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.Data;
+using Event_And_Parking_Manage_system.Data;
 using Event_And_Parking_Manage_system.Models.Enums;
 using Event_And_Parking_Manage_system.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -55,98 +55,91 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                             .ToListAsync(stoppingToken);
 
                     // ==========================================
-                    // Process Expired Bookings
+                    // Process Expired Bookings individually
                     // ==========================================
 
                     foreach (var booking in expiredBookings)
                     {
-                        // --------------------------------------
-                        // Release Seats
-                        // --------------------------------------
+                        await using var transaction = await context.Database.BeginTransactionAsync(stoppingToken);
 
-                        foreach (var bookingSeat in
-                                 booking.BookingSeats)
+                        try
                         {
-                            if (bookingSeat.Seat != null &&
-                                bookingSeat.Seat.Status ==
-                                SeatStatus.Held)
+                            // --------------------------------------
+                            // Release Seats
+                            // --------------------------------------
+
+                            foreach (var bookingSeat in booking.BookingSeats)
                             {
-                                bookingSeat.Seat.Status =
-                                    SeatStatus.Available;
-
-                                bookingSeat.Seat.UpdatedAt =
-                                    now;
+                                if (bookingSeat.Seat != null &&
+                                    bookingSeat.Seat.Status == SeatStatus.Held)
+                                {
+                                    bookingSeat.Seat.Status = SeatStatus.Available;
+                                    bookingSeat.Seat.UpdatedAt = now;
+                                }
                             }
-                        }
 
-                        // --------------------------------------
-                        // Release Parking
-                        // --------------------------------------
+                            // --------------------------------------
+                            // Release Parking
+                            // --------------------------------------
 
-                        if (booking.ParkingReservation?.ParkingSlot != null)
-                        {
-                            var parkingSlot =
-                                booking.ParkingReservation.ParkingSlot;
-
-                            if (parkingSlot.Status ==
-                                ParkingSlotStatus.Held)
+                            if (booking.ParkingReservation?.ParkingSlot != null)
                             {
-                                parkingSlot.Status =
-                                    ParkingSlotStatus.Available;
-
-                                parkingSlot.UpdatedAt =
-                                    now;
+                                var parkingSlot = booking.ParkingReservation.ParkingSlot;
+                                if (parkingSlot.Status == ParkingSlotStatus.Held)
+                                {
+                                    parkingSlot.Status = ParkingSlotStatus.Available;
+                                    parkingSlot.UpdatedAt = now;
+                                }
                             }
-                        }
 
-                        // --------------------------------------
-                        // Expire Booking
-                        // --------------------------------------
+                            // --------------------------------------
+                            // Expire Booking
+                            // --------------------------------------
 
-                        booking.Status =
-                            BookingStatus.Expired;
+                            booking.Status = BookingStatus.Expired;
+                            booking.UpdatedAt = now;
 
-                        booking.UpdatedAt =
-                            now;
-                    }
+                            await context.SaveChangesAsync(stoppingToken);
+                            await transaction.CommitAsync(stoppingToken);
 
-                    // ==========================================
-                    // Save Expired Bookings
-                    // ==========================================
+                            _logger.LogInformation(
+                                "Expired booking {BookingId} processed successfully.",
+                                booking.BookingId);
 
-                    if (expiredBookings.Count > 0)
-                    {
-                        await context.SaveChangesAsync(
-                            stoppingToken);
+                            // --------------------------------------
+                            // Create Expiry Notification
+                            // --------------------------------------
 
-                        _logger.LogInformation(
-                            "{Count} expired booking(s) processed.",
-                            expiredBookings.Count);
-
-                        // ======================================
-                        // Create Expiry Notifications
-                        // ======================================
-
-                        foreach (var booking in expiredBookings)
-                        {
                             try
                             {
-                                await notificationService
-                                    .CreateNotificationAsync(
-                                        booking.CustomerId,
-                                        "BookingExpired",
-                                        $"Your booking {booking.BookingNumber} has expired because the payment hold period ended.");
+                                await notificationService.CreateNotificationAsync(
+                                    booking.CustomerId,
+                                    "BookingExpired",
+                                    $"Your booking {booking.BookingNumber} has expired because the payment hold period ended.");
                             }
                             catch (Exception notificationEx)
                             {
-                                // Booking expiry already succeeded.
-                                // Notification failure should not
-                                // undo the expiry.
                                 _logger.LogError(
                                     notificationEx,
                                     "Booking {BookingId} expired successfully, but expiry notification failed.",
                                     booking.BookingId);
                             }
+                        }
+                        catch (DbUpdateConcurrencyException ex)
+                        {
+                            await transaction.RollbackAsync(stoppingToken);
+                            _logger.LogWarning(
+                                ex,
+                                "Concurrency conflict while processing expired booking {BookingId}.",
+                                booking.BookingId);
+                        }
+                        catch (Exception ex)
+                        {
+                            await transaction.RollbackAsync(stoppingToken);
+                            _logger.LogError(
+                                ex,
+                                "Error while processing expired booking {BookingId}.",
+                                booking.BookingId);
                         }
                     }
                 }

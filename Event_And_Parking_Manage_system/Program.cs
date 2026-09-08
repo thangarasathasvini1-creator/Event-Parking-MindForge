@@ -1,3 +1,4 @@
+using Event_And_Parking_Manage_system.Middleware;
 using Event_And_Parking_Manage_system.Data;
 using Event_And_Parking_Manage_system.Repositories;
 using Event_And_Parking_Manage_system.Repositories.Implementation;
@@ -8,6 +9,8 @@ using Event_And_Parking_Manage_system.Services.Interfaces;
 using Event_And_Parking_Manage_system.Validators;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -254,7 +257,12 @@ namespace Event_And_Parking_Manage_system
             // Controllers & Validation
             // ==========================================
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                });
 
             builder.Services.AddFluentValidationAutoValidation();
 
@@ -360,6 +368,8 @@ namespace Event_And_Parking_Manage_system
             app.UseAuthentication();
 
             app.UseAuthorization();
+
+            app.UseMiddleware<DeactivatedUserMiddleware>();
 
             // ==========================================
             // Map Controllers

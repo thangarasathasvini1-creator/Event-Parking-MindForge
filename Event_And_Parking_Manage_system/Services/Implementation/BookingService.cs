@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.Data;
+using Event_And_Parking_Manage_system.Data;
 using Event_And_Parking_Manage_system.DTOs.Bookings;
 using Event_And_Parking_Manage_system.Models.Entities;
 using Event_And_Parking_Manage_system.Models.Enums;
@@ -432,24 +432,14 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 }
 
                 // =================================================
-                // 5. Confirmed Booking
-                // =================================================
-
-                if (booking.Status == BookingStatus.Confirmed)
-                {
-                    throw new InvalidOperationException(
-                        "Confirmed booking cannot be cancelled.");
-                }
-
-                // =================================================
                 // 6. Release Seats
                 // =================================================
 
                 foreach (var bookingSeat in booking.BookingSeats)
                 {
                     if (bookingSeat.Seat != null &&
-                        bookingSeat.Seat.Status ==
-                        SeatStatus.Held)
+                        (bookingSeat.Seat.Status == SeatStatus.Held ||
+                         bookingSeat.Seat.Status == SeatStatus.Booked))
                     {
                         bookingSeat.Seat.Status =
                             SeatStatus.Available;
@@ -468,8 +458,8 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                     var parkingSlot =
                         booking.ParkingReservation.ParkingSlot;
 
-                    if (parkingSlot.Status ==
-                        ParkingSlotStatus.Held)
+                    if (parkingSlot.Status == ParkingSlotStatus.Held ||
+                        parkingSlot.Status == ParkingSlotStatus.Occupied)
                     {
                         parkingSlot.Status =
                             ParkingSlotStatus.Available;
