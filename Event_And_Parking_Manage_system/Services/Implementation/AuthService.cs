@@ -16,7 +16,8 @@ namespace Event_And_Parking_Manage_system.Services
         private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
 
-        public AuthService(ICustomerRepository customerRepository, 
+        public AuthService(
+            ICustomerRepository customerRepository,
             IConfiguration configuration,
             IEmailService emailService)
         {
@@ -25,9 +26,15 @@ namespace Event_And_Parking_Manage_system.Services
             _emailService = emailService;
         }
 
-        public async Task<LoginResponseDto?> LoginAsync(LoginCustomerDto dto)
+        // =========================================================
+        // NORMAL LOGIN
+        // =========================================================
+
+        public async Task<LoginResponseDto?> LoginAsync(
+            LoginCustomerDto dto)
         {
-            var customer = await _customerRepository.GetByEmailAsync(dto.Email);
+            var customer =
+                await _customerRepository.GetByEmailAsync(dto.Email);
 
             if (customer == null)
                 return null;
@@ -35,8 +42,12 @@ namespace Event_And_Parking_Manage_system.Services
             if (customer.Status != Models.Enums.CustomerStatus.Active)
                 return null;
 
-            if (!BCrypt.Net.BCrypt.Verify(dto.Password, customer.PasswordHash))
+            if (!BCrypt.Net.BCrypt.Verify(
+                    dto.Password,
+                    customer.PasswordHash))
+            {
                 return null;
+            }
 
             if (!customer.EmailVerified)
                 return null;
@@ -51,34 +62,137 @@ namespace Event_And_Parking_Manage_system.Services
             };
         }
 
+        // =========================================================
+        // GOOGLE LOGIN
+        // =========================================================
+
+        public async Task<LoginResponseDto?> GoogleLoginAsync(
+            string email,
+            string name,
+            string googleId)
+        {
+            if (string.IsNullOrWhiteSpace(email) ||
+                string.IsNullOrWhiteSpace(name) ||
+                string.IsNullOrWhiteSpace(googleId))
+            {
+                return null;
+            }
+
+            // Find existing customer using Google verified email
+            var customer =
+                await _customerRepository.GetByEmailAsync(email);
+
+            // -----------------------------------------------------
+            // EXISTING CUSTOMER
+            // -----------------------------------------------------
+
+            if (customer != null)
+            {
+                // Deactivated customers cannot login
+                if (customer.Status !=
+                    Models.Enums.CustomerStatus.Active)
+                {
+                    return null;
+                }
+
+                // Google has verified this email
+                if (!customer.EmailVerified)
+                {
+                    customer.EmailVerified = true;
+                    customer.UpdatedAt = DateTime.UtcNow;
+
+                    await _customerRepository.UpdateAsync(customer);
+                }
+
+                return new LoginResponseDto
+                {
+                    CustomerId = customer.CustomerId,
+                    Name = customer.Name,
+                    Email = customer.Email,
+                    Role = customer.Role.ToString(),
+                    Token = GenerateJwtToken(customer)
+                };
+            }
+
+            // -----------------------------------------------------
+            // NEW GOOGLE CUSTOMER
+            // -----------------------------------------------------
+
+            customer = new Customer
+            {
+                Name = name,
+                Email = email,
+
+                // Google users don't have a normal password.
+                // Generate a random unusable password hash.
+                PasswordHash =
+                    BCrypt.Net.BCrypt.HashPassword(
+                        Guid.NewGuid().ToString()),
+
+                Phone = string.Empty,
+
+                // Google users are normal customers
+                Role = Models.Enums.UserRole.Customer,
+
+                Status = Models.Enums.CustomerStatus.Active,
+
+                // Google already verified the email
+                EmailVerified = true,
+
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _customerRepository.AddAsync(customer);
+
+            // Generate JWT for the newly created customer
+            return new LoginResponseDto
+            {
+                CustomerId = customer.CustomerId,
+                Name = customer.Name,
+                Email = customer.Email,
+                Role = customer.Role.ToString(),
+                Token = GenerateJwtToken(customer)
+            };
+        }
+
+        // =========================================================
+        // JWT TOKEN GENERATION
+        // =========================================================
+
         private string GenerateJwtToken(Customer customer)
         {
             var jwtKey = _configuration["Jwt:Key"]
-                ?? throw new InvalidOperationException("JWT Key is not configured.");
+                ?? throw new InvalidOperationException(
+                    "JWT Key is not configured.");
 
-            var jwtIssuer = _configuration["Jwt:Issuer"];
-            var jwtAudience = _configuration["Jwt:Audience"];
+            var jwtIssuer =
+                _configuration["Jwt:Issuer"];
 
-            var expiryMinutes = _configuration.GetValue<int>("Jwt:ExpiryMinutes");
+            var jwtAudience =
+                _configuration["Jwt:Audience"];
+
+            var expiryMinutes =
+                _configuration.GetValue<int>(
+                    "Jwt:ExpiryMinutes");
 
             var claims = new List<Claim>
-                {
-                    new Claim(
-                        ClaimTypes.NameIdentifier,
-                        customer.CustomerId.ToString()),
+            {
+                new Claim(
+                    ClaimTypes.NameIdentifier,
+                    customer.CustomerId.ToString()),
 
-                    new Claim(
-                        ClaimTypes.Name,
-                        customer.Name),
+                new Claim(
+                    ClaimTypes.Name,
+                    customer.Name),
 
-                    new Claim(
-                        ClaimTypes.Email,
-                        customer.Email),
+                new Claim(
+                    ClaimTypes.Email,
+                    customer.Email),
 
-                    new Claim(
-                        ClaimTypes.Role,
-                        customer.Role.ToString())
-                };
+                new Claim(
+                    ClaimTypes.Role,
+                    customer.Role.ToString())
+            };
 
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(jwtKey));
@@ -91,17 +205,23 @@ namespace Event_And_Parking_Manage_system.Services
                 issuer: jwtIssuer,
                 audience: jwtAudience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
+                expires: DateTime.UtcNow.AddMinutes(
+                    expiryMinutes),
                 signingCredentials: credentials);
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return new JwtSecurityTokenHandler()
+                .WriteToken(token);
         }
 
+        // =========================================================
+        // FORGOT PASSWORD
+        // =========================================================
 
-
-        public async Task<bool> ForgotPasswordAsync(string email)
+        public async Task<bool> ForgotPasswordAsync(
+            string email)
         {
-            var customer = await _customerRepository.GetByEmailAsync(email);
+            var customer =
+                await _customerRepository.GetByEmailAsync(email);
 
             // Do not reveal whether the email exists
             if (customer == null)
@@ -138,9 +258,13 @@ namespace Event_And_Parking_Manage_system.Services
             return true;
         }
 
+        // =========================================================
+        // RESET PASSWORD
+        // =========================================================
+
         public async Task<bool> ResetPasswordAsync(
-    string token,
-    string newPassword)
+            string token,
+            string newPassword)
         {
             if (string.IsNullOrWhiteSpace(token) ||
                 string.IsNullOrWhiteSpace(newPassword))
@@ -154,37 +278,44 @@ namespace Event_And_Parking_Manage_system.Services
             foreach (var customer in customers)
             {
                 if (string.IsNullOrWhiteSpace(
-                        customer.PasswordResetAuthorizationTokenHash))
+                    customer.PasswordResetAuthorizationTokenHash))
                 {
                     continue;
                 }
 
-                if (!customer.PasswordResetAuthorizationTokenExpiresAt.HasValue)
+                if (!customer
+                    .PasswordResetAuthorizationTokenExpiresAt
+                    .HasValue)
                 {
                     continue;
                 }
 
-                if (customer.PasswordResetAuthorizationTokenExpiresAt.Value
-                    <= DateTime.UtcNow)
+                if (customer
+                    .PasswordResetAuthorizationTokenExpiresAt
+                    .Value <= DateTime.UtcNow)
                 {
                     continue;
                 }
 
                 if (BCrypt.Net.BCrypt.Verify(
-                        token,
-                        customer.PasswordResetAuthorizationTokenHash))
+                    token,
+                    customer.PasswordResetAuthorizationTokenHash))
                 {
                     customer.PasswordHash =
-                        BCrypt.Net.BCrypt.HashPassword(newPassword);
+                        BCrypt.Net.BCrypt.HashPassword(
+                            newPassword);
 
-                    // Invalidate the reset authorization token
-                    customer.PasswordResetAuthorizationTokenHash = null;
+                    // Invalidate reset authorization token
+                    customer.PasswordResetAuthorizationTokenHash =
+                        null;
 
-                    customer.PasswordResetAuthorizationTokenExpiresAt = null;
+                    customer.PasswordResetAuthorizationTokenExpiresAt =
+                        null;
 
                     customer.UpdatedAt = DateTime.UtcNow;
 
-                    await _customerRepository.UpdateAsync(customer);
+                    await _customerRepository.UpdateAsync(
+                        customer);
 
                     return true;
                 }
@@ -193,37 +324,57 @@ namespace Event_And_Parking_Manage_system.Services
             return false;
         }
 
+        // =========================================================
+        // VERIFY EMAIL USING TOKEN
+        // =========================================================
 
-
-
-        public async Task<bool> VerifyEmailAsync(string token)
+        public async Task<bool> VerifyEmailAsync(
+            string token)
         {
             if (string.IsNullOrWhiteSpace(token))
                 return false;
 
-            var customers = await _customerRepository.GetAllAsync();
+            var customers =
+                await _customerRepository.GetAllAsync();
 
             foreach (var customer in customers)
             {
-                if (string.IsNullOrWhiteSpace(customer.EmailVerificationTokenHash))
+                if (string.IsNullOrWhiteSpace(
+                    customer.EmailVerificationTokenHash))
+                {
                     continue;
+                }
 
-                if (customer.EmailVerificationTokenExpiresAt == null)
+                if (!customer
+                    .EmailVerificationTokenExpiresAt
+                    .HasValue)
+                {
                     continue;
+                }
 
-                if (customer.EmailVerificationTokenExpiresAt < DateTime.UtcNow)
+                if (customer
+                    .EmailVerificationTokenExpiresAt
+                    .Value < DateTime.UtcNow)
+                {
                     continue;
+                }
 
                 if (BCrypt.Net.BCrypt.Verify(
-                        token,
-                        customer.EmailVerificationTokenHash))
+                    token,
+                    customer.EmailVerificationTokenHash))
                 {
                     customer.EmailVerified = true;
-                    customer.EmailVerificationTokenHash = null;
-                    customer.EmailVerificationTokenExpiresAt = null;
+
+                    customer.EmailVerificationTokenHash =
+                        null;
+
+                    customer.EmailVerificationTokenExpiresAt =
+                        null;
+
                     customer.UpdatedAt = DateTime.UtcNow;
 
-                    await _customerRepository.UpdateAsync(customer);
+                    await _customerRepository.UpdateAsync(
+                        customer);
 
                     return true;
                 }
@@ -231,6 +382,10 @@ namespace Event_And_Parking_Manage_system.Services
 
             return false;
         }
+
+        // =========================================================
+        // GENERATE EMAIL VERIFICATION OTP
+        // =========================================================
 
         private static string GenerateEmailVerificationOtp()
         {
@@ -239,6 +394,10 @@ namespace Event_And_Parking_Manage_system.Services
                 .ToString();
         }
 
+        // =========================================================
+        // GENERATE PASSWORD RESET OTP
+        // =========================================================
+
         private static string GeneratePasswordResetOtp()
         {
             return Random.Shared
@@ -246,10 +405,14 @@ namespace Event_And_Parking_Manage_system.Services
                 .ToString();
         }
 
+        // =========================================================
+        // VERIFY PASSWORD RESET OTP
+        // =========================================================
+
         public async Task<VerifyPasswordResetOtpResponseDto?>
-    VerifyPasswordResetOtpAsync(
-        string email,
-        string otp)
+            VerifyPasswordResetOtpAsync(
+                string email,
+                string otp)
         {
             if (string.IsNullOrWhiteSpace(email) ||
                 string.IsNullOrWhiteSpace(otp))
@@ -264,24 +427,28 @@ namespace Event_And_Parking_Manage_system.Services
             }
 
             var customer =
-                await _customerRepository.GetByEmailAsync(email);
+                await _customerRepository.GetByEmailAsync(
+                    email);
 
             if (customer == null)
                 return null;
 
             if (string.IsNullOrWhiteSpace(
-                    customer.PasswordResetOtpHash))
+                customer.PasswordResetOtpHash))
             {
                 return null;
             }
 
-            if (!customer.PasswordResetOtpExpiresAt.HasValue)
+            if (!customer
+                .PasswordResetOtpExpiresAt
+                .HasValue)
             {
                 return null;
             }
 
-            if (customer.PasswordResetOtpExpiresAt.Value
-                <= DateTime.UtcNow)
+            if (customer
+                .PasswordResetOtpExpiresAt
+                .Value <= DateTime.UtcNow)
             {
                 return null;
             }
@@ -294,37 +461,47 @@ namespace Event_And_Parking_Manage_system.Services
             customer.PasswordResetOtpAttempts++;
 
             if (!BCrypt.Net.BCrypt.Verify(
-                    otp,
-                    customer.PasswordResetOtpHash))
+                otp,
+                customer.PasswordResetOtpHash))
             {
-                await _customerRepository.UpdateAsync(customer);
+                await _customerRepository.UpdateAsync(
+                    customer);
 
                 return null;
             }
 
-            // Generate a short-lived authorization token
-            var resetToken = Guid.NewGuid().ToString("N");
+            // Generate short-lived authorization token
+            var resetToken =
+                Guid.NewGuid().ToString("N");
 
             customer.PasswordResetAuthorizationTokenHash =
-                BCrypt.Net.BCrypt.HashPassword(resetToken);
+                BCrypt.Net.BCrypt.HashPassword(
+                    resetToken);
 
             customer.PasswordResetAuthorizationTokenExpiresAt =
                 DateTime.UtcNow.AddMinutes(10);
 
             // OTP can no longer be reused
             customer.PasswordResetOtpHash = null;
+
             customer.PasswordResetOtpExpiresAt = null;
+
             customer.PasswordResetOtpAttempts = 0;
 
             customer.UpdatedAt = DateTime.UtcNow;
 
-            await _customerRepository.UpdateAsync(customer);
+            await _customerRepository.UpdateAsync(
+                customer);
 
             return new VerifyPasswordResetOtpResponseDto
             {
                 ResetToken = resetToken
             };
         }
+
+        // =========================================================
+        // VERIFY EMAIL OTP
+        // =========================================================
 
         public async Task<bool> VerifyEmailOtpAsync(
             string email,
@@ -343,7 +520,8 @@ namespace Event_And_Parking_Manage_system.Services
             }
 
             var customer =
-                await _customerRepository.GetByEmailAsync(email);
+                await _customerRepository.GetByEmailAsync(
+                    email);
 
             if (customer == null)
                 return false;
@@ -352,18 +530,21 @@ namespace Event_And_Parking_Manage_system.Services
                 return false;
 
             if (string.IsNullOrWhiteSpace(
-                    customer.EmailVerificationOtpHash))
+                customer.EmailVerificationOtpHash))
             {
                 return false;
             }
 
-            if (!customer.EmailVerificationOtpExpiresAt.HasValue)
+            if (!customer
+                .EmailVerificationOtpExpiresAt
+                .HasValue)
             {
                 return false;
             }
 
-            if (customer.EmailVerificationOtpExpiresAt.Value
-                <= DateTime.UtcNow)
+            if (customer
+                .EmailVerificationOtpExpiresAt
+                .Value <= DateTime.UtcNow)
             {
                 return false;
             }
@@ -376,10 +557,11 @@ namespace Event_And_Parking_Manage_system.Services
             customer.EmailVerificationOtpAttempts++;
 
             if (!BCrypt.Net.BCrypt.Verify(
-                    otp,
-                    customer.EmailVerificationOtpHash))
+                otp,
+                customer.EmailVerificationOtpHash))
             {
-                await _customerRepository.UpdateAsync(customer);
+                await _customerRepository.UpdateAsync(
+                    customer);
 
                 return false;
             }
@@ -394,15 +576,22 @@ namespace Event_And_Parking_Manage_system.Services
 
             customer.UpdatedAt = DateTime.UtcNow;
 
-            await _customerRepository.UpdateAsync(customer);
+            await _customerRepository.UpdateAsync(
+                customer);
 
             return true;
         }
 
-        public async Task<bool> ResendVerificationAsync(string email)
+        // =========================================================
+        // RESEND EMAIL VERIFICATION OTP
+        // =========================================================
+
+        public async Task<bool> ResendVerificationAsync(
+            string email)
         {
             var customer =
-                await _customerRepository.GetByEmailAsync(email);
+                await _customerRepository.GetByEmailAsync(
+                    email);
 
             if (customer == null)
                 return false;
@@ -426,7 +615,8 @@ namespace Event_And_Parking_Manage_system.Services
 
             customer.UpdatedAt = DateTime.UtcNow;
 
-            await _customerRepository.UpdateAsync(customer);
+            await _customerRepository.UpdateAsync(
+                customer);
 
             // Send OTP to customer's email
             await _emailService.SendVerificationOtpEmailAsync(
@@ -436,7 +626,5 @@ namespace Event_And_Parking_Manage_system.Services
 
             return true;
         }
-
-
     }
 }
