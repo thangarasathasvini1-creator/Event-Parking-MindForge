@@ -1,5 +1,28 @@
 import { Injectable } from '@angular/core';
 
-@Injectable()
-export class AuthStorage {}
+@Injectable({
+  providedIn: 'root',
+})
+export class AuthStorageService {
+  private readonly tokenKey = 'eventra_access_token';
 
+  setToken(token: string): void {
+    localStorage.setItem(this.tokenKey, token);
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem(this.tokenKey);
+  }
+
+  removeToken(): void {
+    localStorage.removeItem(this.tokenKey);
+  }
+
+  hasToken(): boolean {
+    return this.getToken() !== null;
+  }
+
+  clear(): void {
+    this.removeToken();
+  }
+}
