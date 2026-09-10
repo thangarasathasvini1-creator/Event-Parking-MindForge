@@ -39,6 +39,26 @@ export interface ResendVerificationResponse {
   message: string;
 }
 
+export interface ForgotPasswordResponse {
+  message: string;
+}
+
+export interface VerifyPasswordResetOtpRequest {
+  email: string;
+  otp: string;
+}
+
+export interface VerifyPasswordResetOtpResponse {
+  resetToken: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
+
+
 @Injectable({
   providedIn: 'root',
 })
@@ -102,6 +122,50 @@ export class AuthService {
       email
     );
   }
+
+  // =========================
+// FORGOT PASSWORD
+// =========================
+// =========================
+// FORGOT PASSWORD
+// =========================
+forgotPassword(
+  email: string
+): Observable<ForgotPasswordResponse> {
+  return this.http.post<ForgotPasswordResponse>(
+    `${this.apiUrl}/forgot-password`,
+    JSON.stringify(email),
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+}
+
+// =========================
+// VERIFY PASSWORD RESET OTP
+// =========================
+verifyPasswordResetOtp(
+    request: VerifyPasswordResetOtpRequest
+    ): Observable<VerifyPasswordResetOtpResponse> {
+    return this.http.post<VerifyPasswordResetOtpResponse>(
+        `${this.apiUrl}/verify-password-reset-otp`,
+        request
+    );
+}
+
+// =========================
+// RESET PASSWORD
+// =========================
+resetPassword(
+  request: ResetPasswordRequest
+): Observable<unknown> {
+  return this.http.post<unknown>(
+    `${this.apiUrl}/reset-password`,
+    request
+  );
+}
 
   // =========================
   // LOGOUT
