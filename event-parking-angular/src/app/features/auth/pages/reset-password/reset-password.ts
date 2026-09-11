@@ -7,7 +7,7 @@ import {
   ValidatorFn,
   Validators,
 } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import {
   AuthService,
@@ -35,7 +35,7 @@ const passwordMatchValidator: ValidatorFn = (
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule],
   templateUrl: './reset-password.html',
   styleUrl: './reset-password.css',
 })
@@ -141,7 +141,7 @@ export class ResetPassword {
 
         this.errorMessage.set(
           error?.error?.message ??
-            'Unable to reset your password. Please try again.'
+          'Unable to reset your password. Please try again.'
         );
       },
     });

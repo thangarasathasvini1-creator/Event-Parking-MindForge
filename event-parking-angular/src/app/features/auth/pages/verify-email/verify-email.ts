@@ -7,7 +7,6 @@ import {
 import {
   ActivatedRoute,
   Router,
-  RouterLink,
 } from '@angular/router';
 
 import {
@@ -18,7 +17,7 @@ import {
 @Component({
   selector: 'app-verify-email',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule],
   templateUrl: './verify-email.html',
   styleUrl: './verify-email.css',
 })
@@ -87,7 +86,7 @@ export class VerifyEmail {
         this.isVerified.set(true);
         this.successMessage.set(
           response?.message ??
-            'Email verified successfully.'
+          'Email verified successfully.'
         );
       },
 
@@ -96,7 +95,7 @@ export class VerifyEmail {
 
         this.errorMessage.set(
           error?.error?.message ??
-            'Invalid or expired OTP. Please try again.'
+          'Invalid or expired OTP. Please try again.'
         );
       },
     });
@@ -126,7 +125,7 @@ export class VerifyEmail {
 
           this.successMessage.set(
             response?.message ??
-              'A new verification OTP has been sent to your email.'
+            'A new verification OTP has been sent to your email.'
           );
         },
 
@@ -135,7 +134,7 @@ export class VerifyEmail {
 
           this.errorMessage.set(
             error?.error?.message ??
-              'Unable to resend OTP. Please try again.'
+            'Unable to resend OTP. Please try again.'
           );
         },
       });
