@@ -1,0 +1,154 @@
+<div class="min-h-screen bg-slate-50 px-6 py-8">
+  <div class="mx-auto max-w-5xl">
+
+    <!-- Loading -->
+    @if (isLoading()) {
+      <div class="flex justify-center py-20">
+        <div
+          class="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600">
+        </div>
+      </div>
+    }
+
+    <!-- Error -->
+    @if (!isLoading() && errorMessage()) {
+      <div class="rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
+        <h2 class="text-xl font-semibold text-red-800">
+          Unable to load event
+        </h2>
+
+        <p class="mt-2 text-red-600">
+          {{ errorMessage() }}
+        </p>
+
+        <button
+          type="button"
+          (click)="retry()"
+          class="mt-5 rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-700">
+          Try Again
+        </button>
+      </div>
+    }
+
+    <!-- Event Details -->
+    @if (!isLoading() && !errorMessage() && event()) {
+      <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+
+        <!-- Hero -->
+        <div class="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 px-8 py-10 text-white">
+
+          <p class="text-sm font-semibold uppercase tracking-wide text-indigo-100">
+            {{ event()!.categoryName }}
+          </p>
+
+          <h1 class="mt-3 text-4xl font-bold">
+            {{ event()!.eventName }}
+          </h1>
+
+          <p class="mt-3 max-w-2xl text-indigo-100">
+            {{ event()!.description }}
+          </p>
+        </div>
+
+        <!-- Information -->
+        <div class="grid gap-6 p-8 sm:grid-cols-2 lg:grid-cols-3">
+
+          <!-- Date -->
+          <div class="rounded-xl bg-slate-50 p-5">
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Event Date
+            </p>
+
+            <p class="mt-2 font-semibold text-slate-800">
+              {{ event()!.eventDate }}
+            </p>
+          </div>
+
+          <!-- Time -->
+          <div class="rounded-xl bg-slate-50 p-5">
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Time
+            </p>
+
+            <p class="mt-2 font-semibold text-slate-800">
+              {{ event()!.startTime }} - {{ event()!.endTime }}
+            </p>
+          </div>
+
+          <!-- Venue -->
+          <div class="rounded-xl bg-slate-50 p-5">
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Venue
+            </p>
+
+            <p class="mt-2 font-semibold text-slate-800">
+              {{ event()!.venueName }}
+            </p>
+          </div>
+
+          <!-- Category -->
+          <div class="rounded-xl bg-slate-50 p-5">
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Category
+            </p>
+
+            <p class="mt-2 font-semibold text-slate-800">
+              {{ event()!.categoryName }}
+            </p>
+          </div>
+
+          <!-- Capacity -->
+          <div class="rounded-xl bg-slate-50 p-5">
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Capacity
+            </p>
+
+            <p class="mt-2 font-semibold text-slate-800">
+              {{ event()!.capacity }} people
+            </p>
+          </div>
+
+          <!-- Ticket Price -->
+          <div class="rounded-xl bg-slate-50 p-5">
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Ticket Price
+            </p>
+
+            <p class="mt-2 text-xl font-bold text-indigo-600">
+              {{ event()!.ticketPrice }}
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Parking -->
+        <div class="border-t border-slate-100 px-8 py-6">
+
+          @if (event()!.parkingAvailable) {
+            <div class="rounded-xl bg-emerald-50 p-5">
+              <p class="font-semibold text-emerald-800">
+                Parking Available
+              </p>
+
+              <p class="mt-1 text-sm text-emerald-600">
+                Parking facilities are available for this event.
+              </p>
+            </div>
+          } @else {
+            <div class="rounded-xl bg-slate-100 p-5">
+              <p class="font-semibold text-slate-700">
+                Parking Not Available
+              </p>
+
+              <p class="mt-1 text-sm text-slate-500">
+                Parking is not available for this event.
+              </p>
+            </div>
+          }
+
+        </div>
+
+      </article>
+    }
+  </div>
+</div>
