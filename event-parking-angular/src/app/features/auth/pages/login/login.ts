@@ -60,6 +60,6 @@ export class Login {
   }
 
   goToGoogleLogin(): void {
-    window.location.href = `${environment.apiUrl}/api/auth/google`;
-  }
+  window.location.href = `${environment.apiUrl}/api/auth/google`;
+}
 }

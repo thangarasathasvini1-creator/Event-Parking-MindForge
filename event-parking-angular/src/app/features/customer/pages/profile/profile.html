@@ -1,0 +1,1311 @@
+<div class="min-h-screen bg-slate-50">
+
+  <!-- ===================================================== -->
+  <!-- SIDEBAR -->
+  <!-- ===================================================== -->
+
+  <aside
+    class="fixed inset-y-0 left-0 z-40 hidden border-r border-slate-200 bg-white transition-all duration-300 lg:flex lg:flex-col"
+    [class.w-72]="!sidebarCollapsed()"
+    [class.w-20]="sidebarCollapsed()"
+  >
+
+    <!-- Brand -->
+    <div class="flex h-20 items-center border-b border-slate-100 px-5">
+
+      <div
+        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-xl font-black text-white shadow-lg shadow-blue-600/20"
+      >
+        E
+      </div>
+
+      @if (!sidebarCollapsed()) {
+        <div class="ml-3 overflow-hidden">
+          <h1 class="whitespace-nowrap text-lg font-bold tracking-tight text-slate-950">
+            EVENTRA
+          </h1>
+
+          <p class="whitespace-nowrap text-[10px] text-slate-500">
+            Events. Seats. Parking.
+          </p>
+        </div>
+      }
+
+    </div>
+
+
+    <!-- Navigation -->
+    <nav class="flex-1 overflow-y-auto px-3 py-5">
+
+      @if (!sidebarCollapsed()) {
+        <p class="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+          Main Menu
+        </p>
+      }
+
+
+      <!-- Dashboard -->
+      <button
+        type="button"
+        (click)="closeProfile()"
+        class="mb-1 flex w-full items-center rounded-xl px-3 py-3 text-sm font-semibold transition"
+        [class.bg-blue-50]="!showProfile()"
+        [class.text-blue-700]="!showProfile()"
+        [class.text-slate-600]="showProfile()"
+        [class.justify-center]="sidebarCollapsed()"
+        [class.hover:bg-slate-50]="showProfile()"
+      >
+
+        <svg
+          class="h-5 w-5 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <path d="M3 10.5 12 3l9 7.5"></path>
+          <path d="M5 9.5V21h14V9.5"></path>
+          <path d="M9 21v-6h6v6"></path>
+        </svg>
+
+        @if (!sidebarCollapsed()) {
+          <span class="ml-3">Dashboard</span>
+        }
+
+      </button>
+
+
+      <!-- Browse Events -->
+      <button
+        type="button"
+        class="mb-1 flex w-full items-center rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-blue-600"
+        [class.justify-center]="sidebarCollapsed()"
+      >
+
+        <svg
+          class="h-5 w-5 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <rect x="3" y="4" width="18" height="17" rx="3"></rect>
+          <path d="M16 2v4M8 2v4M3 10h18"></path>
+        </svg>
+
+        @if (!sidebarCollapsed()) {
+          <span class="ml-3">Browse Events</span>
+        }
+
+      </button>
+
+
+      <!-- Bookings -->
+      <button
+        type="button"
+        class="mb-1 flex w-full items-center rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-blue-600"
+        [class.justify-center]="sidebarCollapsed()"
+      >
+
+        <svg
+          class="h-5 w-5 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <path d="M4 7h16"></path>
+          <path d="M4 12h16"></path>
+          <path d="M4 17h10"></path>
+          <circle cx="18" cy="17" r="2"></circle>
+        </svg>
+
+        @if (!sidebarCollapsed()) {
+          <span class="ml-3">My Bookings</span>
+        }
+
+      </button>
+
+
+      <!-- Parking -->
+      <button
+        type="button"
+        class="mb-1 flex w-full items-center rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-blue-600"
+        [class.justify-center]="sidebarCollapsed()"
+      >
+
+        <svg
+          class="h-5 w-5 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <rect x="4" y="3" width="16" height="18" rx="2"></rect>
+          <path d="M9 17V7h4a3 3 0 0 1 0 6H9"></path>
+        </svg>
+
+        @if (!sidebarCollapsed()) {
+          <span class="ml-3">Parking Reservations</span>
+        }
+
+      </button>
+
+
+      <!-- Payments -->
+      <button
+        type="button"
+        class="mb-1 flex w-full items-center rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-blue-600"
+        [class.justify-center]="sidebarCollapsed()"
+      >
+
+        <svg
+          class="h-5 w-5 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <rect x="2.5" y="5" width="19" height="14" rx="2.5"></rect>
+          <path d="M2.5 10h19"></path>
+          <path d="M7 15h3"></path>
+        </svg>
+
+        @if (!sidebarCollapsed()) {
+          <span class="ml-3">My Payments</span>
+        }
+
+      </button>
+
+
+      <!-- Notifications -->
+      <button
+        type="button"
+        class="mb-1 flex w-full items-center rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-blue-600"
+        [class.justify-center]="sidebarCollapsed()"
+      >
+
+        <div class="relative">
+
+          <svg
+            class="h-5 w-5 shrink-0"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+          >
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+            <path d="M10 21h4"></path>
+          </svg>
+
+          @if (dashboard() && dashboard()!.unreadNotifications > 0) {
+            <span
+              class="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white"
+            >
+              {{ dashboard()!.unreadNotifications }}
+            </span>
+          }
+
+        </div>
+
+        @if (!sidebarCollapsed()) {
+          <span class="ml-3">Notifications</span>
+        }
+
+      </button>
+
+
+      <!-- PROFILE -->
+      <button
+        type="button"
+        (click)="openProfile()"
+        class="mb-1 flex w-full items-center rounded-xl px-3 py-3 text-sm font-medium transition"
+        [class.bg-blue-50]="showProfile()"
+        [class.text-blue-700]="showProfile()"
+        [class.text-slate-600]="!showProfile()"
+        [class.justify-center]="sidebarCollapsed()"
+        [class.hover:bg-slate-50]="!showProfile()"
+      >
+
+        <svg
+          class="h-5 w-5 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <circle cx="12" cy="8" r="3.5"></circle>
+          <path d="M5 20c.8-3.3 3.1-5 7-5s6.2 1.7 7 5"></path>
+        </svg>
+
+        @if (!sidebarCollapsed()) {
+          <span class="ml-3">My Profile</span>
+        }
+
+      </button>
+
+
+      @if (!sidebarCollapsed()) {
+
+        <div class="my-5 border-t border-slate-100"></div>
+
+        <p class="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+          Account
+        </p>
+
+      }
+
+
+      <!-- Settings -->
+      <button
+        type="button"
+        class="mb-1 flex w-full items-center rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-blue-600"
+        [class.justify-center]="sidebarCollapsed()"
+      >
+
+        <svg
+          class="h-5 w-5 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 1.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V20h-2.6v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1-1.8-1.8.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H6v-2.6h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1 1.8-1.8.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5V5h2.6v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.8 1.8-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.1v2.6h-.1a1.7 1.7 0 0 0-1.5 1Z"
+          ></path>
+        </svg>
+
+        @if (!sidebarCollapsed()) {
+          <span class="ml-3">Settings</span>
+        }
+
+      </button>
+
+
+      <!-- Logout -->
+      <button
+        type="button"
+        (click)="logout()"
+        class="flex w-full items-center rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-600"
+        [class.justify-center]="sidebarCollapsed()"
+      >
+
+        <svg
+          class="h-5 w-5 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <path d="M10 5H5v14h5"></path>
+          <path d="M14 8l4 4-4 4"></path>
+          <path d="M18 12H9"></path>
+        </svg>
+
+        @if (!sidebarCollapsed()) {
+          <span class="ml-3">Logout</span>
+        }
+
+      </button>
+
+    </nav>
+
+
+    <!-- Promo -->
+    @if (!sidebarCollapsed()) {
+
+      <div class="p-4">
+
+        <div
+          class="overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 p-5 text-white shadow-lg shadow-blue-600/20"
+        >
+
+          <div class="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-white/15">
+            ★
+          </div>
+
+          <h3 class="text-sm font-bold">
+            Make Every Event Special
+          </h3>
+
+          <p class="mt-1 text-xs leading-5 text-blue-100">
+            Discover amazing events and secure your spot today.
+          </p>
+
+          <button
+            type="button"
+            class="mt-4 w-full rounded-lg bg-white px-3 py-2 text-xs font-bold text-blue-700 transition hover:bg-blue-50"
+          >
+            Explore Events →
+          </button>
+
+        </div>
+
+      </div>
+
+    }
+
+  </aside>
+
+
+  <!-- ===================================================== -->
+  <!-- MAIN -->
+  <!-- ===================================================== -->
+
+  <div
+    class="transition-all duration-300"
+    [class.lg:ml-72]="!sidebarCollapsed()"
+    [class.lg:ml-20]="sidebarCollapsed()"
+  >
+
+    <!-- TOPBAR -->
+    <header
+      class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur"
+    >
+
+      <div class="flex h-20 items-center justify-between px-5 sm:px-8">
+
+        <div class="flex items-center gap-4">
+
+          <button
+            type="button"
+            (click)="toggleSidebar()"
+            class="hidden h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 lg:flex"
+          >
+            <svg
+              class="h-5 w-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+
+
+          <div class="hidden w-72 md:block xl:w-96">
+
+            <div class="relative">
+
+              <svg
+                class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <circle cx="11" cy="11" r="7"></circle>
+                <path d="m20 20-4-4"></path>
+              </svg>
+
+              <input
+                type="search"
+                placeholder="Search events, venues..."
+                class="w-full rounded-xl border border-transparent bg-slate-100 py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-200 focus:bg-white focus:ring-4 focus:ring-blue-600/10"
+              />
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- User -->
+        <div class="flex items-center gap-3">
+
+          <button
+            type="button"
+            class="relative flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100"
+          >
+
+            <svg
+              class="h-5 w-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+              <path d="M10 21h4"></path>
+            </svg>
+
+          </button>
+
+
+          <div class="h-8 w-px bg-slate-200"></div>
+
+
+          <button
+            type="button"
+            (click)="openProfile()"
+            class="flex items-center gap-3 rounded-xl px-2 py-1 transition hover:bg-slate-50"
+          >
+
+            <div class="hidden text-right sm:block">
+
+              <p class="text-sm font-bold text-slate-900">
+                Customer
+              </p>
+
+              <p class="text-[11px] text-slate-400">
+                EVENTRA Member
+              </p>
+
+            </div>
+
+            <div
+              class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700"
+            >
+              C
+            </div>
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <!-- ===================================================== -->
+    <!-- CONTENT -->
+    <!-- ===================================================== -->
+
+    <main class="mx-auto max-w-[1600px] px-5 py-7 sm:px-8">
+
+
+      <!-- ================================================= -->
+      <!-- PROFILE VIEW -->
+      <!-- ================================================= -->
+
+      @if (showProfile()) {
+
+        <section>
+
+          <!-- Profile Header -->
+          <div
+            class="mb-7 overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 p-7 shadow-xl sm:p-9"
+          >
+
+            <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+
+              <div class="flex items-center gap-5">
+
+                <div
+                  class="flex h-20 w-20 items-center justify-center rounded-2xl bg-white text-2xl font-black text-blue-700 shadow-xl"
+                >
+                  C
+                </div>
+
+                <div>
+
+                  <span
+                    class="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-blue-200"
+                  >
+                    EVENTRA Member
+                  </span>
+
+                  <h2 class="mt-3 text-3xl font-bold text-white">
+                    My Profile
+                  </h2>
+
+                  <p class="mt-2 text-sm text-slate-300">
+                    Manage your EVENTRA account information.
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              <button
+                type="button"
+                (click)="closeProfile()"
+                class="rounded-xl bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+              >
+                ← Back to Dashboard
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <!-- Profile Card -->
+          <div class="grid gap-6 xl:grid-cols-3">
+
+            <!-- Personal Info -->
+            <section
+              class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm xl:col-span-2"
+            >
+
+              <div class="border-b border-slate-100 px-6 py-5 flex items-center justify-between">
+                <div>
+                  <h3 class="font-bold text-slate-950">
+                    Personal Information
+                  </h3>
+
+                  <p class="mt-1 text-xs text-slate-500">
+                    Update your account profile details below.
+                  </p>
+                </div>
+              </div>
+
+              <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="p-6">
+
+                @if (errorMessage()) {
+                  <div class="mb-5 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-700">
+                    <svg class="h-5 w-5 shrink-0 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path d="m15 9-6 6M9 9l6 6"></path>
+                    </svg>
+                    <span>{{ errorMessage() }}</span>
+                  </div>
+                }
+
+                @if (successMessage()) {
+                  <div class="mb-5 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-semibold text-emerald-700">
+                    <svg class="h-5 w-5 shrink-0 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path d="m9 12 2 2 4-4"></path>
+                    </svg>
+                    <span>{{ successMessage() }}</span>
+                  </div>
+                }
+
+                <div class="grid gap-5 sm:grid-cols-2">
+
+                  <!-- Name -->
+                  <div>
+                    <label for="profile-name" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Full Name <span class="text-red-500">*</span>
+                    </label>
+
+                    <input
+                      id="profile-name"
+                      type="text"
+                      formControlName="name"
+                      placeholder="Enter your full name"
+                      class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                      [class.border-red-400]="profileForm.controls.name.touched && profileForm.controls.name.invalid"
+                    />
+
+                    @if (profileForm.controls.name.touched && profileForm.controls.name.invalid) {
+                      <p class="mt-1.5 text-xs font-medium text-red-600">
+                        Full name is required (max 100 characters).
+                      </p>
+                    }
+                  </div>
+
+
+                  <!-- Email -->
+                  <div>
+                    <label for="profile-email" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Email Address <span class="text-red-500">*</span>
+                    </label>
+
+                    <input
+                      id="profile-email"
+                      type="email"
+                      formControlName="email"
+                      placeholder="name@example.com"
+                      class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                      [class.border-red-400]="profileForm.controls.email.touched && profileForm.controls.email.invalid"
+                    />
+
+                    @if (profileForm.controls.email.touched && profileForm.controls.email.invalid) {
+                      <p class="mt-1.5 text-xs font-medium text-red-600">
+                        Please enter a valid email address.
+                      </p>
+                    }
+                  </div>
+
+
+                  <!-- Phone -->
+                  <div>
+                    <label for="profile-phone" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Phone Number <span class="text-red-500">*</span>
+                    </label>
+
+                    <input
+                      id="profile-phone"
+                      type="tel"
+                      formControlName="phone"
+                      placeholder="+1 (555) 000-0000"
+                      class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                      [class.border-red-400]="profileForm.controls.phone.touched && profileForm.controls.phone.invalid"
+                    />
+
+                    @if (profileForm.controls.phone.touched && profileForm.controls.phone.invalid) {
+                      <p class="mt-1.5 text-xs font-medium text-red-600">
+                        Please enter a valid phone number (7–20 digits).
+                      </p>
+                    }
+                  </div>
+
+
+                  <!-- Role -->
+                  <div>
+                    <label class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                      Account Role
+                    </label>
+
+                    <div
+                      class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700"
+                    >
+                      <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                      Customer
+                    </div>
+                  </div>
+
+                </div>
+
+
+                <!-- Form Action / Submit Button -->
+                <div class="mt-6 flex items-center justify-end border-t border-slate-100 pt-5">
+                  <button
+                    type="submit"
+                    [disabled]="isSaving()"
+                    class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-md shadow-blue-600/20 transition hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    @if (isSaving()) {
+                      <svg class="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24" fill="none">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                      </svg>
+                      Saving Changes...
+                    } @else {
+                      Save Changes
+                    }
+                  </button>
+                </div>
+
+              </form>
+
+            </section>
+
+
+            <!-- Security -->
+            <section
+              class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+            >
+
+              <div
+                class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600"
+              >
+
+                <svg
+                  class="h-6 w-6"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                >
+                  <rect x="5" y="10" width="14" height="10" rx="2"></rect>
+                  <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+                </svg>
+
+              </div>
+
+
+              <h3 class="mt-5 text-lg font-bold text-slate-950">
+                Account Security
+              </h3>
+
+              <p class="mt-2 text-sm leading-6 text-slate-500">
+                Your account is protected using EVENTRA's authenticated
+                account system.
+              </p>
+
+
+              <div class="mt-6 rounded-xl bg-emerald-50 p-4">
+
+                <div class="flex items-center gap-2">
+
+                  <span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+
+                  <span class="text-sm font-bold text-emerald-700">
+                    Account Active
+                  </span>
+
+                </div>
+
+                <p class="mt-1 text-xs text-emerald-600">
+                  Your account is currently active.
+                </p>
+
+              </div>
+
+            </section>
+
+          </div>
+
+
+          <!-- Account Actions -->
+          <section
+            class="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+          >
+
+            <h3 class="font-bold text-slate-950">
+              Account Information
+            </h3>
+
+            <p class="mt-1 text-sm text-slate-500">
+              Manage your EVENTRA account from this dashboard.
+            </p>
+
+
+            <div class="mt-5 grid gap-4 sm:grid-cols-3">
+
+              <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Upcoming Bookings
+                </p>
+
+                <p class="mt-2 text-2xl font-bold text-slate-950">
+                  {{ dashboard()?.upcomingBookings ?? 0 }}
+                </p>
+
+              </div>
+
+
+              <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Parking Reservations
+                </p>
+
+                <p class="mt-2 text-2xl font-bold text-slate-950">
+                  {{ dashboard()?.reservedParking ?? 0 }}
+                </p>
+
+              </div>
+
+
+              <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Notifications
+                </p>
+
+                <p class="mt-2 text-2xl font-bold text-slate-950">
+                  {{ dashboard()?.unreadNotifications ?? 0 }}
+                </p>
+
+              </div>
+
+            </div>
+
+          </section>
+
+        </section>
+
+      }
+
+
+      <!-- ================================================= -->
+      <!-- DASHBOARD VIEW -->
+      <!-- ================================================= -->
+
+      @else {
+
+        <!-- Hero -->
+        <section
+          class="relative mb-7 overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 p-7 shadow-xl sm:p-9"
+        >
+
+          <div class="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-blue-500/20 blur-3xl"></div>
+
+          <div class="absolute -bottom-28 right-40 h-64 w-64 rounded-full bg-violet-500/20 blur-3xl"></div>
+
+          <div class="relative z-10 max-w-2xl">
+
+            <span
+              class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-blue-200"
+            >
+              <span class="h-2 w-2 rounded-full bg-blue-400"></span>
+              Customer Dashboard
+            </span>
+
+            <h2 class="mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              Welcome back to EVENTRA
+            </h2>
+
+            <p class="mt-3 max-w-xl text-sm leading-6 text-slate-300 sm:text-base">
+              Manage your event bookings, parking reservations,
+              payments and notifications from one place.
+            </p>
+
+          </div>
+
+        </section>
+
+
+        <!-- Loading -->
+        @if (isLoading()) {
+
+          <section class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+
+            @for (item of [1, 2, 3, 4]; track item) {
+
+              <div
+                class="animate-pulse rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+              >
+
+                <div class="h-11 w-11 rounded-xl bg-slate-200"></div>
+
+                <div class="mt-5 h-3 w-28 rounded bg-slate-200"></div>
+
+                <div class="mt-3 h-8 w-16 rounded bg-slate-200"></div>
+
+              </div>
+
+            }
+
+          </section>
+
+        }
+
+
+        <!-- Error -->
+        @else if (errorMessage()) {
+
+          <section class="rounded-2xl border border-red-200 bg-red-50 p-6">
+
+            <h3 class="font-bold text-red-800">
+              Unable to load dashboard
+            </h3>
+
+            <p class="mt-1 text-sm text-red-700">
+              {{ errorMessage() }}
+            </p>
+
+            <button
+              type="button"
+              (click)="retry()"
+              class="mt-4 rounded-lg bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-700"
+            >
+              Try Again
+            </button>
+
+          </section>
+
+        }
+
+
+        <!-- Dashboard Data -->
+        @else if (dashboard()) {
+
+          <!-- Statistics -->
+          <section class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+
+
+            <!-- Bookings -->
+            <div
+              class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+            >
+
+              <div class="flex items-center justify-between">
+
+                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+
+                  <svg
+                    class="h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                  >
+                    <rect x="3" y="4" width="18" height="17" rx="3"></rect>
+                    <path d="M16 2v4M8 2v4M3 10h18"></path>
+                  </svg>
+
+                </div>
+
+                <span class="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600">
+                  Active
+                </span>
+
+              </div>
+
+              <p class="mt-5 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Upcoming Bookings
+              </p>
+
+              <p class="mt-2 text-3xl font-bold text-slate-950">
+                {{ dashboard()!.upcomingBookings }}
+              </p>
+
+              <p class="mt-1 text-xs text-slate-500">
+                Active event reservations
+              </p>
+
+            </div>
+
+
+            <!-- Parking -->
+            <div
+              class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+            >
+
+              <div class="flex items-center justify-between">
+
+                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                  <span class="text-sm font-black">P</span>
+                </div>
+
+                <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600">
+                  Reserved
+                </span>
+
+              </div>
+
+              <p class="mt-5 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Reserved Parking
+              </p>
+
+              <p class="mt-2 text-3xl font-bold text-slate-950">
+                {{ dashboard()!.reservedParking }}
+              </p>
+
+              <p class="mt-1 text-xs text-slate-500">
+                Parking reservations
+              </p>
+
+            </div>
+
+
+            <!-- Payments -->
+            <div
+              class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+            >
+
+              <div class="flex items-center justify-between">
+
+                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+
+                  <svg
+                    class="h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                  >
+                    <rect x="2.5" y="5" width="19" height="14" rx="2.5"></rect>
+                    <path d="M2.5 10h19"></path>
+                  </svg>
+
+                </div>
+
+                <span class="rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-bold text-violet-600">
+                  Records
+                </span>
+
+              </div>
+
+              <p class="mt-5 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Recent Payments
+              </p>
+
+              <p class="mt-2 text-3xl font-bold text-slate-950">
+                {{ dashboard()!.recentPayments }}
+              </p>
+
+              <p class="mt-1 text-xs text-slate-500">
+                Payment records
+              </p>
+
+            </div>
+
+
+            <!-- Notifications -->
+            <div
+              class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+            >
+
+              <div class="flex items-center justify-between">
+
+                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+
+                  <svg
+                    class="h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                  >
+                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+                    <path d="M10 21h4"></path>
+                  </svg>
+
+                </div>
+
+                <span class="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600">
+                  Alerts
+                </span>
+
+              </div>
+
+              <p class="mt-5 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Unread Notifications
+              </p>
+
+              <p class="mt-2 text-3xl font-bold text-slate-950">
+                {{ dashboard()!.unreadNotifications }}
+              </p>
+
+              <p class="mt-1 text-xs text-slate-500">
+                Messages waiting for you
+              </p>
+
+            </div>
+
+          </section>
+
+
+          <!-- Bottom -->
+          <section class="mt-7 grid gap-6 xl:grid-cols-5">
+
+
+            <!-- Upcoming -->
+            <div
+              class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm xl:col-span-3"
+            >
+
+              <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+
+                <div>
+
+                  <h3 class="font-bold text-slate-950">
+                    Upcoming Events
+                  </h3>
+
+                  <p class="mt-1 text-xs text-slate-500">
+                    Your upcoming reservations
+                  </p>
+
+                </div>
+
+                <button
+                  type="button"
+                  class="text-xs font-bold text-blue-600 hover:text-blue-700"
+                >
+                  View All →
+                </button>
+
+              </div>
+
+
+              <div class="divide-y divide-slate-100">
+
+                <div class="flex items-center gap-4 px-6 py-5">
+
+                  <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+
+                    <svg
+                      class="h-6 w-6"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                    >
+                      <circle cx="12" cy="12" r="8"></circle>
+                      <path d="M12 8v4l3 2"></path>
+                    </svg>
+
+                  </div>
+
+                  <div class="min-w-0 flex-1">
+
+                    <h4 class="truncate text-sm font-bold text-slate-900">
+                      Your upcoming event
+                    </h4>
+
+                    <p class="mt-1 text-xs text-slate-500">
+                      Check your booking details and event information.
+                    </p>
+
+                  </div>
+
+                  <span class="rounded-full bg-emerald-50 px-3 py-1 text-[10px] font-bold text-emerald-600">
+                    Confirmed
+                  </span>
+
+                </div>
+
+
+                <div class="flex items-center gap-4 px-6 py-5">
+
+                  <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                    ✓
+                  </div>
+
+                  <div class="min-w-0 flex-1">
+
+                    <h4 class="text-sm font-bold text-slate-900">
+                      Manage your reservations
+                    </h4>
+
+                    <p class="mt-1 text-xs text-slate-500">
+                      View seats, parking and booking information.
+                    </p>
+
+                  </div>
+
+                  <span class="rounded-full bg-blue-50 px-3 py-1 text-[10px] font-bold text-blue-600">
+                    EVENTRA
+                  </span>
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <!-- Right -->
+            <div class="space-y-6 xl:col-span-2">
+
+
+              <!-- Payments -->
+              <div
+                class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+              >
+
+                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+
+                  <div class="flex items-center gap-3">
+
+                    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
+                      $
+                    </div>
+
+                    <h3 class="font-bold text-slate-950">
+                      Recent Payments
+                    </h3>
+
+                  </div>
+
+                  <button
+                    type="button"
+                    class="text-xs font-bold text-blue-600"
+                  >
+                    View All →
+                  </button>
+
+                </div>
+
+
+                <div class="p-6">
+
+                  <p class="text-sm font-bold text-slate-900">
+                    Payment Records
+                  </p>
+
+                  <p class="mt-1 text-xs text-slate-500">
+                    {{ dashboard()!.recentPayments }}
+                    recent payment record(s)
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              <!-- Notifications -->
+              <div
+                class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+              >
+
+                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+
+                  <div class="flex items-center gap-3">
+
+                    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                      🔔
+                    </div>
+
+                    <h3 class="font-bold text-slate-950">
+                      Latest Notifications
+                    </h3>
+
+                  </div>
+
+                  <button
+                    type="button"
+                    class="text-xs font-bold text-blue-600"
+                  >
+                    View All →
+                  </button>
+
+                </div>
+
+
+                <div class="p-6">
+
+                  @if (dashboard()!.unreadNotifications > 0) {
+
+                    <div class="flex items-start gap-3">
+
+                      <span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-blue-600"></span>
+
+                      <div>
+
+                        <p class="text-sm font-bold text-slate-900">
+                          You have new notifications
+                        </p>
+
+                        <p class="mt-1 text-xs leading-5 text-slate-500">
+                          {{ dashboard()!.unreadNotifications }}
+                          notification(s) are waiting for you.
+                        </p>
+
+                      </div>
+
+                    </div>
+
+                  }
+
+                  @else {
+
+                    <div class="py-2 text-center">
+
+                      <div
+                        class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-400"
+                      >
+                        ✓
+                      </div>
+
+                      <p class="mt-3 text-sm font-semibold text-slate-700">
+                        You're all caught up
+                      </p>
+
+                      <p class="mt-1 text-xs text-slate-400">
+                        No unread notifications.
+                      </p>
+
+                    </div>
+
+                  }
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </section>
+
+        }
+
+      }
+
+    </main>
+
+  </div>
+
+</div>
