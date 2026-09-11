@@ -86,5 +86,32 @@ export const routes: Routes = [
     ).then((m) => m.EventDetails),
 },
 
+{
+  path: 'admin/venues',
+  loadComponent: () =>
+    import('./features/admin/pages/venues/venue-list/venue-list')
+      .then((m) => m.VenueList),
+},
+{
+  path: 'admin/venues/new',
+  loadComponent: () =>
+    import('./features/admin/pages/venues/venue-form/venue-form')
+      .then((m) => m.VenueForm),
+},
+
+{
+  path: 'admin/venues/:venueId/edit',
+  loadComponent: () =>
+    import('./features/admin/pages/venues/venue-edit/venue-edit')
+      .then((m) => m.VenueEdit),
+},
+
+{
+  path: 'admin/venues/availability',
+  loadComponent: () =>
+    import(
+      './features/admin/pages/venues/venue-availability/venue-availability'
+    ).then((m) => m.VenueAvailability),
+},
   
 ];
