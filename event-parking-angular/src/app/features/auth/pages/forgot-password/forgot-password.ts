@@ -4,14 +4,14 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 
 import { AuthService } from '../../../../core/auth/auth';
 
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule],
   templateUrl: './forgot-password.html',
   styleUrl: './forgot-password.css',
 })
@@ -57,7 +57,7 @@ export class ForgotPassword {
 
         this.successMessage.set(
           response?.message ??
-            'A password reset OTP has been sent to your email.'
+          'A password reset OTP has been sent to your email.'
         );
 
         this.router.navigate(
@@ -75,7 +75,7 @@ export class ForgotPassword {
 
         this.errorMessage.set(
           error?.error?.message ??
-            'Unable to send password reset OTP. Please try again.'
+          'Unable to send password reset OTP. Please try again.'
         );
       },
     });

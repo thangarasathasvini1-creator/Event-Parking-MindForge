@@ -175,4 +175,8 @@ export class Profile implements OnInit {
   goToDashboard(): void {
     this.router.navigate(['/customer/dashboard']);
   }
+
+  goToEvents(): void {
+    this.router.navigate(['/events']);
+  }
 }

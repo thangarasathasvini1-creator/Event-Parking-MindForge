@@ -1,20 +1,32 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { DashboardService } from '../../../../services/dashboard.service';
 import { Dashboard as DashboardModel } from '../../../../models/dashboard.model';
 import { AuthService } from '../../../../core/auth/auth';
+import { EventList } from '../events/event-list/event-list';
+import { Profile } from '../profile/profile';
+
+export type CustomerDashboardTab =
+  | 'dashboard'
+  | 'events'
+  | 'profile'
+  | 'bookings'
+  | 'parking'
+  | 'payments'
+  | 'notifications';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [EventList, Profile],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
 export class Dashboard implements OnInit {
   private readonly dashboardService = inject(DashboardService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
 
   readonly dashboard = signal<DashboardModel | null>(null);
@@ -22,23 +34,50 @@ export class Dashboard implements OnInit {
   readonly errorMessage = signal('');
 
   readonly sidebarCollapsed = signal(false);
-
-  readonly showProfile = signal(false);
+  readonly activeTab = signal<CustomerDashboardTab>('dashboard');
 
   ngOnInit(): void {
+    const currentUrl = this.router.url;
+    if (currentUrl.includes('/events')) {
+      this.activeTab.set('events');
+    } else if (currentUrl.includes('/customer/profile')) {
+      this.activeTab.set('profile');
+    }
+
+    this.route.queryParams.subscribe((params) => {
+      const tabParam = params['tab'] as CustomerDashboardTab;
+      if (
+        tabParam &&
+        [
+          'dashboard',
+          'events',
+          'profile',
+          'bookings',
+          'parking',
+          'payments',
+          'notifications',
+        ].includes(tabParam)
+      ) {
+        this.activeTab.set(tabParam);
+      }
+    });
+
     this.loadDashboard();
+  }
+
+  setTab(tab: CustomerDashboardTab): void {
+    this.activeTab.set(tab);
+    if (tab === 'events') {
+      this.router.navigate(['/events']);
+    } else if (tab === 'profile') {
+      this.router.navigate(['/customer/profile']);
+    } else {
+      this.router.navigate(['/customer/dashboard']);
+    }
   }
 
   toggleSidebar(): void {
     this.sidebarCollapsed.update((value) => !value);
-  }
-
-  openProfile(): void {
-    this.showProfile.set(true);
-  }
-
-  closeProfile(): void {
-    this.showProfile.set(false);
   }
 
   private loadDashboard(): void {
