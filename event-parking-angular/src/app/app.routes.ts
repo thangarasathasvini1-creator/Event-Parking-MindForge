@@ -69,12 +69,22 @@ export const routes: Routes = [
         (m) => m.Dashboard
         ),
     },
+    
+    {
+  path: 'events',
+  loadComponent: () =>
+    import(
+      './features/customer/pages/events/event-list/event-list'
+    ).then((m) => m.EventList),
+},
 
     {
-    path: 'customer/profile',
-    loadComponent: () =>
-        import('./features/customer/pages/profile/profile').then(
-        (m) => m.Profile
-        ),
-    },
+  path: 'events/:eventId',
+  loadComponent: () =>
+    import(
+      './features/customer/pages/events/event-details/event-details'
+    ).then((m) => m.EventDetails),
+},
+
+  
 ];

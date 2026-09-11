@@ -1,19 +1,15 @@
 export interface Event {
   eventId: number;
-  eventName: string;
-  description: string;
+  name: string;
+
+  venueId: number;
+  categoryId: number;
+
   eventDate: string;
   startTime: string;
   endTime: string;
 
-  venueId: number;
-  venueName: string;
-
-  categoryId: number;
-  categoryName: string;
-
-  capacity: number;
   ticketPrice: number;
-
-  parkingAvailable: boolean;
+  parkingFee: number;
+  capacity: number;
 }
