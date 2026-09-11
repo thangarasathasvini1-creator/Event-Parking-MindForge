@@ -78,6 +78,14 @@ export const routes: Routes = [
         ),
     },
     
+    
+  {
+  path: 'admin/events',
+  loadComponent: () =>
+    import(
+      './features/admin/pages/events/event-list/event-list'
+    ).then((m) => m.EventList),
+},
     {
     path: 'events',
     loadComponent: () =>
@@ -85,6 +93,22 @@ export const routes: Routes = [
         (m) => m.Dashboard
         ),
     },
+
+{
+  path: 'admin/events/new',
+  loadComponent: () =>
+    import(
+      './features/admin/pages/events/event-form/event-form'
+    ).then((m) => m.EventForm),
+},
+
+{
+  path: 'admin/events/:eventId/edit',
+  loadComponent: () =>
+    import(
+      './features/admin/pages/events/event-edit/event-edit'
+    ).then((m) => m.EventEdit),
+},
 
     {
   path: 'events/:eventId',
@@ -120,6 +144,29 @@ export const routes: Routes = [
     import(
       './features/admin/pages/venues/venue-availability/venue-availability'
     ).then((m) => m.VenueAvailability),
+},
+
+{
+  path: 'admin/categories',
+  loadComponent: () =>
+    import(
+      './features/admin/pages/categories/category-list/category-list'
+    ).then((m) => m.CategoryList),
+},
+{
+  path: 'admin/categories/new',
+  loadComponent: () =>
+    import(
+      './features/admin/pages/categories/category-form/category-form'
+    ).then((m) => m.CategoryForm),
+},
+
+{
+  path: 'admin/categories/:categoryId/edit',
+  loadComponent: () =>
+    import(
+      './features/admin/pages/categories/category-edit/category-edit'
+    ).then((m) => m.CategoryEdit),
 },
   
 ];
