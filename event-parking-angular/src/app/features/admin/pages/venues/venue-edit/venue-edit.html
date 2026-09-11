@@ -1,0 +1,146 @@
+<div class="min-h-screen bg-slate-50 px-6 py-8">
+  <div class="mx-auto max-w-2xl">
+
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-slate-900">
+        Edit Venue
+      </h1>
+
+      <p class="mt-2 text-slate-600">
+        Update venue information and capacity.
+      </p>
+    </div>
+
+    @if (isLoading()) {
+
+      <div class="flex justify-center py-16">
+        <div
+          class="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600">
+        </div>
+      </div>
+
+    } @else if (errorMessage() && !venue.venueId) {
+
+      <div class="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
+
+        <p class="font-medium text-red-700">
+          {{ errorMessage() }}
+        </p>
+
+        <button
+          type="button"
+          (click)="goBack()"
+          class="mt-4 rounded-lg bg-slate-700 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800">
+          Back to Venues
+        </button>
+
+      </div>
+
+    } @else {
+
+      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+
+        @if (successMessage()) {
+          <div
+            class="mb-6 rounded-lg bg-emerald-50 p-4 text-sm font-medium text-emerald-700">
+            {{ successMessage() }}
+          </div>
+        }
+
+        @if (errorMessage()) {
+          <div
+            class="mb-6 rounded-lg bg-red-50 p-4 text-sm font-medium text-red-700">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <form (ngSubmit)="updateVenue()">
+
+          <!-- Venue Name -->
+          <div class="mb-5">
+            <label
+              for="venue-name"
+              class="mb-2 block text-sm font-semibold text-slate-700">
+              Venue Name
+            </label>
+
+            <input
+              id="venue-name"
+              type="text"
+              name="name"
+              [(ngModel)]="venue.name"
+              placeholder="Enter venue name"
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+            />
+          </div>
+
+          <!-- Address -->
+          <div class="mb-5">
+            <label
+              for="venue-address"
+              class="mb-2 block text-sm font-semibold text-slate-700">
+              Address
+            </label>
+
+            <textarea
+              id="venue-address"
+              name="address"
+              [(ngModel)]="venue.address"
+              rows="3"
+              placeholder="Enter venue address"
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"></textarea>
+          </div>
+
+          <!-- Capacity -->
+          <div class="mb-6">
+            <label
+              for="venue-capacity"
+              class="mb-2 block text-sm font-semibold text-slate-700">
+              Total Capacity
+            </label>
+
+            <input
+              id="venue-capacity"
+              type="number"
+              name="totalCapacity"
+              [(ngModel)]="venue.totalCapacity"
+              min="1"
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+            />
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-3">
+
+            <!-- Cancel -->
+            <button
+              type="button"
+              (click)="goBack()"
+              class="flex-1 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+              Cancel
+            </button>
+
+            <!-- Update -->
+            <button
+              type="submit"
+              [disabled]="isSaving()"
+              class="flex-1 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60">
+
+              @if (isSaving()) {
+                Updating...
+              } @else {
+                Update Venue
+              }
+
+            </button>
+
+          </div>
+
+        </form>
+
+      </div>
+
+    }
+
+  </div>
+</div>
