@@ -7,7 +7,6 @@ import {
 import {
   ActivatedRoute,
   Router,
-  RouterLink,
 } from '@angular/router';
 
 import {
@@ -18,7 +17,7 @@ import {
 @Component({
   selector: 'app-verify-password-reset-otp',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule],
   templateUrl: './verify-password-reset-otp.html',
   styleUrl: './verify-password-reset-otp.css',
 })
@@ -115,7 +114,7 @@ export class VerifyPasswordResetOtp {
 
           this.errorMessage.set(
             error?.error?.message ??
-              'Invalid, expired, or maximum-attempts-exceeded OTP.'
+            'Invalid, expired, or maximum-attempts-exceeded OTP.'
           );
         },
       });
@@ -145,7 +144,7 @@ export class VerifyPasswordResetOtp {
 
           this.successMessage.set(
             response?.message ??
-              'A new password reset OTP has been sent to your email.'
+            'A new password reset OTP has been sent to your email.'
           );
 
           this.otpForm.reset();
@@ -156,7 +155,7 @@ export class VerifyPasswordResetOtp {
 
           this.errorMessage.set(
             error?.error?.message ??
-              'Unable to resend password reset OTP. Please try again.'
+            'Unable to resend password reset OTP. Please try again.'
           );
         },
       });
