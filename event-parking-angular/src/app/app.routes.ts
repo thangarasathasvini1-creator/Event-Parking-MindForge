@@ -54,4 +54,27 @@ export const routes: Routes = [
         ).then((m) => m.ResetPassword),
     },
 
+    {
+    path: 'login/callback',
+    loadComponent: () =>
+        import('./features/auth/pages/login-callback/login-callback').then(
+        (m) => m.LoginCallback
+        ),
+    },
+
+    {
+    path: 'customer/dashboard',
+    loadComponent: () =>
+        import('./features/customer/pages/dashboard/dashboard').then(
+        (m) => m.Dashboard
+        ),
+    },
+
+    {
+    path: 'customer/profile',
+    loadComponent: () =>
+        import('./features/customer/pages/profile/profile').then(
+        (m) => m.Profile
+        ),
+    },
 ];
