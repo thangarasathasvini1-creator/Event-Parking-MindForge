@@ -69,6 +69,14 @@ export const routes: Routes = [
         (m) => m.Dashboard
         ),
     },
+
+    {
+    path: 'customer/profile',
+    loadComponent: () =>
+        import('./features/customer/pages/dashboard/dashboard').then(
+        (m) => m.Dashboard
+        ),
+    },
     
     
   {
@@ -78,6 +86,13 @@ export const routes: Routes = [
       './features/admin/pages/events/event-list/event-list'
     ).then((m) => m.EventList),
 },
+    {
+    path: 'events',
+    loadComponent: () =>
+        import('./features/customer/pages/dashboard/dashboard').then(
+        (m) => m.Dashboard
+        ),
+    },
 
 {
   path: 'admin/events/new',
