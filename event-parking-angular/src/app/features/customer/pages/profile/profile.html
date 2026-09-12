@@ -1,0 +1,198 @@
+<div class="mb-6">
+  <h2 class="text-3xl font-bold tracking-tight text-slate-900">
+    My Profile
+  </h2>
+  <p class="mt-1 text-sm text-slate-500">
+    Manage your EVENTRA account information.
+  </p>
+</div>
+
+<!-- Profile Card -->
+<div class="grid gap-6 xl:grid-cols-3">
+
+  <!-- Personal Info -->
+  <section
+    class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm xl:col-span-2"
+  >
+    <div class="border-b border-slate-100 px-6 py-5 flex items-center justify-between">
+      <div>
+        <h3 class="font-bold text-slate-950">
+          Personal Information
+        </h3>
+        <p class="mt-1 text-xs text-slate-500">
+          Update your account profile details below.
+        </p>
+      </div>
+    </div>
+
+    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="p-6">
+
+      @if (errorMessage()) {
+        <div class="mb-5 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-700">
+          <svg class="h-5 w-5 shrink-0 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="m15 9-6 6M9 9l6 6"></path>
+          </svg>
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      @if (successMessage()) {
+        <div class="mb-5 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-semibold text-emerald-700">
+          <svg class="h-5 w-5 shrink-0 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="m9 12 2 2 4-4"></path>
+          </svg>
+          <span>{{ successMessage() }}</span>
+        </div>
+      }
+
+      <div class="grid gap-5 sm:grid-cols-2">
+
+        <!-- Name -->
+        <div>
+          <label for="profile-name" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
+            Full Name <span class="text-red-500">*</span>
+          </label>
+
+          <input
+            id="profile-name"
+            type="text"
+            formControlName="name"
+            placeholder="Enter your full name"
+            class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+            [class.border-red-400]="profileForm.controls.name.touched && profileForm.controls.name.invalid"
+          />
+
+          @if (profileForm.controls.name.touched && profileForm.controls.name.invalid) {
+            <p class="mt-1.5 text-xs font-medium text-red-600">
+              Full name is required (max 100 characters).
+            </p>
+          }
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label for="profile-email" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
+            Email Address <span class="text-red-500">*</span>
+          </label>
+
+          <input
+            id="profile-email"
+            type="email"
+            formControlName="email"
+            placeholder="name@example.com"
+            class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+            [class.border-red-400]="profileForm.controls.email.touched && profileForm.controls.email.invalid"
+          />
+
+          @if (profileForm.controls.email.touched && profileForm.controls.email.invalid) {
+            <p class="mt-1.5 text-xs font-medium text-red-600">
+              Please enter a valid email address.
+            </p>
+          }
+        </div>
+
+        <!-- Phone -->
+        <div>
+          <label for="profile-phone" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
+            Phone Number <span class="text-red-500">*</span>
+          </label>
+
+          <input
+            id="profile-phone"
+            type="tel"
+            formControlName="phone"
+            placeholder="+1 (555) 000-0000"
+            class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+            [class.border-red-400]="profileForm.controls.phone.touched && profileForm.controls.phone.invalid"
+          />
+
+          @if (profileForm.controls.phone.touched && profileForm.controls.phone.invalid) {
+            <p class="mt-1.5 text-xs font-medium text-red-600">
+              Please enter a valid phone number (7–20 digits).
+            </p>
+          }
+        </div>
+
+        <!-- Role -->
+        <div>
+          <label class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
+            Account Role
+          </label>
+
+          <div
+            class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700"
+          >
+            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+            Customer
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Form Action / Submit Button -->
+      <div class="mt-6 flex items-center justify-end border-t border-slate-100 pt-5">
+        <button
+          type="submit"
+          [disabled]="isSaving()"
+          class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-md shadow-blue-600/20 transition hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          @if (isSaving()) {
+            <svg class="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24" fill="none">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            Saving Changes...
+          } @else {
+            Save Changes
+          }
+        </button>
+      </div>
+
+    </form>
+
+  </section>
+
+  <!-- Security -->
+  <section
+    class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+  >
+    <div
+      class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600"
+    >
+      <svg
+        class="h-6 w-6"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+      >
+        <rect x="5" y="10" width="14" height="10" rx="2"></rect>
+        <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+      </svg>
+    </div>
+
+    <h3 class="mt-5 text-lg font-bold text-slate-950">
+      Account Security
+    </h3>
+
+    <p class="mt-2 text-sm leading-6 text-slate-500">
+      Your account is protected using EVENTRA's authenticated account system.
+    </p>
+
+    <div class="mt-6 rounded-xl bg-emerald-50 p-4">
+      <div class="flex items-center gap-2">
+        <span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+        <span class="text-sm font-bold text-emerald-700">
+          Account Active
+        </span>
+      </div>
+      <p class="mt-1 text-xs text-emerald-600">
+        Your account is currently active.
+      </p>
+    </div>
+
+  </section>
+
+</div>

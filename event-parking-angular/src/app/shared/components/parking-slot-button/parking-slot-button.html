@@ -1,0 +1,13 @@
+<button
+  type="button"
+  class="parking-slot-button"
+  [class.selected]="selected"
+  [class.unavailable]="!isAvailable"
+  [disabled]="!isAvailable"
+  [attr.aria-label]="'Parking slot ' + slotNumber + ': ' + status"
+  [attr.aria-pressed]="selected"
+  (click)="onSlotClick()"
+>
+  <span class="slot-number">{{ slotNumber }}</span>
+  <span class="slot-status">{{ isAvailable ? (selected ? 'Selected' : 'Available') : status }}</span>
+</button>

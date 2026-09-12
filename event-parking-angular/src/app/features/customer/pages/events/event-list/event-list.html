@@ -1,0 +1,282 @@
+<div class="min-h-screen bg-slate-50 px-6 py-8">
+  <div class="mx-auto max-w-7xl">
+
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-slate-900">
+        Discover Events
+      </h1>
+
+      <p class="mt-2 text-slate-600">
+        Find and explore upcoming events.
+      </p>
+    </div>
+
+    <!-- Filters -->
+    <div class="mb-8 grid gap-4 md:grid-cols-2">
+
+      <!-- Search -->
+      <div>
+        <label
+          for="event-search"
+          class="mb-2 block text-sm font-semibold text-slate-700">
+          Search Events
+        </label>
+
+        <input
+          id="event-search"
+          type="text"
+          [value]="searchTerm()"
+          (input)="onSearch($event)"
+          placeholder="Search by event name..."
+          class="w-full rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm text-slate-800 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+        />
+      </div>
+
+      <!-- Category -->
+      <div>
+        <label
+          for="category-filter"
+          class="mb-2 block text-sm font-semibold text-slate-700">
+          Category
+        </label>
+
+        <select
+          id="category-filter"
+          [value]="selectedCategoryId() ?? ''"
+          (change)="onCategoryChange($event)"
+          class="w-full rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm text-slate-800 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+
+          <option value="">
+            All Categories
+          </option>
+
+          @for (category of categories(); track category.categoryId) {
+            <option [value]="category.categoryId">
+              {{ category.name }}
+            </option>
+          }
+
+        </select>
+      </div>
+
+    </div>
+
+    <!-- Clear Filters -->
+    @if (searchTerm() || selectedCategoryId() !== null) {
+      <div class="mb-8">
+        <button
+          type="button"
+          (click)="clearFilters()"
+          class="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+          Clear Filters
+        </button>
+      </div>
+    }
+
+    <!-- Loading -->
+    @if (isLoading()) {
+
+      <div class="flex justify-center py-16">
+        <div
+          class="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600">
+        </div>
+      </div>
+
+    }
+
+    <!-- Error -->
+    @if (!isLoading() && errorMessage()) {
+
+      <div class="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
+
+        <p class="font-medium text-red-700">
+          {{ errorMessage() }}
+        </p>
+
+        <button
+          type="button"
+          (click)="retry()"
+          class="mt-4 rounded-lg bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700">
+          Try Again
+        </button>
+
+      </div>
+
+    }
+
+    <!-- Events -->
+    @if (!isLoading() && !errorMessage()) {
+
+      @if (filteredEvents().length > 0) {
+
+        <!-- Result Count -->
+        @if (searchTerm() || selectedCategoryId() !== null) {
+          <p class="mb-6 text-sm text-slate-600">
+            Showing
+            <span class="font-semibold text-indigo-600">
+              {{ filteredEvents().length }}
+            </span>
+            result(s)
+          </p>
+        }
+
+        <!-- Event Grid -->
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+
+          @for (event of filteredEvents(); track event.eventId) {
+
+            <article
+              class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+
+              <!-- Event Header -->
+              <div
+                class="bg-gradient-to-r from-indigo-600 to-violet-600 p-6 text-white">
+
+                <p class="text-sm font-medium text-indigo-100">
+                  Category ID: {{ event.categoryId }}
+                </p>
+
+                <h2 class="mt-2 text-xl font-bold">
+                  {{ event.name }}
+                </h2>
+
+              </div>
+
+              <!-- Event Details -->
+              <div class="space-y-4 p-6">
+
+                <!-- Date -->
+                <div>
+                  <p class="text-xs font-semibold uppercase text-slate-400">
+                    Date
+                  </p>
+
+                  <p class="mt-1 text-sm font-medium text-slate-700">
+                    {{ event.eventDate | date:'mediumDate' }}
+                  </p>
+                </div>
+
+                <!-- Time -->
+                <div>
+                  <p class="text-xs font-semibold uppercase text-slate-400">
+                    Time
+                  </p>
+
+                  <p class="mt-1 text-sm font-medium text-slate-700">
+                    {{ event.startTime }} - {{ event.endTime }}
+                  </p>
+                </div>
+
+                <!-- Venue -->
+                <div>
+                  <p class="text-xs font-semibold uppercase text-slate-400">
+                    Venue ID
+                  </p>
+
+                  <p class="mt-1 text-sm font-medium text-slate-700">
+                    {{ event.venueId }}
+                  </p>
+                </div>
+
+                <!-- Price + Capacity -->
+                <div
+                  class="flex items-center justify-between border-t border-slate-100 pt-4">
+
+                  <div>
+                    <p class="text-xs text-slate-400">
+                      Ticket Price
+                    </p>
+
+                    <p class="text-lg font-bold text-indigo-600">
+                      {{ event.ticketPrice | currency }}
+                    </p>
+                  </div>
+
+                  <div class="text-right">
+                    <p class="text-xs text-slate-400">
+                      Capacity
+                    </p>
+
+                    <p class="text-sm font-semibold text-slate-700">
+                      {{ event.capacity }}
+                    </p>
+                  </div>
+
+                </div>
+
+                <!-- Parking -->
+                @if (event.parkingFee > 0) {
+
+                  <div
+                    class="rounded-lg bg-emerald-50 px-3 py-2 text-center text-sm font-medium text-emerald-700">
+
+                    Parking Available · Fee:
+                    {{ event.parkingFee | currency }}
+
+                  </div>
+
+                } @else {
+
+                  <div
+                    class="rounded-lg bg-slate-100 px-3 py-2 text-center text-sm font-medium text-slate-500">
+
+                    Parking Not Available
+
+                  </div>
+
+                }
+
+                <!-- View Details -->
+                <button
+                  type="button"
+                  (click)="viewEvent(event.eventId)"
+                  class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700">
+
+                  View Details
+
+                </button>
+
+              </div>
+
+            </article>
+
+          }
+
+        </div>
+
+      } @else {
+
+        <!-- No Events -->
+        <div
+          class="rounded-2xl border border-slate-200 bg-white p-12 text-center">
+
+          <h2 class="text-xl font-semibold text-slate-800">
+            No events found
+          </h2>
+
+          <p class="mt-2 text-slate-500">
+            Try changing your search or category filter.
+          </p>
+
+          @if (searchTerm() || selectedCategoryId() !== null) {
+
+            <button
+              type="button"
+              (click)="clearFilters()"
+              class="mt-5 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700">
+
+              Clear Filters
+
+            </button>
+
+          }
+
+        </div>
+
+      }
+
+    }
+
+  </div>
+</div>

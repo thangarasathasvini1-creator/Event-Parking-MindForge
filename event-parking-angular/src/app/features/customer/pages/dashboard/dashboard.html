@@ -1,0 +1,1277 @@
+<div class="min-h-screen bg-slate-50">
+
+  <!-- ====================================================== -->
+  <!-- SIDEBAR -->
+  <!-- ====================================================== -->
+  <aside
+    class="fixed inset-y-0 left-0 z-40 hidden border-r border-slate-200 bg-white transition-all duration-300 lg:flex lg:flex-col"
+    [class.w-72]="!sidebarCollapsed()"
+    [class.w-20]="sidebarCollapsed()"
+  >
+
+    <!-- Brand -->
+    <div class="flex h-20 items-center border-b border-slate-100 px-5">
+
+      <div
+        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-xl font-black text-white shadow-lg shadow-blue-600/20"
+      >
+        E
+      </div>
+
+      @if (!sidebarCollapsed()) {
+        <div class="ml-3 overflow-hidden">
+          <h1
+            class="whitespace-nowrap text-lg font-bold tracking-tight text-slate-950"
+          >
+            EVENTRA
+          </h1>
+
+          <p class="whitespace-nowrap text-[10px] text-slate-500">
+            Events. Seats. Parking.
+          </p>
+        </div>
+      }
+
+    </div>
+
+
+    <!-- ================================================== -->
+    <!-- NAVIGATION -->
+    <!-- ================================================== -->
+    <nav class="flex-1 overflow-y-auto px-3 py-5">
+
+      @if (!sidebarCollapsed()) {
+        <p
+          class="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400"
+        >
+          Main Menu
+        </p>
+      }
+
+
+      <!-- Dashboard -->
+      <button
+        type="button"
+        (click)="setTab('dashboard')"
+        class="mb-1 flex w-full items-center rounded-xl px-3 py-3 text-sm transition"
+        [class.bg-blue-50]="activeTab() === 'dashboard'"
+        [class.text-blue-700]="activeTab() === 'dashboard'"
+        [class.font-semibold]="activeTab() === 'dashboard'"
+        [class.text-slate-600]="activeTab() !== 'dashboard'"
+        [class.hover:bg-slate-50]="activeTab() !== 'dashboard'"
+        [class.justify-center]="sidebarCollapsed()"
+      >
+
+        <svg
+          class="h-5 w-5 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+
+        @if (!sidebarCollapsed()) {
+          <span class="ml-3">Dashboard</span>
+        }
+
+      </button>
+
+
+      <!-- Browse Events -->
+      <button
+        type="button"
+        (click)="setTab('events')"
+        class="mb-1 flex w-full items-center rounded-xl px-3 py-3 text-sm transition hover:bg-slate-50 hover:text-blue-600"
+        [class.bg-blue-50]="activeTab() === 'events'"
+        [class.text-blue-700]="activeTab() === 'events'"
+        [class.font-semibold]="activeTab() === 'events'"
+        [class.text-slate-600]="activeTab() !== 'events'"
+        [class.justify-center]="sidebarCollapsed()"
+      >
+
+        <svg
+          class="h-5 w-5 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+          <line x1="16" x2="16" y1="2" y2="6"/>
+          <line x1="8" x2="8" y1="2" y2="6"/>
+          <line x1="3" x2="21" y1="10" y2="10"/>
+        </svg>
+
+        @if (!sidebarCollapsed()) {
+          <span class="ml-3">Browse Events</span>
+        }
+
+      </button>
+
+
+      <!-- Bookings -->
+      <button
+        type="button"
+        (click)="setTab('bookings')"
+        class="mb-1 flex w-full items-center rounded-xl px-3 py-3 text-sm transition hover:bg-slate-50 hover:text-blue-600"
+        [class.bg-blue-50]="activeTab() === 'bookings'"
+        [class.text-blue-700]="activeTab() === 'bookings'"
+        [class.font-semibold]="activeTab() === 'bookings'"
+        [class.text-slate-600]="activeTab() !== 'bookings'"
+        [class.justify-center]="sidebarCollapsed()"
+      >
+
+        <svg
+          class="h-5 w-5 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>
+          <path d="M13 5v2"/>
+          <path d="M13 11v2"/>
+          <path d="M13 17v2"/>
+        </svg>
+
+        @if (!sidebarCollapsed()) {
+          <span class="ml-3">My Bookings</span>
+        }
+
+      </button>
+
+
+      <!-- Parking -->
+      <button
+        type="button"
+        (click)="setTab('parking')"
+        class="mb-1 flex w-full items-center rounded-xl px-3 py-3 text-sm transition hover:bg-slate-50 hover:text-blue-600"
+        [class.bg-blue-50]="activeTab() === 'parking'"
+        [class.text-blue-700]="activeTab() === 'parking'"
+        [class.font-semibold]="activeTab() === 'parking'"
+        [class.text-slate-600]="activeTab() !== 'parking'"
+        [class.justify-center]="sidebarCollapsed()"
+      >
+
+        <svg
+          class="h-5 w-5 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C2.0 10.9 2 11.2 2 11.5V16c0 .6.4 1 1 1h2"/>
+          <circle cx="7" cy="17" r="2"/>
+          <path d="M9 17h6"/>
+          <circle cx="17" cy="17" r="2"/>
+        </svg>
+
+        @if (!sidebarCollapsed()) {
+          <span class="ml-3">Parking Reservations</span>
+        }
+
+      </button>
+
+
+      <!-- Payments -->
+      <button
+        type="button"
+        (click)="setTab('payments')"
+        class="mb-1 flex w-full items-center rounded-xl px-3 py-3 text-sm transition hover:bg-slate-50 hover:text-blue-600"
+        [class.bg-blue-50]="activeTab() === 'payments'"
+        [class.text-blue-700]="activeTab() === 'payments'"
+        [class.font-semibold]="activeTab() === 'payments'"
+        [class.text-slate-600]="activeTab() !== 'payments'"
+        [class.justify-center]="sidebarCollapsed()"
+      >
+
+        <svg
+          class="h-5 w-5 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect width="20" height="14" x="2" y="5" rx="2"/>
+          <line x1="2" x2="22" y1="10" y2="10"/>
+        </svg>
+
+        @if (!sidebarCollapsed()) {
+          <span class="ml-3">My Payments</span>
+        }
+
+      </button>
+
+
+      <!-- Notifications -->
+      <button
+        type="button"
+        (click)="setTab('notifications')"
+        class="mb-1 flex w-full items-center rounded-xl px-3 py-3 text-sm transition hover:bg-slate-50 hover:text-blue-600"
+        [class.bg-blue-50]="activeTab() === 'notifications'"
+        [class.text-blue-700]="activeTab() === 'notifications'"
+        [class.font-semibold]="activeTab() === 'notifications'"
+        [class.text-slate-600]="activeTab() !== 'notifications'"
+        [class.justify-center]="sidebarCollapsed()"
+      >
+
+        <div class="relative">
+
+          <svg
+            class="h-5 w-5 shrink-0"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+          </svg>
+
+          @if (
+            dashboard() &&
+            dashboard()!.unreadNotifications > 0
+          ) {
+
+            <span
+              class="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white"
+            >
+              {{ dashboard()!.unreadNotifications }}
+            </span>
+
+          }
+
+        </div>
+
+        @if (!sidebarCollapsed()) {
+          <span class="ml-3">Notifications</span>
+        }
+
+      </button>
+
+
+      <!-- Profile -->
+      <button
+        type="button"
+        (click)="setTab('profile')"
+        class="mb-1 flex w-full items-center rounded-xl px-3 py-3 text-sm transition hover:bg-slate-50 hover:text-blue-600"
+        [class.bg-blue-50]="activeTab() === 'profile'"
+        [class.text-blue-700]="activeTab() === 'profile'"
+        [class.font-semibold]="activeTab() === 'profile'"
+        [class.text-slate-600]="activeTab() !== 'profile'"
+        [class.justify-center]="sidebarCollapsed()"
+      >
+
+        <svg
+          class="h-5 w-5 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+
+        @if (!sidebarCollapsed()) {
+          <span class="ml-3">My Profile</span>
+        }
+
+      </button>
+
+
+      <!-- Account divider -->
+      @if (!sidebarCollapsed()) {
+
+        <div class="my-5 border-t border-slate-100"></div>
+
+        <p
+          class="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400"
+        >
+          Account
+        </p>
+
+      }
+
+
+      <!-- Settings -->
+      <button
+        type="button"
+        (click)="setTab('profile')"
+        class="mb-1 flex w-full items-center rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-blue-600"
+        [class.justify-center]="sidebarCollapsed()"
+      >
+
+        <svg
+          class="h-5 w-5 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+
+        @if (!sidebarCollapsed()) {
+          <span class="ml-3">Settings</span>
+        }
+
+      </button>
+
+
+      <!-- Logout -->
+      <button
+        type="button"
+        (click)="logout()"
+        class="flex w-full items-center rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-600"
+        [class.justify-center]="sidebarCollapsed()"
+      >
+
+        <svg
+          class="h-5 w-5 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" x2="9" y1="12" y2="12"/>
+        </svg>
+
+        @if (!sidebarCollapsed()) {
+          <span class="ml-3">Logout</span>
+        }
+
+      </button>
+
+    </nav>
+
+
+    <!-- Sidebar Promo -->
+    @if (!sidebarCollapsed()) {
+
+      <div class="p-4">
+
+        <div
+          class="overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 p-5 text-white shadow-lg shadow-blue-600/20"
+        >
+
+          <div
+            class="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-white/15"
+          >
+            ★
+          </div>
+
+          <h3 class="text-sm font-bold">
+            Make Every Event Special
+          </h3>
+
+          <p class="mt-1 text-xs leading-5 text-blue-100">
+            Discover amazing events and secure your spot today.
+          </p>
+
+          <button
+            type="button"
+            class="mt-4 w-full rounded-lg bg-white px-3 py-2 text-xs font-bold text-blue-700 transition hover:bg-blue-50"
+          >
+            Explore Events →
+          </button>
+
+        </div>
+
+      </div>
+
+    }
+
+  </aside>
+
+
+  <!-- ====================================================== -->
+  <!-- MAIN AREA -->
+  <!-- ====================================================== -->
+  <div
+    class="transition-all duration-300"
+    [class.lg:ml-72]="!sidebarCollapsed()"
+    [class.lg:ml-20]="sidebarCollapsed()"
+  >
+
+    <!-- ================================================== -->
+    <!-- TOPBAR -->
+    <!-- ================================================== -->
+    <header
+      class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur"
+    >
+
+      <div
+        class="flex h-20 items-center justify-between px-5 sm:px-8"
+      >
+
+        <!-- Left -->
+        <div class="flex items-center gap-4">
+
+          <!-- Sidebar Toggle -->
+          <button
+            type="button"
+            (click)="toggleSidebar()"
+            class="hidden h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 lg:flex"
+            aria-label="Toggle sidebar"
+          >
+
+            <svg
+              class="h-5 w-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path d="M4 6h16"></path>
+              <path d="M4 12h16"></path>
+              <path d="M4 18h16"></path>
+            </svg>
+
+          </button>
+
+
+          <!-- Mobile Menu -->
+          <button
+            type="button"
+            class="flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 lg:hidden"
+          >
+
+            <svg
+              class="h-5 w-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path d="M4 6h16"></path>
+              <path d="M4 12h16"></path>
+              <path d="M4 18h16"></path>
+            </svg>
+
+          </button>
+
+
+          <!-- Search -->
+          <div class="hidden w-72 md:block xl:w-96">
+
+            <div class="relative">
+
+              <svg
+                class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <circle cx="11" cy="11" r="7"></circle>
+                <path d="m20 20-4-4"></path>
+              </svg>
+
+              <input
+                type="search"
+                placeholder="Search events, venues..."
+                class="w-full rounded-xl border border-transparent bg-slate-100 py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-200 focus:bg-white focus:ring-4 focus:ring-blue-600/10"
+              />
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Right -->
+        <div class="flex items-center gap-3">
+
+          <!-- Notifications -->
+          <button
+            type="button"
+            class="relative flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+          >
+
+            <svg
+              class="h-5 w-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path
+                d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"
+              ></path>
+
+              <path d="M10 21h4"></path>
+            </svg>
+
+            @if (
+              dashboard() &&
+              dashboard()!.unreadNotifications > 0
+            ) {
+
+              <span
+                class="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500"
+              ></span>
+
+            }
+
+          </button>
+
+
+          <div
+            class="hidden h-8 w-px bg-slate-200 sm:block"
+          ></div>
+
+
+          <!-- User -->
+          <button
+            type="button"
+            (click)="setTab('profile')"
+            class="flex items-center gap-3 rounded-xl px-2 py-1 transition hover:bg-slate-50"
+          >
+
+            <div class="hidden text-right sm:block">
+
+              <p class="text-sm font-bold text-slate-900">
+                Customer
+              </p>
+
+              <p class="text-[11px] text-slate-400">
+                EVENTRA Member
+              </p>
+
+            </div>
+
+            <div
+              class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700"
+            >
+              C
+            </div>
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <!-- ================================================== -->
+    <!-- CONTENT -->
+    <!-- ================================================== -->
+    <main
+      class="mx-auto max-w-[1600px] px-5 py-7 sm:px-8"
+    >
+
+      @if (activeTab() === 'events') {
+        <app-event-list></app-event-list>
+      } @else if (activeTab() === 'profile') {
+        <app-profile></app-profile>
+      } @else {
+
+      <!-- HERO -->
+      <section
+        class="relative mb-7 overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 p-7 shadow-xl sm:p-9"
+      >
+
+        <div
+          class="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-blue-500/20 blur-3xl"
+        ></div>
+
+        <div
+          class="absolute -bottom-28 right-40 h-64 w-64 rounded-full bg-violet-500/20 blur-3xl"
+        ></div>
+
+        <div class="relative z-10 max-w-2xl">
+
+          <span
+            class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-blue-200"
+          >
+            <span
+              class="h-2 w-2 rounded-full bg-blue-400"
+            ></span>
+
+            Customer Dashboard
+          </span>
+
+          <h2
+            class="mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl"
+          >
+            Welcome back to EVENTRA
+          </h2>
+
+          <p
+            class="mt-3 max-w-xl text-sm leading-6 text-slate-300 sm:text-base"
+          >
+            Manage your event bookings, parking reservations,
+            payments and notifications from one place.
+          </p>
+
+        </div>
+
+      </section>
+
+
+      <!-- ================================================== -->
+      <!-- LOADING -->
+      <!-- ================================================== -->
+      @if (isLoading()) {
+
+        <section
+          class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4"
+        >
+
+          @for (item of [1, 2, 3, 4]; track item) {
+
+            <div
+              class="animate-pulse rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+            >
+
+              <div
+                class="h-11 w-11 rounded-xl bg-slate-200"
+              ></div>
+
+              <div
+                class="mt-5 h-3 w-28 rounded bg-slate-200"
+              ></div>
+
+              <div
+                class="mt-3 h-8 w-16 rounded bg-slate-200"
+              ></div>
+
+            </div>
+
+          }
+
+        </section>
+
+      }
+
+
+      <!-- ================================================== -->
+      <!-- ERROR -->
+      <!-- ================================================== -->
+      @else if (errorMessage()) {
+
+        <section
+          class="rounded-2xl border border-red-200 bg-red-50 p-6"
+        >
+
+          <h3 class="font-bold text-red-800">
+            Unable to load dashboard
+          </h3>
+
+          <p class="mt-1 text-sm text-red-700">
+            {{ errorMessage() }}
+          </p>
+
+          <button
+            type="button"
+            (click)="retry()"
+            class="mt-4 rounded-lg bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-700"
+          >
+            Try Again
+          </button>
+
+        </section>
+
+      }
+
+
+      <!-- ================================================== -->
+      <!-- DASHBOARD DATA -->
+      <!-- ================================================== -->
+      @else if (dashboard()) {
+
+        <!-- ================================================= -->
+        <!-- STATISTICS -->
+        <!-- ================================================= -->
+        <section
+          class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4"
+        >
+
+          <!-- Upcoming Bookings -->
+          <div
+            class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+          >
+
+            <div class="flex items-center justify-between">
+
+              <div
+                class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600"
+              >
+
+                <svg
+                  class="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                >
+                  <rect
+                    x="3"
+                    y="4"
+                    width="18"
+                    height="17"
+                    rx="3"
+                  ></rect>
+
+                  <path d="M16 2v4"></path>
+                  <path d="M8 2v4"></path>
+                  <path d="M3 10h18"></path>
+                </svg>
+
+              </div>
+
+              <span
+                class="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600"
+              >
+                Active
+              </span>
+
+            </div>
+
+            <p
+              class="mt-5 text-xs font-semibold uppercase tracking-wider text-slate-400"
+            >
+              Upcoming Bookings
+            </p>
+
+            <p
+              class="mt-2 text-3xl font-bold text-slate-950"
+            >
+              {{ dashboard()!.upcomingBookings }}
+            </p>
+
+            <p class="mt-1 text-xs text-slate-500">
+              Active event reservations
+            </p>
+
+          </div>
+
+
+          <!-- Reserved Parking -->
+          <div
+            class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+          >
+
+            <div class="flex items-center justify-between">
+
+              <div
+                class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600"
+              >
+                <svg
+                  class="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C2.0 10.9 2 11.2 2 11.5V16c0 .6.4 1 1 1h2"/>
+                  <circle cx="7" cy="17" r="2"/>
+                  <path d="M9 17h6"/>
+                  <circle cx="17" cy="17" r="2"/>
+                </svg>
+              </div>
+
+              <span
+                class="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600"
+              >
+                Reserved
+              </span>
+
+            </div>
+
+            <p
+              class="mt-5 text-xs font-semibold uppercase tracking-wider text-slate-400"
+            >
+              Reserved Parking
+            </p>
+
+            <p
+              class="mt-2 text-3xl font-bold text-slate-950"
+            >
+              {{ dashboard()!.reservedParking }}
+            </p>
+
+            <p class="mt-1 text-xs text-slate-500">
+              Parking reservations
+            </p>
+
+          </div>
+
+
+          <!-- Recent Payments -->
+          <div
+            class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+          >
+
+            <div class="flex items-center justify-between">
+
+              <div
+                class="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 text-violet-600"
+              >
+
+                <svg
+                  class="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                >
+                  <rect
+                    x="2.5"
+                    y="5"
+                    width="19"
+                    height="14"
+                    rx="2.5"
+                  ></rect>
+
+                  <path d="M2.5 10h19"></path>
+                </svg>
+
+              </div>
+
+              <span
+                class="rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-bold text-violet-600"
+              >
+                Records
+              </span>
+
+            </div>
+
+            <p
+              class="mt-5 text-xs font-semibold uppercase tracking-wider text-slate-400"
+            >
+              Recent Payments
+            </p>
+
+            <p
+              class="mt-2 text-3xl font-bold text-slate-950"
+            >
+              {{ dashboard()!.recentPayments }}
+            </p>
+
+            <p class="mt-1 text-xs text-slate-500">
+              Payment records
+            </p>
+
+          </div>
+
+
+          <!-- Notifications -->
+          <div
+            class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+          >
+
+            <div class="flex items-center justify-between">
+
+              <div
+                class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600"
+              >
+
+                <svg
+                  class="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                >
+                  <path
+                    d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"
+                  ></path>
+
+                  <path d="M10 21h4"></path>
+                </svg>
+
+              </div>
+
+              <span
+                class="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600"
+              >
+                Alerts
+              </span>
+
+            </div>
+
+            <p
+              class="mt-5 text-xs font-semibold uppercase tracking-wider text-slate-400"
+            >
+              Unread Notifications
+            </p>
+
+            <p
+              class="mt-2 text-3xl font-bold text-slate-950"
+            >
+              {{ dashboard()!.unreadNotifications }}
+            </p>
+
+            <p class="mt-1 text-xs text-slate-500">
+              Messages waiting for you
+            </p>
+
+          </div>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- LOWER CONTENT -->
+        <!-- ================================================= -->
+        <section
+          class="mt-7 grid gap-6 xl:grid-cols-5"
+        >
+
+          <!-- Upcoming Events -->
+          <div
+            class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm xl:col-span-3"
+          >
+
+            <div
+              class="flex items-center justify-between border-b border-slate-100 px-6 py-5"
+            >
+
+              <div>
+
+                <h3 class="font-bold text-slate-950">
+                  Upcoming Events
+                </h3>
+
+                <p class="mt-1 text-xs text-slate-500">
+                  Your upcoming reservations
+                </p>
+
+              </div>
+
+              <button
+                type="button"
+                class="text-xs font-bold text-blue-600 hover:text-blue-700"
+              >
+                View All →
+              </button>
+
+            </div>
+
+
+            <div class="divide-y divide-slate-100">
+
+              <div
+                class="flex items-center gap-4 px-6 py-5"
+              >
+
+                <div
+                  class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600"
+                >
+
+                  <svg
+                    class="h-6 w-6"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="8"
+                    ></circle>
+
+                    <path d="M12 8v4l3 2"></path>
+                  </svg>
+
+                </div>
+
+                <div class="min-w-0 flex-1">
+
+                  <h4
+                    class="truncate text-sm font-bold text-slate-900"
+                  >
+                    Your upcoming event
+                  </h4>
+
+                  <p class="mt-1 text-xs text-slate-500">
+                    Check your booking details and event information.
+                  </p>
+
+                </div>
+
+                <span
+                  class="rounded-full bg-emerald-50 px-3 py-1 text-[10px] font-bold text-emerald-600"
+                >
+                  Confirmed
+                </span>
+
+              </div>
+
+
+              <div
+                class="flex items-center gap-4 px-6 py-5"
+              >
+
+                <div
+                  class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600"
+                >
+
+                  <svg
+                    class="h-6 w-6"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                  >
+                    <path d="M4 7h16"></path>
+                    <path d="M4 12h16"></path>
+                    <path d="M4 17h10"></path>
+                  </svg>
+
+                </div>
+
+                <div class="min-w-0 flex-1">
+
+                  <h4
+                    class="text-sm font-bold text-slate-900"
+                  >
+                    Manage your reservations
+                  </h4>
+
+                  <p class="mt-1 text-xs text-slate-500">
+                    View seats, parking and booking information.
+                  </p>
+
+                </div>
+
+                <span
+                  class="rounded-full bg-blue-50 px-3 py-1 text-[10px] font-bold text-blue-600"
+                >
+                  EVENTRA
+                </span>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- Right Column -->
+          <div
+            class="space-y-6 xl:col-span-2"
+          >
+
+            <!-- Recent Payments -->
+            <div
+              class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+            >
+
+              <div
+                class="flex items-center justify-between border-b border-slate-100 px-6 py-5"
+              >
+
+                <div class="flex items-center gap-3">
+
+                  <div
+                    class="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-50 text-violet-600"
+                  >
+                    $
+                  </div>
+
+                  <h3 class="font-bold text-slate-950">
+                    Recent Payments
+                  </h3>
+
+                </div>
+
+                <button
+                  type="button"
+                  class="text-xs font-bold text-blue-600"
+                >
+                  View All →
+                </button>
+
+              </div>
+
+              <div class="p-6">
+
+                <div
+                  class="flex items-center justify-between"
+                >
+
+                  <div>
+
+                    <p
+                      class="text-sm font-bold text-slate-900"
+                    >
+                      Payment Records
+                    </p>
+
+                    <p
+                      class="mt-1 text-xs text-slate-500"
+                    >
+                      {{ dashboard()!.recentPayments }}
+                      recent payment record(s)
+                    </p>
+
+                  </div>
+
+                  <p
+                    class="text-xs font-semibold text-emerald-600"
+                  >
+                    Updated
+                  </p>
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <!-- Notifications -->
+            <div
+              class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+            >
+
+              <div
+                class="flex items-center justify-between border-b border-slate-100 px-6 py-5"
+              >
+
+                <div class="flex items-center gap-3">
+
+                  <div
+                    class="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600"
+                  >
+
+                    <svg
+                      class="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                    >
+                      <path
+                        d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"
+                      ></path>
+                    </svg>
+
+                  </div>
+
+                  <h3 class="font-bold text-slate-950">
+                    Latest Notifications
+                  </h3>
+
+                </div>
+
+                <button
+                  type="button"
+                  class="text-xs font-bold text-blue-600"
+                >
+                  View All →
+                </button>
+
+              </div>
+
+              <div class="p-6">
+
+                @if (
+                  dashboard()!.unreadNotifications > 0
+                ) {
+
+                  <div
+                    class="flex items-start gap-3"
+                  >
+
+                    <span
+                      class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-blue-600"
+                    ></span>
+
+                    <div>
+
+                      <p
+                        class="text-sm font-bold text-slate-900"
+                      >
+                        You have new notifications
+                      </p>
+
+                      <p
+                        class="mt-1 text-xs leading-5 text-slate-500"
+                      >
+                        {{ dashboard()!.unreadNotifications }}
+                        notification(s) are waiting for you.
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                }
+
+                @else {
+
+                  <div class="py-2 text-center">
+
+                    <div
+                      class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-400"
+                    >
+                      ✓
+                    </div>
+
+                    <p
+                      class="mt-3 text-sm font-semibold text-slate-700"
+                    >
+                      You're all caught up
+                    </p>
+
+                    <p
+                      class="mt-1 text-xs text-slate-400"
+                    >
+                      No unread notifications.
+                    </p>
+
+                  </div>
+
+                }
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+      }
+
+      }
+
+    </main>
+
+  </div>
+
+</div>

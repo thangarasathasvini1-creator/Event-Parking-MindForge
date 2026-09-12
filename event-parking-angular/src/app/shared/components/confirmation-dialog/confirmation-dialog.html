@@ -1,1 +1,12 @@
-<p>confirmation-dialog works!</p>
+<div class="dialog-backdrop" role="presentation">
+  <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+    <h2 id="dialog-title">{{ title }}</h2>
+    <p>{{ message }}</p>
+    <div class="dialog-actions">
+      <button type="button" class="cancel-button" [disabled]="busy" (click)="cancelled.emit()">Cancel</button>
+      <button type="button" class="confirm-button" [disabled]="busy" (click)="confirmed.emit()">
+        {{ busy ? 'Processing...' : confirmLabel }}
+      </button>
+    </div>
+  </section>
+</div>
