@@ -6,7 +6,9 @@ import { checkoutGuard } from './core/guards/checkout-guard';
 
 export const routes: Routes = [
 
-  // ==================== PUBLIC / LANDING PAGE ====================
+  // ============================================================
+  // PUBLIC / LANDING PAGE
+  // ============================================================
 
   {
     path: '',
@@ -17,7 +19,10 @@ export const routes: Routes = [
       ).then((m) => m.Landing),
   },
 
-  // ==================== AUTH ====================
+
+  // ============================================================
+  // AUTHENTICATION
+  // ============================================================
 
   {
     path: 'login',
@@ -75,7 +80,10 @@ export const routes: Routes = [
       ).then((m) => m.LoginCallback),
   },
 
-  // ==================== CUSTOMER (PROTECTED) ====================
+
+  // ============================================================
+  // CUSTOMER - PROTECTED
+  // ============================================================
 
   {
     path: 'customer/dashboard',
@@ -94,6 +102,11 @@ export const routes: Routes = [
         './features/customer/pages/dashboard/dashboard'
       ).then((m) => m.Dashboard),
   },
+
+
+  // ============================================================
+  // CUSTOMER EVENTS
+  // ============================================================
 
   {
     path: 'events',
@@ -140,7 +153,10 @@ export const routes: Routes = [
       ).then((m) => m.Checkout),
   },
 
-  // ==================== CUSTOMER BOOKINGS ====================
+
+  // ============================================================
+  // CUSTOMER BOOKINGS
+  // ============================================================
 
   {
     path: 'bookings',
@@ -151,19 +167,6 @@ export const routes: Routes = [
       ).then((m) => m.Bookings),
   },
 
-  // ==================== BOOKING DETAILS ====================
-
-  {
-    path: 'bookings/:bookingId',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import(
-        './features/customer/pages/bookings/booking-details/booking-details'
-      ).then((m) => m.BookingDetails),
-  },
-
-  // ==================== PAYMENT ====================
-
   {
     path: 'bookings/:bookingId/payment',
     canActivate: [authGuard],
@@ -172,8 +175,6 @@ export const routes: Routes = [
         './features/customer/pages/events/payment/payment'
       ).then((m) => m.Payment),
   },
-
-  // ==================== BOOKING CONFIRMATION ====================
 
   {
     path: 'bookings/:bookingId/confirmation',
@@ -184,13 +185,84 @@ export const routes: Routes = [
       ).then((m) => m.BookingConfirmation),
   },
 
-  // ==================== ADMIN (PROTECTED) ====================
+  {
+    path: 'bookings/:bookingId',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import(
+        './features/customer/pages/bookings/booking-details/booking-details'
+      ).then((m) => m.BookingDetails),
+  },
+
+
+  // ============================================================
+  // CUSTOMER PAYMENT HISTORY
+  // ============================================================
+
+  {
+    path: 'payments',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import(
+        './features/customer/pages/payments/payment-history/payment-history'
+      ).then((m) => m.PaymentHistory),
+  },
+
+  {
+    path: 'payments/:paymentId/receipt',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import(
+        './features/customer/pages/payments/payment-receipt/payment-receipt'
+      ).then((m) => m.PaymentReceipt),
+  },
+
+
+  // ============================================================
+  // ADMIN DASHBOARD
+  // ============================================================
 
   {
     path: 'admin/dashboard',
-    redirectTo: 'admin/events',
-    pathMatch: 'full',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import(
+        './features/admin/pages/dashboard/dashboard'
+      ).then((m) => m.Dashboard),
   },
+
+
+  // ============================================================
+  // ADMIN BOOKINGS
+  // ============================================================
+
+  {
+    path: 'admin/bookings',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import(
+        './features/admin/pages/bookings/bookings'
+      ).then((m) => m.Bookings),
+  },
+
+
+  // ============================================================
+  // ADMIN PAYMENTS
+  // ============================================================
+
+  {
+    path: 'admin/payments',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import(
+        './features/admin/pages/payments/payments'
+      ).then((m) => m.Payments),
+  },
+
+
+  // ============================================================
+  // ADMIN EVENTS
+  // ============================================================
 
   {
     path: 'admin/events',
@@ -218,6 +290,11 @@ export const routes: Routes = [
         './features/admin/pages/events/event-edit/event-edit'
       ).then((m) => m.EventEdit),
   },
+
+
+  // ============================================================
+  // ADMIN VENUES
+  // ============================================================
 
   {
     path: 'admin/venues',
@@ -255,6 +332,11 @@ export const routes: Routes = [
       ).then((m) => m.VenueAvailability),
   },
 
+
+  // ============================================================
+  // ADMIN CATEGORIES
+  // ============================================================
+
   {
     path: 'admin/categories',
     canActivate: [adminGuard],
@@ -282,7 +364,10 @@ export const routes: Routes = [
       ).then((m) => m.CategoryEdit),
   },
 
-  // ==================== FALLBACK ====================
+
+  // ============================================================
+  // FALLBACK
+  // ============================================================
 
   {
     path: '**',
