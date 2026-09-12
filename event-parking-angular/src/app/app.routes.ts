@@ -97,6 +97,22 @@ export const routes: Routes = [
         './features/customer/pages/events/event-details/event-details'
       ).then((m) => m.EventDetails),
   },
+  {
+    path: 'events/:eventId/seats',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import(
+        './features/customer/pages/events/seat-selection/seat-selection'
+      ).then((m) => m.SeatSelection),
+  },
+  {
+    path: 'events/:eventId/parking-selection',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import(
+        './features/customer/pages/events/parking-selection/parking-selection'
+      ).then((m) => m.ParkingSelection),
+  },
 
   // ==================== ADMIN (PROTECTED) ====================
   {
@@ -184,93 +200,6 @@ export const routes: Routes = [
         './features/admin/pages/categories/category-edit/category-edit'
       ).then((m) => m.CategoryEdit),
   },
-        import('./features/customer/pages/dashboard/dashboard').then(
-        (m) => m.Dashboard
-        ),
-    },
-
-{
-  path: 'admin/events/new',
-  loadComponent: () =>
-    import(
-      './features/admin/pages/events/event-form/event-form'
-    ).then((m) => m.EventForm),
-},
-
-{
-  path: 'admin/events/:eventId/edit',
-  loadComponent: () =>
-    import(
-      './features/admin/pages/events/event-edit/event-edit'
-    ).then((m) => m.EventEdit),
-},
-
-    {
-  path: 'events/:eventId',
-  loadComponent: () =>
-    import(
-      './features/customer/pages/events/event-details/event-details'
-    ).then((m) => m.EventDetails),
-},
-
-{
-  path: 'events/:eventId/seats',
-  loadComponent: () =>
-    import(
-      './features/customer/pages/events/seat-selection/seat-selection'
-    ).then((m) => m.SeatSelection),
-},
-
-{
-  path: 'events/:eventId/parking-selection',
-  loadComponent: () =>
-    import(
-      './features/customer/pages/events/parking-selection/parking-selection'
-    ).then((m) => m.ParkingSelection),
-},
-
-{
-  path: 'admin/venues',
-  loadComponent: () =>
-    import('./features/admin/pages/venues/venue-list/venue-list')
-      .then((m) => m.VenueList),
-},
-{
-  path: 'admin/venues/new',
-  loadComponent: () =>
-    import('./features/admin/pages/venues/venue-form/venue-form')
-      .then((m) => m.VenueForm),
-},
-
-{
-  path: 'admin/venues/:venueId/edit',
-  loadComponent: () =>
-    import('./features/admin/pages/venues/venue-edit/venue-edit')
-      .then((m) => m.VenueEdit),
-},
-
-{
-  path: 'admin/venues/availability',
-  loadComponent: () =>
-    import(
-      './features/admin/pages/venues/venue-availability/venue-availability'
-    ).then((m) => m.VenueAvailability),
-},
-
-{
-  path: 'admin/categories',
-  loadComponent: () =>
-    import(
-      './features/admin/pages/categories/category-list/category-list'
-    ).then((m) => m.CategoryList),
-},
-{
-  path: 'admin/categories/new',
-  loadComponent: () =>
-    import(
-      './features/admin/pages/categories/category-form/category-form'
-    ).then((m) => m.CategoryForm),
-},
 
   // Fallback for unmapped routes
   {
