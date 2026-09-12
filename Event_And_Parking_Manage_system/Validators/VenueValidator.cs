@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.DTOs.Venues;
+using Event_And_Parking_Manage_system.DTOs.Venues;
 
 namespace Event_And_Parking_Manage_system.Validators
 {
@@ -15,6 +15,9 @@ namespace Event_And_Parking_Manage_system.Validators
             if (dto.TotalCapacity <= 0)
                 return "Venue capacity must be greater than zero.";
 
+            if (dto.CarCapacity < 0 || dto.BikeCapacity < 0 || dto.BusCapacity < 0 || dto.VanCapacity < 0)
+                return "Vehicle parking slot capacities cannot be negative.";
+
             return null;
         }
 
@@ -28,6 +31,9 @@ namespace Event_And_Parking_Manage_system.Validators
 
             if (dto.TotalCapacity <= 0)
                 return "Venue capacity must be greater than zero.";
+
+            if (dto.CarCapacity < 0 || dto.BikeCapacity < 0 || dto.BusCapacity < 0 || dto.VanCapacity < 0)
+                return "Vehicle parking slot capacities cannot be negative.";
 
             return null;
         }

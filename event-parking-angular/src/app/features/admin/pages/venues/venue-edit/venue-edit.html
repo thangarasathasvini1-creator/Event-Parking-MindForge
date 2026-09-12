@@ -92,7 +92,7 @@
           </div>
 
           <!-- Capacity -->
-          <div class="mb-6">
+          <div class="mb-5">
             <label
               for="venue-capacity"
               class="mb-2 block text-sm font-semibold text-slate-700">
@@ -107,6 +107,88 @@
               min="1"
               class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
+          </div>
+
+          <!-- Parking Slots Breakdown -->
+          <div class="mb-6 rounded-xl border border-slate-200 bg-slate-50/50 p-5">
+            <div class="mb-4 flex items-center justify-between">
+              <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700">
+                Parking Capacity Breakdown
+              </h3>
+              <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
+                Total Slots: {{ computedTotalParkingSlots > 0 ? computedTotalParkingSlots : (venue.totalParkingSlots ?? 0) }}
+              </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <!-- Car Capacity -->
+              <div>
+                <label for="edit-car-capacity" class="mb-1 block text-xs font-semibold text-slate-600">
+                  🚗 Car Slots
+                </label>
+                <input
+                  id="edit-car-capacity"
+                  type="number"
+                  name="carCapacity"
+                  [(ngModel)]="venue.carCapacity"
+                  (ngModelChange)="updateTotalSlots()"
+                  min="0"
+                  placeholder="0"
+                  class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                />
+              </div>
+
+              <!-- Bike Capacity -->
+              <div>
+                <label for="edit-bike-capacity" class="mb-1 block text-xs font-semibold text-slate-600">
+                  🏍️ Bike Slots
+                </label>
+                <input
+                  id="edit-bike-capacity"
+                  type="number"
+                  name="bikeCapacity"
+                  [(ngModel)]="venue.bikeCapacity"
+                  (ngModelChange)="updateTotalSlots()"
+                  min="0"
+                  placeholder="0"
+                  class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                />
+              </div>
+
+              <!-- Bus Capacity -->
+              <div>
+                <label for="edit-bus-capacity" class="mb-1 block text-xs font-semibold text-slate-600">
+                  🚌 Bus Slots
+                </label>
+                <input
+                  id="edit-bus-capacity"
+                  type="number"
+                  name="busCapacity"
+                  [(ngModel)]="venue.busCapacity"
+                  (ngModelChange)="updateTotalSlots()"
+                  min="0"
+                  placeholder="0"
+                  class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                />
+              </div>
+
+              <!-- Van Capacity -->
+              <div>
+                <label for="edit-van-capacity" class="mb-1 block text-xs font-semibold text-slate-600">
+                  🚐 Van Slots
+                </label>
+                <input
+                  id="edit-van-capacity"
+                  type="number"
+                  name="vanCapacity"
+                  [(ngModel)]="venue.vanCapacity"
+                  (ngModelChange)="updateTotalSlots()"
+                  min="0"
+                  placeholder="0"
+                  class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                />
+              </div>
+            </div>
           </div>
 
           <!-- Actions -->

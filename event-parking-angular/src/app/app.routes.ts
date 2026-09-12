@@ -80,6 +80,11 @@ export const routes: Routes = [
     
     
   {
+    path: 'admin/dashboard',
+    redirectTo: 'admin/events',
+    pathMatch: 'full',
+  },
+  {
   path: 'admin/events',
   loadComponent: () =>
     import(

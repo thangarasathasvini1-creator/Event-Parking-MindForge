@@ -78,16 +78,44 @@
                 </div>
 
                 <div
-                  class="border-t border-slate-100 pt-4">
+                  class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4">
 
-                  <p class="text-xs font-semibold uppercase text-slate-400">
-                    Total Capacity
-                  </p>
+                  <div>
+                    <p class="text-xs font-semibold uppercase text-slate-400">
+                      Total Capacity
+                    </p>
 
-                  <p class="mt-1 text-lg font-bold text-indigo-600">
-                    {{ venue.totalCapacity }}
-                  </p>
+                    <p class="mt-1 text-lg font-bold text-indigo-600">
+                      {{ venue.totalCapacity }}
+                    </p>
+                  </div>
 
+                  <div>
+                    <p class="text-xs font-semibold uppercase text-slate-400">
+                      Parking Slots
+                    </p>
+
+                    <p class="mt-1 text-lg font-bold text-emerald-600">
+                      {{ venue.totalParkingSlots ?? 0 }}
+                    </p>
+                  </div>
+
+                </div>
+
+                <!-- Vehicle Type Badges -->
+                <div class="flex flex-wrap gap-2 pt-2">
+                  <span class="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
+                    🚗 Car: {{ venue.carCapacity ?? 0 }}
+                  </span>
+                  <span class="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
+                    🏍️ Bike: {{ venue.bikeCapacity ?? 0 }}
+                  </span>
+                  <span class="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
+                    🚌 Bus: {{ venue.busCapacity ?? 0 }}
+                  </span>
+                  <span class="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
+                    🚐 Van: {{ venue.vanCapacity ?? 0 }}
+                  </span>
                 </div>
 
                 <!-- Edit Venue -->
