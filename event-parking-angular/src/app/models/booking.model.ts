@@ -7,13 +7,15 @@ export interface CreateBookingRequest {
 export interface Booking {
   bookingId: number;
   bookingNumber: string;
-  customerId: number;
+  customerId?: number;
   eventId: number;
+  eventName?: string;
   status: string;
   totalAmount: number;
-  holdExpiresAt: string | null;
+  holdExpiresAt?: string | null;
   createdAt: string;
-  seatIds: number[];
-  parkingSlotId: number | null;
-  paymentStatus: string | null;
+  seatCount?: number;
+  seatIds?: number[];
+  parkingSlotId?: number | null;
+  paymentStatus?: string | null;
 }

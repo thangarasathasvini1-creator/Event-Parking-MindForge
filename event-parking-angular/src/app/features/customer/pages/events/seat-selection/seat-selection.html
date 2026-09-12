@@ -1,54 +1,68 @@
-<div class="seat-selection-page">
+<div class="min-h-screen bg-slate-50/60 py-10 px-4 sm:px-6 lg:px-8 font-sans text-slate-900">
 
   <!-- Page Header -->
-  <div class="page-header">
-    <h1>Select Your Seats</h1>
-    <p>Choose the seats you want to reserve for this event.</p>
-  </div>
+  <header class="max-w-4xl mx-auto mb-8">
+    <span class="inline-block text-xs font-bold tracking-widest text-blue-600 uppercase mb-1">
+      EVENTRA · SEATS
+    </span>
+    <h1 class="text-3xl font-extrabold text-slate-950 tracking-tight">
+      Select Your Seats
+    </h1>
+    <p class="text-slate-500 text-sm mt-1">
+      Choose the seats you want to reserve for this event.
+    </p>
+  </header>
 
   <!-- Loading State -->
   @if (isLoading()) {
-    <div class="state-message">
-      Loading available seats...
+    <div class="max-w-md mx-auto my-16 p-10 bg-white rounded-2xl border border-slate-200 shadow-sm text-center flex flex-col items-center justify-center">
+      <div class="w-10 h-10 border-3 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4" aria-hidden="true"></div>
+      <h2 class="text-base font-bold text-slate-800">Loading available seats...</h2>
     </div>
   }
 
   <!-- Error State -->
   @if (!isLoading() && errorMessage()) {
-    <div class="error-message">
+    <div class="max-w-md mx-auto my-16 p-6 bg-rose-50 border border-rose-200 rounded-2xl text-center text-sm text-rose-700 flex flex-col items-center gap-3">
       <span>{{ errorMessage() }}</span>
-      <button type="button" (click)="loadSeats()">Try Again</button>
+      <button
+        type="button"
+        (click)="loadSeats()"
+        class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition cursor-pointer"
+      >
+        Try Again
+      </button>
     </div>
   }
 
-  <!-- Seat Selection -->
+  <!-- Seat Selection Card -->
   @if (!isLoading() && !errorMessage()) {
-    <div class="seat-card">
+    <div class="max-w-4xl mx-auto bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-10">
 
-      <!-- Stage -->
-      <div class="screen">
+      <!-- Stage / Screen -->
+      <div class="max-w-md mx-auto mb-8 py-2.5 px-6 rounded-b-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[11px] font-black tracking-widest text-center shadow-xs uppercase">
         STAGE / SCREEN
       </div>
 
       <!-- Legend -->
-      <div class="legend">
-        <div class="legend-item">
-          <span class="legend-seat available"></span>
+      <div class="flex items-center justify-center gap-6 mb-8 text-xs font-medium text-slate-600 flex-wrap">
+        <div class="flex items-center gap-2">
+          <span class="w-4 h-4 rounded-md border border-slate-300 bg-white inline-block"></span>
           <span>Available</span>
         </div>
-        <div class="legend-item">
-          <span class="legend-seat selected"></span>
+        <div class="flex items-center gap-2">
+          <span class="w-4 h-4 rounded-md border border-blue-600 bg-blue-600 inline-block"></span>
           <span>Selected</span>
         </div>
-        <div class="legend-item">
-          <span class="legend-seat booked"></span>
+        <div class="flex items-center gap-2">
+          <span class="w-4 h-4 rounded-md border border-slate-200 bg-slate-200 inline-block"></span>
           <span>Booked</span>
         </div>
       </div>
 
-      <!-- Seat Map -->
+      <!-- Seat Map Grid -->
       @if (seats().length > 0) {
-        <div class="seat-grid">
+        <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 max-w-2xl mx-auto p-4 sm:p-6 bg-slate-50/70 rounded-2xl border border-slate-100 justify-items-center">
           @for (seat of seats(); track seat.seatId) {
             <app-seat-button
               [seatNumber]="seat | seatLabel"
@@ -60,42 +74,49 @@
         </div>
       }
 
-      <!-- No Seats -->
+      <!-- No Seats Found -->
       @if (seats().length === 0) {
-        <div class="empty-message">
+        <div class="p-8 text-center text-sm text-slate-400">
           No seats are available for this event.
         </div>
       }
 
-      <!-- Selection Summary -->
-      <div class="selection-summary">
+      <!-- Selection Summary Footer -->
+      <div class="mt-8 pt-6 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
 
-        <div>
-          <span>Selected Seats</span>
-          <strong>{{ selectedSeats().length }}</strong>
+        <div class="flex items-center gap-8 text-sm">
+          <div>
+            <span class="block text-xs text-slate-400">Selected</span>
+            <strong class="text-xl font-bold text-slate-900">{{ selectedSeats().length }} Seats</strong>
+          </div>
+
+          <div>
+            <span class="block text-xs text-slate-400">Total Price</span>
+            <strong class="text-xl font-black text-blue-600">{{ totalPrice | currency:'LKR' }}</strong>
+          </div>
         </div>
 
-        <div>
-          <span>Total</span>
-          <strong>{{ totalPrice | currency:'LKR' }}</strong>
-        </div>
-
-        <!-- Selected Seat Numbers -->
-        <div class="selected-list">
-          @for (seat of selectedSeats(); track seat.seatId) {
-            <span>{{ seat | seatLabel }}</span>
+        <!-- Selected Badges & Continue Button -->
+        <div class="flex items-center gap-4 flex-wrap justify-end">
+          @if (selectedSeats().length > 0) {
+            <div class="flex items-center gap-1.5 flex-wrap">
+              @for (seat of selectedSeats(); track seat.seatId) {
+                <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold">
+                  {{ seat | seatLabel }}
+                </span>
+              }
+            </div>
           }
-        </div>
 
-        <!-- Continue -->
-        <button
-          type="button"
-          class="continue-button"
-          [disabled]="selectedSeats().length === 0"
-          (click)="continueToParking()"
-        >
-          Continue to Parking
-        </button>
+          <button
+            type="button"
+            [disabled]="selectedSeats().length === 0"
+            (click)="continueToParking()"
+            class="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-bold shadow-sm transition active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+          >
+            Continue to Parking →
+          </button>
+        </div>
 
       </div>
 

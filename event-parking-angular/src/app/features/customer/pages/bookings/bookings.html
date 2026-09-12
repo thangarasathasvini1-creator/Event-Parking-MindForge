@@ -1,0 +1,261 @@
+<div class="min-h-screen bg-slate-50/60 py-10 px-4 sm:px-6 lg:px-8 font-sans text-slate-900">
+
+  <!-- ==================== PAGE HEADER ==================== -->
+  <header class="max-w-7xl mx-auto mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div class="max-w-2xl">
+      <span class="inline-block text-xs font-bold tracking-widest text-blue-600 uppercase mb-1">
+        EVENTRA
+      </span>
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight">
+        My Bookings
+      </h1>
+      <p class="text-slate-500 text-sm sm:text-base mt-1.5 leading-relaxed">
+        View and manage all your event reservations in one place.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      (click)="goToEvents()"
+      class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold shadow-sm hover:shadow transition active:scale-[0.98] cursor-pointer"
+    >
+      Browse Events
+    </button>
+  </header>
+
+  <!-- ==================== SUCCESS MESSAGE ==================== -->
+  @if (successMessage()) {
+    <div
+      class="max-w-7xl mx-auto mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-3 shadow-xs"
+      role="status"
+      aria-live="polite"
+    >
+      <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs" aria-hidden="true">
+        ✓
+      </span>
+      <span class="font-medium">{{ successMessage() }}</span>
+    </div>
+  }
+
+  <!-- ==================== LOADING STATE ==================== -->
+  @if (isLoading()) {
+    <section
+      class="max-w-md mx-auto my-16 p-10 bg-white rounded-2xl border border-slate-200 shadow-sm text-center flex flex-col items-center justify-center"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div class="w-10 h-10 border-3 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4" aria-hidden="true"></div>
+      <h2 class="text-lg font-bold text-slate-900 mb-1">
+        Loading your bookings...
+      </h2>
+      <p class="text-xs text-slate-500">
+        Please wait while we retrieve your reservations.
+      </p>
+    </section>
+  }
+
+  <!-- ==================== ERROR STATE ==================== -->
+  @if (!isLoading() && errorMessage()) {
+    <section
+      class="max-w-md mx-auto my-16 p-8 bg-white rounded-2xl border border-rose-200 shadow-sm text-center"
+      role="alert"
+      aria-live="assertive"
+    >
+      <div class="w-12 h-12 mx-auto rounded-full bg-rose-100 text-rose-600 font-black text-xl flex items-center justify-center mb-4" aria-hidden="true">
+        !
+      </div>
+      <h2 class="text-lg font-bold text-slate-900 mb-1">
+        Something went wrong
+      </h2>
+      <p class="text-sm text-slate-600 mb-6">
+        {{ errorMessage() }}
+      </p>
+      <button
+        type="button"
+        (click)="loadBookings()"
+        class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold transition cursor-pointer"
+      >
+        Try Again
+      </button>
+    </section>
+  }
+
+  <!-- ==================== EMPTY STATE ==================== -->
+  @if (!isLoading() && !errorMessage() && bookings().length === 0) {
+    <section class="max-w-md mx-auto my-16 p-10 bg-white rounded-2xl border border-slate-200 shadow-sm text-center">
+      <div class="text-5xl mb-4" aria-hidden="true">🎟️</div>
+      <span class="inline-block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+        YOUR RESERVATIONS
+      </span>
+      <h2 class="text-xl font-bold text-slate-900 mb-2">
+        No bookings yet
+      </h2>
+      <p class="text-sm text-slate-500 mb-6 leading-relaxed">
+        You haven't made any event bookings yet. Explore our events and reserve your seats.
+      </p>
+      <button
+        type="button"
+        (click)="goToEvents()"
+        class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition active:scale-[0.98] cursor-pointer"
+      >
+        Browse Events
+      </button>
+    </section>
+  }
+
+  <!-- ==================== BOOKING LIST ==================== -->
+  @if (!isLoading() && !errorMessage() && bookings().length > 0) {
+    <section class="max-w-7xl mx-auto" aria-label="Your bookings">
+
+      <!-- Stats Pill -->
+      <div class="mb-6 flex items-center gap-3">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs shadow-xs">
+          <span class="text-slate-500">Total Bookings:</span>
+          <span class="font-bold text-slate-900">{{ bookings().length }}</span>
+        </div>
+      </div>
+
+      <!-- Booking Cards -->
+      <div class="space-y-5">
+        @for (booking of bookings(); track booking.bookingId) {
+          <article class="bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition p-5 sm:p-6">
+
+            <!-- Card Top -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  BOOKING NUMBER
+                </span>
+                <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
+                  {{ booking.bookingNumber }}
+                </h2>
+              </div>
+
+              <span
+                class="inline-flex items-center self-start sm:self-auto px-3 py-1 rounded-full text-xs font-semibold border"
+                [class]="getStatusClass(booking.status)"
+              >
+                {{ booking.status }}
+              </span>
+            </div>
+
+            <!-- Card Info Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 py-4 border-b border-slate-100 text-sm">
+              <div>
+                <span class="block text-xs text-slate-400 font-medium">Event</span>
+                <strong class="font-bold text-slate-900">
+                  {{ booking.eventName || ('Event #' + booking.eventId) }}
+                </strong>
+              </div>
+
+              <div>
+                <span class="block text-xs text-slate-400 font-medium">Booked On</span>
+                <strong class="font-semibold text-slate-800">
+                  {{ booking.createdAt | date:'mediumDate' }}
+                </strong>
+              </div>
+
+              <div>
+                <span class="block text-xs text-slate-400 font-medium">Seats</span>
+                <strong class="font-semibold text-slate-800">
+                  {{ booking.seatCount ?? booking.seatIds?.length ?? 0 }}
+                </strong>
+              </div>
+
+              <div>
+                <span class="block text-xs text-slate-400 font-medium">Total Amount</span>
+                <strong class="font-bold text-blue-600">
+                  {{ booking.totalAmount | currency:'LKR':'symbol':'1.2-2' }}
+                </strong>
+              </div>
+            </div>
+
+            <!-- Hold Banner -->
+            @if (booking.holdExpiresAt) {
+              <div class="my-3.5 p-3 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs flex items-center gap-2.5">
+                <span class="text-base" aria-hidden="true">⏱</span>
+                <div>
+                  <strong class="font-semibold">Booking Hold:</strong>
+                  <span class="text-amber-800 ml-1">Held until {{ booking.holdExpiresAt | date:'medium' }}</span>
+                </div>
+              </div>
+            }
+
+            <!-- Payment & Seats -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-3.5 text-xs">
+              <!-- Payment Status -->
+              <div class="flex items-center gap-2">
+                <span class="text-slate-400 font-medium">Payment Status:</span>
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full font-semibold border"
+                  [class]="getPaymentStatusClass(booking.paymentStatus ?? null)"
+                >
+                  {{ booking.paymentStatus || 'Pending' }}
+                </span>
+              </div>
+
+              <!-- Selected Seats -->
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-slate-400 font-medium">Seats:</span>
+                @if (booking.seatIds && booking.seatIds.length > 0) {
+                  @for (seatId of booking.seatIds; track seatId) {
+                    <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-semibold text-[11px] border border-slate-200">
+                      Seat {{ seatId }}
+                    </span>
+                  }
+                } @else {
+                  <span class="text-slate-500 italic">
+                    {{ booking.seatCount ? (booking.seatCount + ' seats reserved') : 'No seats assigned' }}
+                  </span>
+                }
+              </div>
+            </div>
+
+            <!-- Card Bottom / Actions -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-slate-100">
+              <div class="text-xs text-slate-400 flex items-center gap-3">
+                <span>Booking ID: #{{ booking.bookingId }}</span>
+                @if (booking.parkingSlotId !== null && booking.parkingSlotId !== undefined) {
+                  <span>• Parking Slot #{{ booking.parkingSlotId }}</span>
+                }
+              </div>
+
+              <div class="flex items-center gap-2.5 self-end sm:self-auto">
+                <button
+                  type="button"
+                  (click)="viewBooking(booking.bookingId)"
+                  class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition cursor-pointer"
+                >
+                  View Details
+                </button>
+
+                @if (
+                  booking.status.toLowerCase() !== 'cancelled' &&
+                  booking.status.toLowerCase() !== 'completed' &&
+                  booking.status.toLowerCase() !== 'confirmed'
+                ) {
+                  <button
+                    type="button"
+                    [disabled]="isCancellingBooking(booking.bookingId)"
+                    (click)="cancelBooking(booking.bookingId)"
+                    class="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
+                  >
+                    @if (isCancellingBooking(booking.bookingId)) {
+                      <span class="inline-block w-3 h-3 border-2 border-rose-400 border-t-rose-700 rounded-full animate-spin mr-1.5 align-middle" aria-hidden="true"></span>
+                      Cancelling...
+                    } @else {
+                      Cancel Booking
+                    }
+                  </button>
+                }
+              </div>
+            </div>
+
+          </article>
+        }
+      </div>
+
+    </section>
+  }
+
+</div>
