@@ -1,1 +1,82 @@
-<p>parking-selection works!</p>
+<main class="parking-selection-page">
+  <header class="page-header">
+    <h1>Parking reservation</h1>
+    <p>Choose one available parking slot for this event, or continue without parking.</p>
+  </header>
+
+  <section class="optional-notice" aria-label="Parking is optional">
+    <strong>Parking is optional.</strong>
+    <span>You can complete your ticket booking without reserving a parking slot.</span>
+  </section>
+
+  @if (isLoading()) {
+    <div class="state-message" role="status">Loading parking layout...</div>
+  }
+
+  @if (!isLoading() && errorMessage()) {
+    <div class="error-message" role="alert">
+      <span>{{ errorMessage() }}</span>
+      <button type="button" (click)="loadParkingSlots()">Try again</button>
+    </div>
+  }
+
+  @if (!isLoading() && !errorMessage()) {
+    <section class="parking-card">
+      <div class="layout-header">
+        <div>
+          <h2>Parking layout</h2>
+          <p>Selecting a different slot automatically replaces your current choice.</p>
+        </div>
+        <div class="legend" aria-label="Parking slot status legend">
+          <span><i class="legend-marker available"></i>Available</span>
+          <span><i class="legend-marker selected"></i>Selected</span>
+          <span><i class="legend-marker occupied"></i>Occupied / held</span>
+        </div>
+      </div>
+
+      @if (slots().length > 0) {
+        <div class="parking-grid" aria-label="Parking slots">
+          @for (slot of slots(); track slot.parkingSlotId) {
+            <app-parking-slot-button
+              [slotNumber]="slot.slotNumber | slotCode"
+              [status]="slot.status"
+              [selected]="isSelected(slot.parkingSlotId)"
+              (slotSelected)="selectSlot(slot)"
+            />
+          }
+        </div>
+      } @else {
+        <div class="empty-message">No parking slots are configured for this event. You can continue without parking.</div>
+      }
+
+      <section class="selection-summary" aria-live="polite">
+        @if (selectedSlot(); as slot) {
+          <div class="selected-slot-details">
+            <span class="summary-label">Selected parking</span>
+            <strong>{{ slot.slotNumber | slotCode }}</strong>
+            <span>{{ slot.zone || 'General zone' }} · {{ slot.vehicleType }}</span>
+            <span>{{ slot.fee | currency:'LKR' }}</span>
+          </div>
+          <button type="button" class="remove-button" (click)="skipParking()">Remove parking</button>
+        } @else {
+          <div class="no-selection">
+            <strong>No parking selected</strong>
+            <span>Your seat booking will not require a parking reservation.</span>
+          </div>
+        }
+
+        @if (selectionMessage()) {
+          <p class="selection-message" role="status">{{ selectionMessage() }}</p>
+        }
+
+        <div class="actions">
+          <a [routerLink]="['/events', eventId, 'seats']" class="back-button">Back to seats</a>
+          <div class="primary-actions">
+            <button type="button" class="outline-button" (click)="continueWithoutParking()">Continue without parking</button>
+            <button type="button" class="skip-button" (click)="continueToCheckout()">Continue to checkout</button>
+          </div>
+        </div>
+      </section>
+    </section>
+  }
+</main>
