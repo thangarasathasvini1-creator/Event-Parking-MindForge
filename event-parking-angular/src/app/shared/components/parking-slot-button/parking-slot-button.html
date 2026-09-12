@@ -1,13 +1,27 @@
 <button
   type="button"
-  class="parking-slot-button"
-  [class.selected]="selected"
-  [class.unavailable]="!isAvailable"
+  class="flex min-h-[72px] w-full flex-col items-center justify-center gap-1 rounded-xl border transition cursor-pointer active:scale-95 text-center p-2"
+  [class.bg-blue-600]="selected"
+  [class.text-white]="selected"
+  [class.border-blue-600]="selected"
+  [class.shadow-sm]="selected"
+  [class.bg-white]="isAvailable && !selected"
+  [class.text-slate-800]="isAvailable && !selected"
+  [class.border-slate-200]="isAvailable && !selected"
+  [class.hover:border-blue-500]="isAvailable && !selected"
+  [class.hover:shadow-xs]="isAvailable && !selected"
+  [class.bg-slate-100]="!isAvailable"
+  [class.text-slate-400]="!isAvailable"
+  [class.border-slate-200]="!isAvailable"
+  [class.cursor-not-allowed]="!isAvailable"
+  [class.opacity-60]="!isAvailable"
   [disabled]="!isAvailable"
   [attr.aria-label]="'Parking slot ' + slotNumber + ': ' + status"
   [attr.aria-pressed]="selected"
   (click)="onSlotClick()"
 >
-  <span class="slot-number">{{ slotNumber }}</span>
-  <span class="slot-status">{{ isAvailable ? (selected ? 'Selected' : 'Available') : status }}</span>
+  <span class="text-sm font-bold font-mono tracking-tight">{{ slotNumber }}</span>
+  <span class="text-[10px] font-semibold uppercase tracking-wider opacity-85">
+    {{ isAvailable ? (selected ? 'Selected' : 'Available') : status }}
+  </span>
 </button>

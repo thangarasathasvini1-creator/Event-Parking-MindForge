@@ -10,9 +10,11 @@ import { Router } from '@angular/router';
 
 import { EventService } from '../../../../../services/event';
 import { CategoryService } from '../../../../../services/category';
+import { VenueService } from '../../../../../services/venue';
 
 import { Event } from '../../../../../models/event.model';
 import { Category } from '../../../../../models/category.model';
+import { Venue } from '../../../../../models/venue.model';
 
 @Component({
   selector: 'app-event-list',
@@ -24,10 +26,12 @@ import { Category } from '../../../../../models/category.model';
 export class EventList implements OnInit {
   private readonly eventService = inject(EventService);
   private readonly categoryService = inject(CategoryService);
+  private readonly venueService = inject(VenueService);
   private readonly router = inject(Router);
 
   readonly events = signal<Event[]>([]);
   readonly categories = signal<Category[]>([]);
+  readonly venues = signal<Venue[]>([]);
 
   readonly searchTerm = signal('');
   readonly selectedCategoryId = signal<number | null>(null);
@@ -55,6 +59,7 @@ export class EventList implements OnInit {
   ngOnInit(): void {
     this.loadEvents();
     this.loadCategories();
+    this.loadVenues();
   }
 
   private loadEvents(): void {
@@ -92,6 +97,28 @@ export class EventList implements OnInit {
     });
   }
 
+  private loadVenues(): void {
+    this.venueService.getVenues().subscribe({
+      next: (response) => {
+        this.venues.set(response);
+      },
+
+      error: (error) => {
+        console.error('Failed to load venues:', error);
+      },
+    });
+  }
+
+  getCategoryName(categoryId: number): string {
+    const category = this.categories().find(c => c.categoryId === categoryId);
+    return category ? category.name : `Category ${categoryId}`;
+  }
+
+  getVenueName(venueId: number): string {
+    const venue = this.venues().find(v => v.venueId === venueId);
+    return venue ? venue.name : `Venue ${venueId}`;
+  }
+
   onSearch(event: globalThis.Event): void {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
@@ -122,5 +149,6 @@ export class EventList implements OnInit {
   retry(): void {
     this.loadEvents();
     this.loadCategories();
+    this.loadVenues();
   }
 }

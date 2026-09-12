@@ -138,10 +138,7 @@ export class SeatSelection implements OnInit {
 
     if (availableSelections.length !== this.selectedSeats().length) {
       this.selectedSeats.set(availableSelections);
-      this.bookingState.clearSeats();
-      for (const seat of availableSelections) {
-        this.bookingState.toggleSeat(seat);
-      }
+      this.bookingState.setSelectedSeats(availableSelections);
     }
   }
 
@@ -162,11 +159,7 @@ export class SeatSelection implements OnInit {
       this.bookingState.setEvent(event);
     }
     
-    // We can clear and re-add or implement a setSeats method
-    this.bookingState.clearSeats();
-    for (const seat of this.selectedSeats()) {
-      this.bookingState.toggleSeat(seat);
-    }
+    this.bookingState.setSelectedSeats(this.selectedSeats());
 
     console.log(
       'Selected seats saved to state:',

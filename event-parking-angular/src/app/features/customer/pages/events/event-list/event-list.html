@@ -134,7 +134,7 @@
                 class="bg-gradient-to-r from-indigo-600 to-violet-600 p-6 text-white">
 
                 <p class="text-sm font-medium text-indigo-100">
-                  Category ID: {{ event.categoryId }}
+                  {{ getCategoryName(event.categoryId) }}
                 </p>
 
                 <h2 class="mt-2 text-xl font-bold">
@@ -171,11 +171,11 @@
                 <!-- Venue -->
                 <div>
                   <p class="text-xs font-semibold uppercase text-slate-400">
-                    Venue ID
+                    Venue
                   </p>
 
                   <p class="mt-1 text-sm font-medium text-slate-700">
-                    {{ event.venueId }}
+                    {{ getVenueName(event.venueId) }}
                   </p>
                 </div>
 

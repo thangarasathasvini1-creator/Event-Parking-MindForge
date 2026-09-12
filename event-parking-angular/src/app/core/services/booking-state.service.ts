@@ -31,6 +31,10 @@ export class BookingStateService {
     });
   }
 
+  setSelectedSeats(seats: Seat[]): void {
+    this.selectedSeats.set([...seats]);
+  }
+
   clearSeats(): void {
     this.selectedSeats.set([]);
   }
