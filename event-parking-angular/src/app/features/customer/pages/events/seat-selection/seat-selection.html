@@ -1,0 +1,105 @@
+<div class="seat-selection-page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1>Select Your Seats</h1>
+    <p>Choose the seats you want to reserve for this event.</p>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="state-message">
+      Loading available seats...
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (!isLoading && errorMessage) {
+    <div class="error-message">
+      <span>{{ errorMessage }}</span>
+      <button type="button" (click)="loadSeats()">Try Again</button>
+    </div>
+  }
+
+  <!-- Seat Selection -->
+  @if (!isLoading && !errorMessage) {
+    <div class="seat-card">
+
+      <!-- Stage -->
+      <div class="screen">
+        STAGE / SCREEN
+      </div>
+
+      <!-- Legend -->
+      <div class="legend">
+        <div class="legend-item">
+          <span class="legend-seat available"></span>
+          <span>Available</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-seat selected"></span>
+          <span>Selected</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-seat booked"></span>
+          <span>Booked</span>
+        </div>
+      </div>
+
+      <!-- Seat Map -->
+      @if (seats.length > 0) {
+        <div class="seat-grid">
+          @for (seat of seats; track seat.seatId) {
+            <app-seat-button
+              [seatNumber]="seat | seatLabel"
+              [status]="seat.status"
+              [selected]="isSelected(seat.seatId)"
+              (seatSelected)="toggleSeat(seat)"
+            ></app-seat-button>
+          }
+        </div>
+      }
+
+      <!-- No Seats -->
+      @if (seats.length === 0) {
+        <div class="empty-message">
+          No seats are available for this event.
+        </div>
+      }
+
+      <!-- Selection Summary -->
+      <div class="selection-summary">
+
+        <div>
+          <span>Selected Seats</span>
+          <strong>{{ selectedSeats.length }}</strong>
+        </div>
+
+        <div>
+          <span>Total</span>
+          <strong>{{ totalPrice | currency:'LKR' }}</strong>
+        </div>
+
+        <!-- Selected Seat Numbers -->
+        <div class="selected-list">
+          @for (seat of selectedSeats; track seat.seatId) {
+            <span>{{ seat | seatLabel }}</span>
+          }
+        </div>
+
+        <!-- Continue -->
+        <button
+          type="button"
+          class="continue-button"
+          [disabled]="selectedSeats.length === 0"
+          (click)="continueToParking()"
+        >
+          Continue to Parking
+        </button>
+
+      </div>
+
+    </div>
+  }
+
+</div>

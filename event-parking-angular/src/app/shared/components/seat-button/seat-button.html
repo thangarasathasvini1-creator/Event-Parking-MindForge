@@ -1,0 +1,11 @@
+<button
+  type="button"
+  class="seat-button"
+  [class.selected]="selected"
+  [class.booked]="!isAvailable"
+  [disabled]="!isAvailable"
+  (click)="onSeatClick()"
+  [attr.aria-label]="'Seat ' + seatNumber"
+>
+  {{ seatNumber }}
+</button>
