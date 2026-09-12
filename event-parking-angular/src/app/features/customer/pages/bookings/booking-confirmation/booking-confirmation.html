@@ -1,0 +1,171 @@
+<main class="min-h-screen bg-slate-50/60 py-12 px-4 sm:px-6 lg:px-8 font-sans text-slate-900 flex items-center justify-center">
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <section class="max-w-md w-full p-10 bg-white rounded-2xl border border-slate-200 shadow-sm text-center flex flex-col items-center justify-center">
+      <div class="w-10 h-10 border-3 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4" aria-hidden="true"></div>
+      <h2 class="text-lg font-bold text-slate-900 mb-1">Loading your confirmation...</h2>
+      <p class="text-xs text-slate-500">Please wait while we retrieve your booking.</p>
+    </section>
+  }
+
+  <!-- Error State -->
+  @else if (errorMessage()) {
+    <section class="max-w-md w-full p-8 bg-white rounded-2xl border border-rose-200 shadow-sm text-center">
+      <div class="w-12 h-12 mx-auto rounded-full bg-rose-100 text-rose-600 font-black text-xl flex items-center justify-center mb-4" aria-hidden="true">!</div>
+      <h2 class="text-lg font-bold text-slate-900 mb-1">Unable to load confirmation</h2>
+      <p class="text-sm text-slate-600 mb-6">{{ errorMessage() }}</p>
+
+      <div class="flex items-center justify-center gap-3">
+        <button
+          type="button"
+          (click)="goToBookings()"
+          class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition cursor-pointer"
+        >
+          My Bookings
+        </button>
+        <button
+          type="button"
+          (click)="loadBooking()"
+          class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition cursor-pointer"
+        >
+          Try Again
+        </button>
+      </div>
+    </section>
+  }
+
+  <!-- Confirmation Card -->
+  @else if (booking(); as currentBooking) {
+    <section class="max-w-2xl w-full bg-white rounded-3xl border border-slate-200/90 shadow-md p-6 sm:p-10 text-center">
+
+      <!-- Success Icon -->
+      <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-100 text-emerald-600 font-black text-2xl flex items-center justify-center shadow-xs mb-4" aria-hidden="true">
+        ✓
+      </div>
+
+      <p class="text-xs font-bold tracking-widest text-emerald-600 uppercase mb-1">
+        EVENTRA · BOOKING CONFIRMATION
+      </p>
+
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight mb-2">
+        Booking Confirmed!
+      </h1>
+
+      <p class="text-sm text-slate-500 mb-8 max-w-md mx-auto">
+        Your reservation has been successfully confirmed. A receipt and details have been recorded in your account.
+      </p>
+
+      <!-- Booking Number Box -->
+      <div class="mb-8 p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+        <span class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">
+          BOOKING NUMBER
+        </span>
+        <strong class="text-2xl sm:text-3xl font-black text-blue-600 tracking-tight font-mono">
+          {{ currentBooking.bookingNumber }}
+        </strong>
+      </div>
+
+      <!-- Details Section -->
+      <div class="text-left mb-8 border-t border-b border-slate-100 py-6">
+        <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
+          Reservation Details
+        </h2>
+
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span class="block text-xs text-slate-400 font-medium">Booking ID</span>
+            <strong class="text-slate-800">#{{ currentBooking.bookingId }}</strong>
+          </div>
+
+          <div>
+            <span class="block text-xs text-slate-400 font-medium">Event</span>
+            <strong class="text-slate-800">{{ currentBooking.eventName || ('Event #' + currentBooking.eventId) }}</strong>
+          </div>
+
+          <div>
+            <span class="block text-xs text-slate-400 font-medium">Seats</span>
+            <strong class="text-slate-800">{{ currentBooking.seatIds?.length ?? currentBooking.seatCount ?? 0 }} Seats</strong>
+          </div>
+
+          <div>
+            <span class="block text-xs text-slate-400 font-medium">Parking</span>
+            <strong class="text-slate-800">
+              @if (currentBooking.parkingSlotId !== null && currentBooking.parkingSlotId !== undefined) {
+                Slot #{{ currentBooking.parkingSlotId }}
+              } @else {
+                No Parking
+              }
+            </strong>
+          </div>
+
+          <div>
+            <span class="block text-xs text-slate-400 font-medium mb-1">Booking Status</span>
+            <span
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border"
+              [class]="getStatusClass(currentBooking.status)"
+            >
+              {{ currentBooking.status }}
+            </span>
+          </div>
+
+          <div>
+            <span class="block text-xs text-slate-400 font-medium mb-1">Payment Status</span>
+            <span
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border"
+              [class.bg-emerald-50]="isPaymentSuccessful()"
+              [class.text-emerald-700]="isPaymentSuccessful()"
+              [class.border-emerald-200]="isPaymentSuccessful()"
+              [class.bg-amber-50]="!isPaymentSuccessful()"
+              [class.text-amber-700]="!isPaymentSuccessful()"
+              [class.border-amber-200]="!isPaymentSuccessful()"
+            >
+              {{ currentBooking.paymentStatus || 'Pending' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Amount -->
+      <div class="flex items-center justify-between p-4 rounded-xl bg-blue-50/50 border border-blue-100 text-left mb-6">
+        <span class="text-sm font-semibold text-slate-700">Total Amount Paid</span>
+        <strong class="text-2xl font-black text-blue-700">
+          {{ currentBooking.totalAmount | currency:'LKR' }}
+        </strong>
+      </div>
+
+      <div class="text-xs text-slate-400 mb-8">
+        Booking created on {{ currentBooking.createdAt | date:'medium' }}
+      </div>
+
+      <!-- Actions -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+        <button
+          type="button"
+          (click)="viewBooking()"
+          class="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold shadow-sm transition active:scale-[0.98] cursor-pointer"
+        >
+          View Booking Details
+        </button>
+
+        <button
+          type="button"
+          (click)="goToBookings()"
+          class="w-full sm:w-auto px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition cursor-pointer"
+        >
+          My Bookings
+        </button>
+
+        <button
+          type="button"
+          (click)="goToEvents()"
+          class="w-full sm:w-auto px-6 py-3 text-slate-500 hover:text-slate-800 text-sm font-semibold transition cursor-pointer"
+        >
+          Browse More Events
+        </button>
+      </div>
+
+    </section>
+  }
+
+</main>

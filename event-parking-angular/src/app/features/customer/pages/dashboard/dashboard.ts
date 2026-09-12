@@ -71,6 +71,8 @@ export class Dashboard implements OnInit {
       this.router.navigate(['/events']);
     } else if (tab === 'profile') {
       this.router.navigate(['/customer/profile']);
+    } else if (tab === 'bookings') {
+      this.router.navigate(['/bookings']);
     } else {
       this.router.navigate(['/customer/dashboard']);
     }
