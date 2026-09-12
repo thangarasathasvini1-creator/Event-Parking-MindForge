@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { environment } from '../../environments/environment.development';
+import { environment } from '../../environments/environment';
 
 export interface CustomerProfile {
   customerId: number;
@@ -28,7 +28,7 @@ export interface UpdateCustomerProfileRequest {
 export class CustomerService {
   private readonly http = inject(HttpClient);
 
-  private readonly apiUrl = `${environment.apiUrl}/api/customers`;
+  private readonly apiUrl = `${environment.apiUrl}/customers`;
 
   getProfile(customerId: number): Observable<CustomerProfile> {
     return this.http.get<CustomerProfile>(

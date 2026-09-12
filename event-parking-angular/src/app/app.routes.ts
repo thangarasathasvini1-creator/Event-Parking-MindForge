@@ -124,6 +124,22 @@ export const routes: Routes = [
 },
 
 {
+  path: 'events/:eventId/seats',
+  loadComponent: () =>
+    import(
+      './features/customer/pages/events/seat-selection/seat-selection'
+    ).then((m) => m.SeatSelection),
+},
+
+{
+  path: 'events/:eventId/parking-selection',
+  loadComponent: () =>
+    import(
+      './features/customer/pages/events/parking-selection/parking-selection'
+    ).then((m) => m.ParkingSelection),
+},
+
+{
   path: 'admin/venues',
   loadComponent: () =>
     import('./features/admin/pages/venues/venue-list/venue-list')
