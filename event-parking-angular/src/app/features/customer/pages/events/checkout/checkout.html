@@ -1,0 +1,55 @@
+<main class="checkout-page">
+  @if (booking(); as createdBooking) {
+    <section class="success-card" role="status">
+      <p class="eyebrow">Booking created</p>
+      <h1>Your reservation is on hold</h1>
+      <p><strong>{{ createdBooking.bookingNumber }}</strong> was created successfully. Complete payment before the hold expires.</p>
+      <p class="total">{{ createdBooking.totalAmount | currency:'LKR' }}</p>
+      <a routerLink="/events" class="primary-link">Back to events</a>
+    </section>
+  } @else {
+    <header class="page-header">
+      <p class="eyebrow">Final step</p>
+      <h1>Review your booking</h1>
+      <p>Parking is optional. Your final total updates based on the slot you selected.</p>
+    </header>
+
+    @if (errorMessage()) {
+      <p class="error-message" role="alert">{{ errorMessage() }}</p>
+    }
+
+    <section class="summary-card">
+      <div class="summary-row"><span>Event</span><strong>{{ event()?.name }}</strong></div>
+      <div class="summary-row"><span>Seats</span><strong>{{ seats().length }}</strong></div>
+      <div class="seat-list">
+        @for (seat of seats(); track seat.seatId) { <span>{{ seat | seatLabel }}</span> }
+      </div>
+      <div class="summary-row"><span>Ticket total</span><strong>{{ ticketTotal | currency:'LKR' }}</strong></div>
+      <div class="summary-row parking-row">
+        <span>Parking</span>
+        @if (parkingSlot(); as slot) {
+          <strong>{{ slot.slotNumber | slotCode }} · {{ slot.fee | currency:'LKR' }}</strong>
+        } @else {
+          <strong>No parking selected</strong>
+        }
+      </div>
+      <div class="grand-total"><span>Total</span><strong>{{ total | currency:'LKR' }}</strong></div>
+    </section>
+
+    <div class="actions">
+      <a [routerLink]="['/events', event()?.eventId, 'parking-selection']" class="back-link">Back to parking</a>
+      <button type="button" class="confirm-button" (click)="requestConfirmation()">Confirm booking</button>
+    </div>
+  }
+</main>
+
+@if (showConfirmation()) {
+  <app-confirmation-dialog
+    title="Create this booking?"
+    message="Your selected seats and optional parking slot will be placed on hold."
+    confirmLabel="Create booking"
+    [busy]="isSubmitting()"
+    (confirmed)="confirmBooking()"
+    (cancelled)="showConfirmation.set(false)"
+  />
+}

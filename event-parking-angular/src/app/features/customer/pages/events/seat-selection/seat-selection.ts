@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
@@ -25,14 +25,14 @@ export class SeatSelection implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
-  seats: Seat[] = [];
-  selectedSeats: Seat[] = [];
+  readonly seats = signal<Seat[]>([]);
+  readonly selectedSeats = signal<Seat[]>([]);
 
-  isLoading = false;
-  errorMessage = '';
+  readonly isLoading = signal(false);
+  readonly errorMessage = signal('');
 
   eventId = 0;
-  event: Event | null = null;
+  readonly event = signal<Event | null>(null);
 
   ngOnInit(): void {
     this.eventId = Number(
@@ -40,14 +40,14 @@ export class SeatSelection implements OnInit {
     );
 
     if (!this.eventId) {
-      this.errorMessage = 'Invalid event.';
+      this.errorMessage.set('Invalid event.');
       return;
     }
 
     // Pre-fill from state if coming back
     const stateEvent = this.bookingState.event();
     if (stateEvent && stateEvent.eventId === this.eventId) {
-      this.selectedSeats = [...this.bookingState.selectedSeats()];
+      this.selectedSeats.set([...this.bookingState.selectedSeats()]);
     }
 
     this.loadEvent();
@@ -56,28 +56,31 @@ export class SeatSelection implements OnInit {
 
   loadEvent(): void {
     this.eventService.getEventById(this.eventId).subscribe({
-      next: (event) => this.event = event,
-      error: () => this.errorMessage = 'Failed to load event details.'
+      next: (event) => this.event.set(event),
+      error: () => this.errorMessage.set('Failed to load event details.')
     });
   }
 
   loadSeats(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
+    this.isLoading.set(true);
+    this.errorMessage.set('');
 
     this.seatService.getSeatsByEvent(this.eventId).subscribe({
       next: (seats: Seat[]) => {
-        this.seats = seats;
-        this.isLoading = false;
+        const sortedSeats = this.sortSeats(seats);
+        this.seats.set(sortedSeats);
+        this.removeUnavailableSelections(sortedSeats);
+        this.isLoading.set(false);
       },
 
       error: (error: any) => {
         console.error('Failed to load seats:', error);
 
-        this.errorMessage =
-          'Unable to load seats. Error: ' + (error.message || JSON.stringify(error));
+        this.errorMessage.set(
+          'Unable to load seats. Error: ' + (error.message || JSON.stringify(error))
+        );
 
-        this.isLoading = false;
+        this.isLoading.set(false);
       }
     });
   }
@@ -87,47 +90,87 @@ export class SeatSelection implements OnInit {
       return;
     }
 
-    const index = this.selectedSeats.findIndex(s => s.seatId === seat.seatId);
+    const selectedSeats = this.selectedSeats();
+    const index = selectedSeats.findIndex(s => s.seatId === seat.seatId);
 
     if (index >= 0) {
-      this.selectedSeats.splice(index, 1);
+      this.selectedSeats.set(selectedSeats.filter(s => s.seatId !== seat.seatId));
     } else {
-      this.selectedSeats.push(seat);
+      this.selectedSeats.set([...selectedSeats, seat]);
     }
 
-    this.errorMessage = '';
+    this.errorMessage.set('');
   }
 
   isSelected(seatId: number): boolean {
-    return this.selectedSeats.some(s => s.seatId === seatId);
+    return this.selectedSeats().some(s => s.seatId === seatId);
+  }
+
+  private sortSeats(seats: Seat[]): Seat[] {
+    return [...seats].sort((first, second) => {
+      const rowDifference = this.getPosition(first.row) - this.getPosition(second.row);
+
+      if (rowDifference !== 0) {
+        return rowDifference;
+      }
+
+      return this.getPosition(first.column) - this.getPosition(second.column);
+    });
+  }
+
+  private getPosition(value: number | string): number {
+    if (typeof value === 'number') {
+      return value;
+    }
+
+    return Number(value.match(/\d+/)?.[0] ?? 0);
+  }
+
+  private removeUnavailableSelections(seats: Seat[]): void {
+    const availableSeatIds = new Set(
+      seats
+        .filter(seat => seat.status.toLowerCase() === 'available')
+        .map(seat => seat.seatId)
+    );
+    const availableSelections = this.selectedSeats().filter(seat =>
+      availableSeatIds.has(seat.seatId)
+    );
+
+    if (availableSelections.length !== this.selectedSeats().length) {
+      this.selectedSeats.set(availableSelections);
+      this.bookingState.clearSeats();
+      for (const seat of availableSelections) {
+        this.bookingState.toggleSeat(seat);
+      }
+    }
   }
 
   get totalPrice(): number {
-    if (!this.event) return 0;
-    return this.selectedSeats.length * this.event.ticketPrice;
+    const event = this.event();
+    return event ? this.selectedSeats().length * event.ticketPrice : 0;
   }
 
   continueToParking(): void {
-    if (this.selectedSeats.length === 0) {
-      this.errorMessage =
-        'Please select at least one seat.';
+    if (this.selectedSeats().length === 0) {
+      this.errorMessage.set('Please select at least one seat.');
       return;
     }
 
     // Save to shared state
-    if (this.event) {
-      this.bookingState.setEvent(this.event);
+    const event = this.event();
+    if (event) {
+      this.bookingState.setEvent(event);
     }
     
     // We can clear and re-add or implement a setSeats method
     this.bookingState.clearSeats();
-    for (const seat of this.selectedSeats) {
+    for (const seat of this.selectedSeats()) {
       this.bookingState.toggleSeat(seat);
     }
 
     console.log(
       'Selected seats saved to state:',
-      this.selectedSeats
+      this.selectedSeats()
     );
 
     this.router.navigate([

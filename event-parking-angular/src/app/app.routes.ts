@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth-guard';
 import { adminGuard } from './core/guards/admin-guard';
+import { checkoutGuard } from './core/guards/checkout-guard';
 
 export const routes: Routes = [
   // ==================== PUBLIC / LANDING PAGE ====================
@@ -112,6 +113,14 @@ export const routes: Routes = [
       import(
         './features/customer/pages/events/parking-selection/parking-selection'
       ).then((m) => m.ParkingSelection),
+  },
+  {
+    path: 'events/:eventId/checkout',
+    canActivate: [authGuard, checkoutGuard],
+    loadComponent: () =>
+      import(
+        './features/customer/pages/events/checkout/checkout'
+      ).then((m) => m.Checkout),
   },
 
   // ==================== ADMIN (PROTECTED) ====================

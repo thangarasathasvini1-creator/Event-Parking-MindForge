@@ -3,6 +3,7 @@ export interface ParkingSlot {
   eventId: number;
   slotNumber: string;
   zone: string;
+  vehicleType: string;
   fee: number;
   status: string;
 }

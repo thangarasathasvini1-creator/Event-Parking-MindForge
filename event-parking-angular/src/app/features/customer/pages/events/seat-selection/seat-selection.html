@@ -7,22 +7,22 @@
   </div>
 
   <!-- Loading State -->
-  @if (isLoading) {
+  @if (isLoading()) {
     <div class="state-message">
       Loading available seats...
     </div>
   }
 
   <!-- Error State -->
-  @if (!isLoading && errorMessage) {
+  @if (!isLoading() && errorMessage()) {
     <div class="error-message">
-      <span>{{ errorMessage }}</span>
+      <span>{{ errorMessage() }}</span>
       <button type="button" (click)="loadSeats()">Try Again</button>
     </div>
   }
 
   <!-- Seat Selection -->
-  @if (!isLoading && !errorMessage) {
+  @if (!isLoading() && !errorMessage()) {
     <div class="seat-card">
 
       <!-- Stage -->
@@ -47,9 +47,9 @@
       </div>
 
       <!-- Seat Map -->
-      @if (seats.length > 0) {
+      @if (seats().length > 0) {
         <div class="seat-grid">
-          @for (seat of seats; track seat.seatId) {
+          @for (seat of seats(); track seat.seatId) {
             <app-seat-button
               [seatNumber]="seat | seatLabel"
               [status]="seat.status"
@@ -61,7 +61,7 @@
       }
 
       <!-- No Seats -->
-      @if (seats.length === 0) {
+      @if (seats().length === 0) {
         <div class="empty-message">
           No seats are available for this event.
         </div>
@@ -72,7 +72,7 @@
 
         <div>
           <span>Selected Seats</span>
-          <strong>{{ selectedSeats.length }}</strong>
+          <strong>{{ selectedSeats().length }}</strong>
         </div>
 
         <div>
@@ -82,7 +82,7 @@
 
         <!-- Selected Seat Numbers -->
         <div class="selected-list">
-          @for (seat of selectedSeats; track seat.seatId) {
+          @for (seat of selectedSeats(); track seat.seatId) {
             <span>{{ seat | seatLabel }}</span>
           }
         </div>
@@ -91,7 +91,7 @@
         <button
           type="button"
           class="continue-button"
-          [disabled]="selectedSeats.length === 0"
+          [disabled]="selectedSeats().length === 0"
           (click)="continueToParking()"
         >
           Continue to Parking
