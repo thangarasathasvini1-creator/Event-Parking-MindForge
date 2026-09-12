@@ -49,9 +49,15 @@ export class Login {
       error: (error) => {
         this.isLoading.set(false);
 
-        this.errorMessage.set(
-          error?.error?.message ?? 'Invalid email or password.'
-        );
+        if (error?.status === 0) {
+          this.errorMessage.set(
+            'Unable to connect to the backend server. Please ensure the backend API is running at https://localhost:7291.'
+          );
+        } else {
+          this.errorMessage.set(
+            error?.error?.message ?? 'Invalid email or password.'
+          );
+        }
       },
     });
   }
