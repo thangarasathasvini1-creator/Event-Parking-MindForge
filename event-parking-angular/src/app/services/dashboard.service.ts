@@ -9,13 +9,27 @@ import { Dashboard } from '../models/dashboard.model';
   providedIn: 'root',
 })
 export class DashboardService {
+
   private readonly http = inject(HttpClient);
 
-  private readonly apiUrl = `${environment.apiUrl}/dashboard`;
+  private readonly apiUrl =
+    `${environment.apiUrl}/dashboard`;
+
+  // ==================== CUSTOMER DASHBOARD ====================
 
   getCustomerDashboard(): Observable<Dashboard> {
     return this.http.get<Dashboard>(
       `${this.apiUrl}/customer`
     );
   }
+
+
+  // ==================== ADMIN DASHBOARD ====================
+
+  getAdminDashboard(): Observable<unknown> {
+    return this.http.get<unknown>(
+      `${environment.apiUrl}/admin/dashboard`
+    );
+  }
+
 }
