@@ -6,7 +6,7 @@ import {
   ReactiveFormsModule,
   Validators,
   AbstractControl,
-  ValidationErrors
+  ValidationErrors,
 } from '@angular/forms';
 
 import { Booking } from '../../../../../models/booking.model';
@@ -29,7 +29,6 @@ interface PaymentResponse {
   styleUrl: './payment.css',
 })
 export class Payment implements OnInit {
-
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -47,14 +46,18 @@ export class Payment implements OnInit {
 
   bookingId = 0;
 
+  // ============================================================
+  // PAYMENT FORM
+  // ============================================================
+
   readonly paymentForm = this.fb.nonNullable.group({
     cardNumber: [
       '',
       [
         Validators.required,
         Validators.pattern(/^[0-9]{13,19}$/),
-        this.cardChecksumValidator
-      ]
+        this.cardChecksumValidator,
+      ],
     ],
 
     expiry: [
@@ -62,18 +65,22 @@ export class Payment implements OnInit {
       [
         Validators.required,
         Validators.pattern(/^(0[1-9]|1[0-2])\/[0-9]{2}$/),
-        this.expiryValidator
-      ]
+        this.expiryValidator,
+      ],
     ],
 
     cvv: [
       '',
       [
         Validators.required,
-        Validators.pattern(/^[0-9]{3,4}$/)
-      ]
-    ]
+        Validators.pattern(/^[0-9]{3,4}$/),
+      ],
+    ],
   });
+
+  // ============================================================
+  // INIT
+  // ============================================================
 
   ngOnInit(): void {
     const id = Number(
@@ -86,9 +93,12 @@ export class Payment implements OnInit {
     }
 
     this.bookingId = id;
-
     this.loadBooking();
   }
+
+  // ============================================================
+  // LOAD BOOKING
+  // ============================================================
 
   loadBooking(): void {
     this.isLoading.set(true);
@@ -99,7 +109,6 @@ export class Payment implements OnInit {
       .subscribe({
         next: (booking: Booking) => {
           this.booking.set(booking);
-
           this.isLoading.set(false);
 
           this.loadPaymentStatus();
@@ -116,9 +125,13 @@ export class Payment implements OnInit {
           );
 
           this.isLoading.set(false);
-        }
+        },
       });
   }
+
+  // ============================================================
+  // LOAD PAYMENT STATUS
+  // ============================================================
 
   loadPaymentStatus(): void {
     this.bookingService
@@ -128,7 +141,7 @@ export class Payment implements OnInit {
           this.payment.set(payment);
 
           const status =
-            payment.status?.toLowerCase() ?? '';
+            payment.status?.trim().toLowerCase() ?? '';
 
           if (
             status === 'success' ||
@@ -144,9 +157,13 @@ export class Payment implements OnInit {
             'Failed to load payment status:',
             error
           );
-        }
+        },
       });
   }
+
+  // ============================================================
+  // SUBMIT PAYMENT
+  // ============================================================
 
   submitPayment(): void {
     this.errorMessage.set('');
@@ -167,7 +184,7 @@ export class Payment implements OnInit {
     }
 
     if (
-      booking.status.toLowerCase() !== 'pending'
+      booking.status.trim().toLowerCase() !== 'pending'
     ) {
       this.errorMessage.set(
         'This booking is no longer available for payment.'
@@ -179,7 +196,7 @@ export class Payment implements OnInit {
 
     this.bookingService
       .makePayment(this.bookingId, {
-        paymentMethod: 'Card'
+        paymentMethod: 'Card',
       })
       .subscribe({
         next: (payment: PaymentResponse) => {
@@ -204,11 +221,14 @@ export class Payment implements OnInit {
           );
 
           this.isSubmitting.set(false);
-
           this.handlePaymentError(error);
-        }
+        },
       });
   }
+
+  // ============================================================
+  // REFRESH BOOKING AFTER PAYMENT
+  // ============================================================
 
   private reloadBookingAfterPayment(): void {
     this.bookingService
@@ -216,6 +236,16 @@ export class Payment implements OnInit {
       .subscribe({
         next: (booking: Booking) => {
           this.booking.set(booking);
+
+          /*
+           * Payment is completed.
+           * Move customer to booking confirmation page.
+           */
+          this.router.navigate([
+            '/bookings',
+            this.bookingId,
+            'confirmation',
+          ]);
         },
 
         error: (error: unknown) => {
@@ -223,20 +253,34 @@ export class Payment implements OnInit {
             'Failed to refresh booking:',
             error
           );
-        }
+
+          this.isSubmitting.set(false);
+
+          this.errorMessage.set(
+            'Payment was successful, but we could not load the confirmation. Please try again.'
+          );
+        },
       });
   }
+
+  // ============================================================
+  // NAVIGATION
+  // ============================================================
 
   goToBookingDetails(): void {
     this.router.navigate([
       '/bookings',
-      this.bookingId
+      this.bookingId,
     ]);
   }
 
   goToBookings(): void {
     this.router.navigate(['/bookings']);
   }
+
+  // ============================================================
+  // PAYMENT ERROR HANDLING
+  // ============================================================
 
   private handlePaymentError(error: unknown): void {
     const httpError = error as {
@@ -249,7 +293,7 @@ export class Payment implements OnInit {
     if (httpError.status === 409) {
       this.errorMessage.set(
         httpError.error?.message ??
-        'This booking is no longer available for payment.'
+          'This booking is no longer available for payment.'
       );
 
       this.loadBooking();
@@ -259,7 +303,21 @@ export class Payment implements OnInit {
     if (httpError.status === 400) {
       this.errorMessage.set(
         httpError.error?.message ??
-        'The payment request is invalid.'
+          'The payment request is invalid.'
+      );
+      return;
+    }
+
+    if (httpError.status === 401) {
+      this.errorMessage.set(
+        'Your session has expired. Please log in again.'
+      );
+      return;
+    }
+
+    if (httpError.status === 403) {
+      this.errorMessage.set(
+        'You do not have permission to make this payment.'
       );
       return;
     }
@@ -271,11 +329,25 @@ export class Payment implements OnInit {
       return;
     }
 
+    if (
+      httpError.status !== undefined &&
+      httpError.status >= 500
+    ) {
+      this.errorMessage.set(
+        'The payment service is temporarily unavailable. Please try again later.'
+      );
+      return;
+    }
+
     this.errorMessage.set(
       httpError.error?.message ??
-      'Payment could not be completed. Please try again.'
+        'Payment could not be completed. Please try again.'
     );
   }
+
+  // ============================================================
+  // FORM CONTROLS
+  // ============================================================
 
   get cardNumberControl(): AbstractControl {
     return this.paymentForm.controls.cardNumber;
@@ -289,12 +361,16 @@ export class Payment implements OnInit {
     return this.paymentForm.controls.cvv;
   }
 
+  // ============================================================
+  // CARD LUHN VALIDATION
+  // ============================================================
+
   private cardChecksumValidator(
     control: AbstractControl
   ): ValidationErrors | null {
-
-    const value = String(control.value ?? '')
-      .replace(/\s+/g, '');
+    const value = String(
+      control.value ?? ''
+    ).replace(/\s+/g, '');
 
     if (!value || !/^\d+$/.test(value)) {
       return null;
@@ -303,7 +379,11 @@ export class Payment implements OnInit {
     let sum = 0;
     let shouldDouble = false;
 
-    for (let i = value.length - 1; i >= 0; i--) {
+    for (
+      let i = value.length - 1;
+      i >= 0;
+      i--
+    ) {
       let digit = Number(value[i]);
 
       if (shouldDouble) {
@@ -323,13 +403,20 @@ export class Payment implements OnInit {
       : { invalidCard: true };
   }
 
+  // ============================================================
+  // EXPIRY VALIDATION
+  // ============================================================
+
   private expiryValidator(
     control: AbstractControl
   ): ValidationErrors | null {
+    const value = String(
+      control.value ?? ''
+    ).trim();
 
-    const value = String(control.value ?? '');
-
-    if (!/^(0[1-9]|1[0-2])\/[0-9]{2}$/.test(value)) {
+    if (
+      !/^(0[1-9]|1[0-2])\/[0-9]{2}$/.test(value)
+    ) {
       return null;
     }
 
@@ -341,31 +428,49 @@ export class Payment implements OnInit {
 
     const now = new Date();
 
-    const currentMonth = now.getMonth() + 1;
-    const currentYear = now.getFullYear();
+    const currentMonth =
+      now.getMonth() + 1;
+
+    const currentYear =
+      now.getFullYear();
 
     if (
       year < currentYear ||
-      (year === currentYear && month < currentMonth)
+      (
+        year === currentYear &&
+        month < currentMonth
+      )
     ) {
       return {
-        expired: true
+        expired: true,
       };
     }
 
     return null;
   }
 
+  // ============================================================
+  // BOOKING STATUS STYLE
+  // ============================================================
+
   getStatusClass(status: string): string {
-    const s = (status ?? '').toLowerCase();
+    const s =
+      (status ?? '')
+        .trim()
+        .toLowerCase();
+
     switch (s) {
       case 'confirmed':
       case 'completed':
         return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+
       case 'pending':
         return 'bg-amber-50 text-amber-700 border-amber-200';
+
       case 'cancelled':
+      case 'canceled':
         return 'bg-rose-50 text-rose-700 border-rose-200';
+
       default:
         return 'bg-slate-50 text-slate-700 border-slate-200';
     }

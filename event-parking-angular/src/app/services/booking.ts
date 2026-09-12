@@ -45,6 +45,18 @@ export class BookingService {
   }
 
 
+  // ==================== ADMIN BOOKINGS BY EVENT ====================
+
+  getBookingsByEvent(
+    eventId: number
+  ): Observable<Booking[]> {
+
+    return this.http.get<Booking[]>(
+      `${this.apiUrl}?eventId=${eventId}`
+    );
+  }
+
+
   // ==================== GET BOOKING ====================
 
   getBookingById(
@@ -66,7 +78,9 @@ export class BookingService {
 
     return this.http.delete<void>(
       `${this.apiUrl}/${bookingId}`,
-      reason ? { body: { reason } } : {}
+      reason
+        ? { body: { reason } }
+        : {}
     );
   }
 
