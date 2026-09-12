@@ -3,7 +3,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../../core/auth/auth';
-import { environment } from '../../../../../environments/environment.development';
+import { environment } from '../../../../../environments/environment';
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -61,6 +61,6 @@ export class Login {
   }
 
   goToGoogleLogin(): void {
-  window.location.href = `${environment.apiUrl}/api/auth/google`;
-}
+    window.location.href = `${environment.apiUrl}/auth/google`;
+  }
 }

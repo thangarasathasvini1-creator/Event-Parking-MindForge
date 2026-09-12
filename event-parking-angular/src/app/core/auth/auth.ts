@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment';
 import { AuthStateService } from './auth-state';
 import { AuthStorageService } from './auth-storage';
 
@@ -67,7 +67,7 @@ export class AuthService {
   private readonly authState = inject(AuthStateService);
   private readonly authStorage = inject(AuthStorageService);
 
-  private readonly apiUrl = `${environment.apiUrl}/api/auth`;
+  private readonly apiUrl = `${environment.apiUrl}/auth`;
 
   // =========================
   // LOGIN
@@ -94,7 +94,7 @@ export class AuthService {
   // =========================
   register(request: RegisterRequest): Observable<unknown> {
     return this.http.post<unknown>(
-      `${environment.apiUrl}/api/customers/register`,
+      `${environment.apiUrl}/customers/register`,
       request
     );
   }

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { environment } from '../../environments/environment.development';
+import { environment } from '../../environments/environment';
 import { Venue } from '../models/venue.model';
 
 @Injectable({
@@ -11,7 +11,7 @@ import { Venue } from '../models/venue.model';
 export class VenueService {
   private readonly http = inject(HttpClient);
 
-  private readonly apiUrl = `${environment.apiUrl}/api/venues`;
+  private readonly apiUrl = `${environment.apiUrl}/venues`;
 
   getVenues(): Observable<Venue[]> {
     return this.http.get<Venue[]>(this.apiUrl);
