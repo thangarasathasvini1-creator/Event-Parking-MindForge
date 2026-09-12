@@ -1,0 +1,45 @@
+.parking-slot-button {
+  display: flex;
+  min-height: 74px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1e293b;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.parking-slot-button:hover:not(:disabled),
+.parking-slot-button:focus-visible:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: #4f46e5;
+  box-shadow: 0 5px 14px rgba(79, 70, 229, 0.18);
+  outline: none;
+}
+
+.parking-slot-button.selected {
+  border-color: #4f46e5;
+  background: #4f46e5;
+  color: #ffffff;
+}
+
+.parking-slot-button.unavailable {
+  border-color: #cbd5e1;
+  background: #e2e8f0;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.slot-number {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.slot-status {
+  font-size: 11px;
+  font-weight: 600;
+}
