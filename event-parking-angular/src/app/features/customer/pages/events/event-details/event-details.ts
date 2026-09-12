@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { EventService } from '../../../../../services/event';
 import { Event } from '../../../../../models/event.model';
@@ -7,6 +7,7 @@ import { Event } from '../../../../../models/event.model';
 @Component({
   selector: 'app-event-details',
   standalone: true,
+  imports: [RouterLink],
   templateUrl: './event-details.html',
   styleUrl: './event-details.css',
 })

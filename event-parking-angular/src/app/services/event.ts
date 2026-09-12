@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { environment } from '../../environments/environment.development';
+import { environment } from '../../environments/environment';
 import { Event } from '../models/event.model';
 
 @Injectable({
@@ -11,7 +11,7 @@ import { Event } from '../models/event.model';
 export class EventService {
   private readonly http = inject(HttpClient);
 
-  private readonly apiUrl = `${environment.apiUrl}/api/events`;
+  private readonly apiUrl = `${environment.apiUrl}/events`;
 
   getEvents(): Observable<Event[]> {
     return this.http.get<Event[]>(this.apiUrl);
