@@ -57,6 +57,11 @@ BEGIN
         Name NVARCHAR(150) NOT NULL,
         Address NVARCHAR(500) NOT NULL,
         TotalCapacity INT NOT NULL,
+        TotalParkingSlots INT NOT NULL CONSTRAINT DF_Venues_TotalParkingSlots DEFAULT (0),
+        CarCapacity INT NOT NULL CONSTRAINT DF_Venues_CarCapacity DEFAULT (0),
+        BikeCapacity INT NOT NULL CONSTRAINT DF_Venues_BikeCapacity DEFAULT (0),
+        BusCapacity INT NOT NULL CONSTRAINT DF_Venues_BusCapacity DEFAULT (0),
+        VanCapacity INT NOT NULL CONSTRAINT DF_Venues_VanCapacity DEFAULT (0),
         CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_Venues_CreatedAt DEFAULT (SYSUTCDATETIME()),
         UpdatedAt DATETIME2 NULL
     );

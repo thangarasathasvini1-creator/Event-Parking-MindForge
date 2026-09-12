@@ -39,8 +39,9 @@ export class Login {
       next: (response) => {
         this.isLoading.set(false);
 
-        if (response.role.toLowerCase() === 'admin') {
-          this.router.navigate(['/admin/dashboard']);
+        const role = response.role?.toLowerCase();
+        if (role === 'admin' || role === 'administrator') {
+          this.router.navigate(['/admin/events']);
         } else {
           this.router.navigate(['/customer/dashboard']);
         }

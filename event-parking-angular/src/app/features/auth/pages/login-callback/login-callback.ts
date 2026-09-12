@@ -36,8 +36,9 @@ export class LoginCallback {
         role,
       });
 
-      if (role.toLowerCase() === 'admin') {
-        this.router.navigate(['/admin/dashboard']);
+      const userRole = role.toLowerCase();
+      if (userRole === 'admin' || userRole === 'administrator') {
+        this.router.navigate(['/admin/events']);
       } else {
         this.router.navigate(['/customer/dashboard']);
       }

@@ -24,7 +24,25 @@ export class VenueForm {
     name: '',
     address: '',
     totalCapacity: 0,
+    totalParkingSlots: 0,
+    carCapacity: 0,
+    bikeCapacity: 0,
+    busCapacity: 0,
+    vanCapacity: 0,
   };
+
+  get computedTotalParkingSlots(): number {
+    return (
+      (Number(this.venue.carCapacity) || 0) +
+      (Number(this.venue.bikeCapacity) || 0) +
+      (Number(this.venue.busCapacity) || 0) +
+      (Number(this.venue.vanCapacity) || 0)
+    );
+  }
+
+  updateTotalSlots(): void {
+    this.venue.totalParkingSlots = this.computedTotalParkingSlots;
+  }
 
   saveVenue(): void {
     this.successMessage.set('');
@@ -47,13 +65,32 @@ export class VenueForm {
       return;
     }
 
+    if (
+      (this.venue.carCapacity ?? 0) < 0 ||
+      (this.venue.bikeCapacity ?? 0) < 0 ||
+      (this.venue.busCapacity ?? 0) < 0 ||
+      (this.venue.vanCapacity ?? 0) < 0
+    ) {
+      this.errorMessage.set(
+        'Vehicle parking capacities cannot be negative.'
+      );
+      return;
+    }
+
     this.isSaving.set(true);
+
+    const totalSlots = this.computedTotalParkingSlots;
 
     const venueData: Venue = {
       venueId: 0,
       name: this.venue.name.trim(),
       address: this.venue.address.trim(),
       totalCapacity: this.venue.totalCapacity,
+      totalParkingSlots: totalSlots,
+      carCapacity: Number(this.venue.carCapacity) || 0,
+      bikeCapacity: Number(this.venue.bikeCapacity) || 0,
+      busCapacity: Number(this.venue.busCapacity) || 0,
+      vanCapacity: Number(this.venue.vanCapacity) || 0,
     };
 
     this.venueService.createVenue(venueData).subscribe({
@@ -67,6 +104,11 @@ export class VenueForm {
           name: '',
           address: '',
           totalCapacity: 0,
+          totalParkingSlots: 0,
+          carCapacity: 0,
+          bikeCapacity: 0,
+          busCapacity: 0,
+          vanCapacity: 0,
         };
 
         this.isSaving.set(false);
