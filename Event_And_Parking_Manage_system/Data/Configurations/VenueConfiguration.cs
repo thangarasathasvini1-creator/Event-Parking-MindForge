@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.Models.Entities;
+using Event_And_Parking_Manage_system.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -20,6 +20,26 @@ namespace Event_And_Parking_Manage_system.Data.Configurations
 
             builder.Property(x => x.TotalCapacity)
                 .IsRequired();
+
+            builder.Property(x => x.TotalParkingSlots)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            builder.Property(x => x.CarCapacity)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            builder.Property(x => x.BikeCapacity)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            builder.Property(x => x.BusCapacity)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            builder.Property(x => x.VanCapacity)
+                .IsRequired()
+                .HasDefaultValue(0);
 
             builder.HasMany(x => x.Events)
                 .WithOne(x => x.Venue)

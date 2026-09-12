@@ -28,7 +28,12 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 VenueId = v.VenueId,
                 Name = v.Name,
                 Address = v.Address,
-                TotalCapacity = v.TotalCapacity
+                TotalCapacity = v.TotalCapacity,
+                TotalParkingSlots = v.TotalParkingSlots > 0 ? v.TotalParkingSlots : (v.CarCapacity + v.BikeCapacity + v.BusCapacity + v.VanCapacity),
+                CarCapacity = v.CarCapacity,
+                BikeCapacity = v.BikeCapacity,
+                BusCapacity = v.BusCapacity,
+                VanCapacity = v.VanCapacity
             });
         }
 
@@ -44,7 +49,12 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 VenueId = venue.VenueId,
                 Name = venue.Name,
                 Address = venue.Address,
-                TotalCapacity = venue.TotalCapacity
+                TotalCapacity = venue.TotalCapacity,
+                TotalParkingSlots = venue.TotalParkingSlots > 0 ? venue.TotalParkingSlots : (venue.CarCapacity + venue.BikeCapacity + venue.BusCapacity + venue.VanCapacity),
+                CarCapacity = venue.CarCapacity,
+                BikeCapacity = venue.BikeCapacity,
+                BusCapacity = venue.BusCapacity,
+                VanCapacity = venue.VanCapacity
             };
         }
 
@@ -63,7 +73,12 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 VenueId = v.VenueId,
                 Name = v.Name,
                 Address = v.Address,
-                TotalCapacity = v.TotalCapacity
+                TotalCapacity = v.TotalCapacity,
+                TotalParkingSlots = v.TotalParkingSlots > 0 ? v.TotalParkingSlots : (v.CarCapacity + v.BikeCapacity + v.BusCapacity + v.VanCapacity),
+                CarCapacity = v.CarCapacity,
+                BikeCapacity = v.BikeCapacity,
+                BusCapacity = v.BusCapacity,
+                VanCapacity = v.VanCapacity
             });
         }
 
@@ -74,11 +89,22 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             if (validationError != null)
                 throw new ArgumentException(validationError);
 
+            var totalParking = (dto.CarCapacity + dto.BikeCapacity + dto.BusCapacity + dto.VanCapacity);
+            if (totalParking == 0 && dto.TotalParkingSlots > 0)
+            {
+                totalParking = dto.TotalParkingSlots;
+            }
+
             var venue = new Venue
             {
                 Name = dto.Name,
                 Address = dto.Address,
                 TotalCapacity = dto.TotalCapacity,
+                TotalParkingSlots = totalParking,
+                CarCapacity = dto.CarCapacity,
+                BikeCapacity = dto.BikeCapacity,
+                BusCapacity = dto.BusCapacity,
+                VanCapacity = dto.VanCapacity,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -91,7 +117,12 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 VenueId = venue.VenueId,
                 Name = venue.Name,
                 Address = venue.Address,
-                TotalCapacity = venue.TotalCapacity
+                TotalCapacity = venue.TotalCapacity,
+                TotalParkingSlots = venue.TotalParkingSlots,
+                CarCapacity = venue.CarCapacity,
+                BikeCapacity = venue.BikeCapacity,
+                BusCapacity = venue.BusCapacity,
+                VanCapacity = venue.VanCapacity
             };
         }
 
@@ -118,9 +149,20 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 }
             }
 
+            var totalParking = (dto.CarCapacity + dto.BikeCapacity + dto.BusCapacity + dto.VanCapacity);
+            if (totalParking == 0 && dto.TotalParkingSlots > 0)
+            {
+                totalParking = dto.TotalParkingSlots;
+            }
+
             venue.Name = dto.Name;
             venue.Address = dto.Address;
             venue.TotalCapacity = dto.TotalCapacity;
+            venue.TotalParkingSlots = totalParking;
+            venue.CarCapacity = dto.CarCapacity;
+            venue.BikeCapacity = dto.BikeCapacity;
+            venue.BusCapacity = dto.BusCapacity;
+            venue.VanCapacity = dto.VanCapacity;
             venue.UpdatedAt = DateTime.UtcNow;
 
             _venueRepository.Update(venue);

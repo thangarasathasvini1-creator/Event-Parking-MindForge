@@ -33,7 +33,25 @@ export class VenueEdit implements OnInit {
     name: '',
     address: '',
     totalCapacity: 0,
+    totalParkingSlots: 0,
+    carCapacity: 0,
+    bikeCapacity: 0,
+    busCapacity: 0,
+    vanCapacity: 0,
   };
+
+  get computedTotalParkingSlots(): number {
+    return (
+      (Number(this.venue.carCapacity) || 0) +
+      (Number(this.venue.bikeCapacity) || 0) +
+      (Number(this.venue.busCapacity) || 0) +
+      (Number(this.venue.vanCapacity) || 0)
+    );
+  }
+
+  updateTotalSlots(): void {
+    this.venue.totalParkingSlots = this.computedTotalParkingSlots;
+  }
 
   private venueId = 0;
 
@@ -96,13 +114,32 @@ export class VenueEdit implements OnInit {
       return;
     }
 
+    if (
+      (this.venue.carCapacity ?? 0) < 0 ||
+      (this.venue.bikeCapacity ?? 0) < 0 ||
+      (this.venue.busCapacity ?? 0) < 0 ||
+      (this.venue.vanCapacity ?? 0) < 0
+    ) {
+      this.errorMessage.set(
+        'Vehicle parking capacities cannot be negative.'
+      );
+      return;
+    }
+
     this.isSaving.set(true);
+
+    const totalSlots = this.computedTotalParkingSlots;
 
     const venueData: Venue = {
       venueId: this.venueId,
       name: this.venue.name.trim(),
       address: this.venue.address.trim(),
       totalCapacity: this.venue.totalCapacity,
+      totalParkingSlots: totalSlots > 0 ? totalSlots : (this.venue.totalParkingSlots ?? 0),
+      carCapacity: Number(this.venue.carCapacity) || 0,
+      bikeCapacity: Number(this.venue.bikeCapacity) || 0,
+      busCapacity: Number(this.venue.busCapacity) || 0,
+      vanCapacity: Number(this.venue.vanCapacity) || 0,
     };
 
     this.venueService

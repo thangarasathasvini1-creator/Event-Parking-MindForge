@@ -20,4 +20,21 @@ export class EventService {
   getEventById(eventId: number): Observable<Event> {
     return this.http.get<Event>(`${this.apiUrl}/${eventId}`);
   }
+
+  createEvent(event: Event): Observable<Event> {
+  return this.http.post<Event>(this.apiUrl, event);
+}
+
+updateEvent(eventId: number, event: Event): Observable<Event> {
+  return this.http.put<Event>(
+    `${this.apiUrl}/${eventId}`,
+    event
+  );
+}
+
+deleteEvent(eventId: number): Observable<void> {
+  return this.http.delete<void>(
+    `${this.apiUrl}/${eventId}`
+  );
+}
 }
