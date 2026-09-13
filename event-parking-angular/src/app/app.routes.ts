@@ -217,6 +217,19 @@ export const routes: Routes = [
       ).then((m) => m.PaymentReceipt),
   },
 
+    // ============================================================
+  // CUSTOMER NOTIFICATIONS
+  // ============================================================
+
+  {
+    path: 'notifications',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import(
+        './features/customer/pages/notifications/notifications'
+      ).then((m) => m.Notifications),
+  },
+
 
   // ============================================================
   // ADMIN DASHBOARD
