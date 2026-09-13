@@ -1,126 +1,198 @@
-<div class="min-h-screen bg-slate-50/60 py-10 px-4 sm:px-6 lg:px-8 font-sans text-slate-900">
+<div class="min-h-screen bg-slate-50/60 py-8 px-4 sm:px-6 lg:px-8 font-sans text-slate-900">
 
-  <!-- Page Header -->
-  <header class="max-w-4xl mx-auto mb-8">
-    <span class="inline-block text-xs font-bold tracking-widest text-blue-600 uppercase mb-1">
-      EVENTRA · SEATS
-    </span>
-    <h1 class="text-3xl font-extrabold text-slate-950 tracking-tight">
-      Select Your Seats
-    </h1>
-    <p class="text-slate-500 text-sm mt-1">
-      Choose the seats you want to reserve for this event.
-    </p>
-  </header>
+  <!-- Container -->
+  <div class="max-w-5xl mx-auto space-y-6">
 
-  <!-- Loading State -->
-  @if (isLoading()) {
-    <div class="max-w-md mx-auto my-16 p-10 bg-white rounded-2xl border border-slate-200 shadow-sm text-center flex flex-col items-center justify-center">
-      <div class="w-10 h-10 border-3 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4" aria-hidden="true"></div>
-      <h2 class="text-base font-bold text-slate-800">Loading available seats...</h2>
-    </div>
-  }
+    <!-- Back Navigation & Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <button
+          type="button"
+          (click)="navigateBack()"
+          class="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-800 transition cursor-pointer mb-2"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back to Event Details
+        </button>
 
-  <!-- Error State -->
-  @if (!isLoading() && errorMessage()) {
-    <div class="max-w-md mx-auto my-16 p-6 bg-rose-50 border border-rose-200 rounded-2xl text-center text-sm text-rose-700 flex flex-col items-center gap-3">
-      <span>{{ errorMessage() }}</span>
-      <button
-        type="button"
-        (click)="loadSeats()"
-        class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition cursor-pointer"
-      >
-        Try Again
-      </button>
-    </div>
-  }
-
-  <!-- Seat Selection Card -->
-  @if (!isLoading() && !errorMessage()) {
-    <div class="max-w-4xl mx-auto bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-10">
-
-      <!-- Stage / Screen -->
-      <div class="max-w-md mx-auto mb-8 py-2.5 px-6 rounded-b-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[11px] font-black tracking-widest text-center shadow-xs uppercase">
-        STAGE / SCREEN
+        <span class="block text-xs font-bold tracking-widest text-blue-600 uppercase">
+          EVENTRA · SEAT SELECTION
+        </span>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight">
+          Select Your Seats
+        </h1>
+        @if (event(); as ev) {
+          <p class="text-slate-500 text-sm mt-0.5">
+            <strong class="text-slate-800">{{ ev.name || ev.eventName }}</strong> · Ticket Price: <span class="font-bold text-blue-600">LKR {{ ev.ticketPrice | number }}</span> per seat
+          </p>
+        }
       </div>
 
-      <!-- Legend -->
-      <div class="flex items-center justify-center gap-6 mb-8 text-xs font-medium text-slate-600 flex-wrap">
-        <div class="flex items-center gap-2">
-          <span class="w-4 h-4 rounded-md border border-slate-300 bg-white inline-block"></span>
-          <span>Available</span>
+      <!-- Customer Progress Steps -->
+      <nav aria-label="Booking Progress" class="flex items-center gap-2 text-xs font-semibold bg-white p-2 rounded-2xl border border-slate-200/80 shadow-2xs">
+        <span class="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-500">1. Event</span>
+        <span class="text-slate-300">→</span>
+        <span class="px-2.5 py-1 rounded-xl bg-blue-600 text-white font-bold shadow-2xs">2. Seats</span>
+        <span class="text-slate-300">→</span>
+        <span class="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-500">3. Parking</span>
+        <span class="text-slate-300">→</span>
+        <span class="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-500">4. Checkout</span>
+      </nav>
+    </div>
+
+    <!-- Conflict / Information Alert -->
+    @if (conflictMessage()) {
+      <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-sm flex items-center justify-between gap-3 shadow-2xs animate-fadeIn">
+        <div class="flex items-center gap-2.5">
+          <svg class="w-5 h-5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <span>{{ conflictMessage() }}</span>
         </div>
-        <div class="flex items-center gap-2">
-          <span class="w-4 h-4 rounded-md border border-blue-600 bg-blue-600 inline-block"></span>
-          <span>Selected</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="w-4 h-4 rounded-md border border-slate-200 bg-slate-200 inline-block"></span>
-          <span>Booked</span>
-        </div>
+        <button type="button" (click)="conflictMessage.set('')" class="text-amber-600 hover:text-amber-900 font-bold text-xs cursor-pointer">
+          Dismiss
+        </button>
       </div>
+    }
 
-      <!-- Seat Map Grid -->
-      @if (seats().length > 0) {
-        <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 max-w-2xl mx-auto p-4 sm:p-6 bg-slate-50/70 rounded-2xl border border-slate-100 justify-items-center">
-          @for (seat of seats(); track seat.seatId) {
-            <app-seat-button
-              [seatNumber]="seat | seatLabel"
-              [status]="seat.status"
-              [selected]="isSelected(seat.seatId)"
-              (seatSelected)="toggleSeat(seat)"
-            ></app-seat-button>
-          }
-        </div>
-      }
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <div class="bg-white rounded-3xl border border-slate-200/90 p-12 shadow-2xs">
+        <app-loading-spinner message="Loading available seats..."></app-loading-spinner>
+      </div>
+    }
 
-      <!-- No Seats Found -->
-      @if (seats().length === 0) {
-        <div class="p-8 text-center text-sm text-slate-400">
-          No seats are available for this event.
-        </div>
-      }
+    <!-- Error State -->
+    @if (!isLoading() && errorMessage()) {
+      <div class="bg-white rounded-3xl border border-slate-200/90 p-8 shadow-2xs">
+        <app-error-message [message]="errorMessage()" [showRetry]="true" (retry)="loadSeats()"></app-error-message>
+      </div>
+    }
 
-      <!-- Selection Summary Footer -->
-      <div class="mt-8 pt-6 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
+    <!-- Seat Selection Main Card -->
+    @if (!isLoading() && !errorMessage()) {
+      <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-10">
 
-        <div class="flex items-center gap-8 text-sm">
-          <div>
-            <span class="block text-xs text-slate-400">Selected</span>
-            <strong class="text-xl font-bold text-slate-900">{{ selectedSeats().length }} Seats</strong>
-          </div>
-
-          <div>
-            <span class="block text-xs text-slate-400">Total Price</span>
-            <strong class="text-xl font-black text-blue-600">{{ totalPrice | currency:'LKR' }}</strong>
-          </div>
-        </div>
-
-        <!-- Selected Badges & Continue Button -->
-        <div class="flex items-center gap-4 flex-wrap justify-end">
-          @if (selectedSeats().length > 0) {
-            <div class="flex items-center gap-1.5 flex-wrap">
-              @for (seat of selectedSeats(); track seat.seatId) {
-                <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold">
-                  {{ seat | seatLabel }}
-                </span>
-              }
+        <!-- Stage & Controls Header -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+          <div class="w-full sm:w-auto">
+            <span class="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-1">Stage Direction</span>
+            <div class="w-full sm:w-64 py-2 px-6 rounded-xl bg-gradient-to-r from-slate-900 to-indigo-950 text-white text-[11px] font-black tracking-widest text-center shadow-xs uppercase">
+              STAGE / SCREEN
             </div>
-          }
+          </div>
 
+          <!-- Refresh Seat Map Action -->
           <button
             type="button"
-            [disabled]="selectedSeats().length === 0"
-            (click)="continueToParking()"
-            class="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-bold shadow-sm transition active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+            (click)="refreshSeats()"
+            class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer self-end sm:self-auto"
+            title="Refresh availability from backend"
           >
-            Continue to Parking →
+            <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh Availability
           </button>
         </div>
 
-      </div>
+        <!-- Legend -->
+        <div class="flex items-center justify-center gap-6 mb-8 text-xs font-medium text-slate-600 flex-wrap bg-slate-50/80 p-3.5 rounded-2xl border border-slate-100">
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 rounded-md border border-slate-300 bg-white inline-block shadow-2xs"></span>
+            <span>Available</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 rounded-md border border-blue-600 bg-blue-600 inline-block shadow-2xs"></span>
+            <span>Selected</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 rounded-md border border-amber-300 bg-amber-100 inline-block"></span>
+            <span>Held</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 rounded-md border border-slate-200 bg-slate-200 inline-block"></span>
+            <span>Booked</span>
+          </div>
+        </div>
 
-    </div>
-  }
+        <!-- Seat Map Grid -->
+        @if (seats().length > 0) {
+          <div class="p-4 sm:p-8 bg-slate-50/60 rounded-2xl border border-slate-100">
+            <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2.5 sm:gap-3 max-w-4xl mx-auto justify-items-center">
+              @for (seat of seats(); track seat.seatId) {
+                <app-seat-button
+                  [seatNumber]="seat | seatLabel"
+                  [status]="seat.status"
+                  [selected]="isSelected(seat.seatId)"
+                  (seatSelected)="toggleSeat(seat)"
+                ></app-seat-button>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Empty State -->
+        @if (seats().length === 0) {
+          <app-empty-state
+            title="No Seats Available"
+            description="No seats have been allocated for this event yet."
+            actionText="Back to Event"
+            (action)="navigateBack()"
+          ></app-empty-state>
+        }
+
+        <!-- Selection Summary Footer -->
+        <div class="mt-8 pt-6 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
+
+          <!-- Pricing & Count Details -->
+          <div class="flex items-center gap-8 text-sm">
+            <div>
+              <span class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Selected</span>
+              <strong class="text-2xl font-black text-slate-900">{{ selectedSeats().length }} <span class="text-sm font-medium text-slate-500">Seats</span></strong>
+            </div>
+
+            <div class="h-8 w-px bg-slate-200"></div>
+
+            <div>
+              <span class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Ticket Subtotal</span>
+              <strong class="text-2xl font-black text-blue-600">LKR {{ totalPrice | number }}</strong>
+            </div>
+          </div>
+
+          <!-- Badges & Action Buttons -->
+          <div class="flex items-center gap-4 flex-wrap justify-end w-full md:w-auto">
+            @if (selectedSeats().length > 0) {
+              <div class="flex items-center gap-1.5 flex-wrap max-w-xs justify-end">
+                @for (seat of selectedSeats(); track seat.seatId) {
+                  <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold">
+                    {{ seat | seatLabel }}
+                  </span>
+                }
+              </div>
+            }
+
+            <button
+              type="button"
+              [disabled]="selectedSeats().length === 0"
+              (click)="continueToParking()"
+              class="w-full md:w-auto px-7 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-bold shadow-sm transition active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center justify-center gap-2"
+            >
+              <span>Continue to Parking</span>
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    }
+
+  </div>
 
 </div>
+

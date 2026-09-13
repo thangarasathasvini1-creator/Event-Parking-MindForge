@@ -379,6 +379,29 @@ export const routes: Routes = [
 
 
   // ============================================================
+  // ADMIN SEATS & PARKING
+  // ============================================================
+
+  {
+    path: 'admin/seats',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import(
+        './features/admin/pages/seats/seats'
+      ).then((m) => m.Seats),
+  },
+
+  {
+    path: 'admin/parking',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import(
+        './features/admin/pages/parking/parking'
+      ).then((m) => m.Parking),
+  },
+
+
+  // ============================================================
   // FALLBACK
   // ============================================================
 
@@ -386,5 +409,6 @@ export const routes: Routes = [
     path: '**',
     redirectTo: '',
   },
+
 
 ];
