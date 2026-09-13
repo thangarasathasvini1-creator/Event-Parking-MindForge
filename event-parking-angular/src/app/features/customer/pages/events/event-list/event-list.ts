@@ -50,8 +50,8 @@ export class EventList implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
-  /** When embedded inside dashboard, navbar and footer can be suppressed */
-  @Input() isEmbedded = false;
+  /** When embedded inside customer layout, navbar and footer are suppressed */
+  @Input() isEmbedded = true;
 
   readonly events = signal<Event[]>([]);
   readonly categories = signal<Category[]>([]);

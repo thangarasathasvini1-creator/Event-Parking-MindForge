@@ -74,6 +74,9 @@ export class Checkout {
   // ==================== CREATE BOOKING ====================
 
   confirmBooking(): void {
+    if (this.isSubmitting()) {
+      return;
+    }
 
     const event = this.event();
     const seats = this.seats();
@@ -126,14 +129,20 @@ export class Checkout {
            */
           this.bookingState.clearState();
 
+          const bookingId = booking.bookingId ?? (booking as any)?.BookingId;
+
           /*
            * Continue directly to payment.
            */
-          this.router.navigate([
-            '/bookings',
-            booking.bookingId,
-            'payment'
-          ]);
+          if (bookingId) {
+            this.router.navigate([
+              '/bookings',
+              bookingId,
+              'payment'
+            ]);
+          } else {
+            this.router.navigate(['/bookings']);
+          }
         },
 
 
@@ -163,33 +172,46 @@ export class Checkout {
 
     const httpError = error as {
       status?: number;
-      error?: {
-        message?: string;
-      };
+      error?: any;
     };
 
-    const message =
-      httpError.error?.message ??
-      'Unable to create the booking. Please try again.';
+    let message = 'Unable to create the booking. Please try again.';
+    if (typeof httpError.error === 'string' && httpError.error.trim().length > 0) {
+      message = httpError.error;
+    } else if (httpError.error?.message) {
+      message = httpError.error.message;
+    } else if (httpError.error?.title) {
+      message = httpError.error.title;
+    }
 
 
     // ==================== CONFLICT ====================
 
     if (httpError.status === 409) {
 
-      const parkingConflict =
+      const isParkingConflict =
         message
           .toLowerCase()
           .includes('parking');
 
-      this.router.navigate([
-        '/events',
-        eventId,
-        parkingConflict
-          ? 'parking-selection'
-          : 'seats'
-      ]);
+      const isSeatTakenConflict =
+        message.toLowerCase().includes('already booked') ||
+        message.toLowerCase().includes('already reserved') ||
+        message.toLowerCase().includes('not available') ||
+        message.toLowerCase().includes('just taken');
 
+      if (isSeatTakenConflict) {
+        this.router.navigate([
+          '/events',
+          eventId,
+          isParkingConflict
+            ? 'parking-selection'
+            : 'seats'
+        ]);
+        return;
+      }
+
+      this.errorMessage.set(message);
       return;
     }
 
