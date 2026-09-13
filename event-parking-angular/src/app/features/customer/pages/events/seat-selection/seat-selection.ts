@@ -9,14 +9,25 @@ import { EventService } from '../../../../../services/event';
 import { BookingStateService } from '../../../../../core/services/booking-state.service';
 import { SeatButton } from '../../../../../shared/components/seat-button/seat-button';
 import { SeatLabelPipe } from '../../../../../shared/pipes/seat-label-pipe';
+import { LoadingSpinner } from '../../../../../shared/components/loading-spinner/loading-spinner';
+import { ErrorMessage } from '../../../../../shared/components/error-message/error-message';
+import { EmptyState } from '../../../../../shared/components/empty-state/empty-state';
 
 @Component({
   selector: 'app-seat-selection',
   standalone: true,
-  imports: [CommonModule, SeatButton, SeatLabelPipe],
+  imports: [
+    CommonModule,
+    SeatButton,
+    SeatLabelPipe,
+    LoadingSpinner,
+    ErrorMessage,
+    EmptyState
+  ],
   templateUrl: './seat-selection.html',
   styleUrl: './seat-selection.css'
 })
+
 export class SeatSelection implements OnInit {
 
   private readonly seatService = inject(SeatService);
@@ -30,6 +41,7 @@ export class SeatSelection implements OnInit {
 
   readonly isLoading = signal(false);
   readonly errorMessage = signal('');
+  readonly conflictMessage = signal('');
 
   eventId = 0;
   readonly event = signal<Event | null>(null);
@@ -61,45 +73,60 @@ export class SeatSelection implements OnInit {
     });
   }
 
-  loadSeats(): void {
+  loadSeats(isRefresh = false): void {
     this.isLoading.set(true);
-    this.errorMessage.set('');
+    if (!isRefresh) {
+      this.errorMessage.set('');
+    }
 
     this.seatService.getSeatsByEvent(this.eventId).subscribe({
       next: (seats: Seat[]) => {
         const sortedSeats = this.sortSeats(seats);
         this.seats.set(sortedSeats);
-        this.removeUnavailableSelections(sortedSeats);
+        this.removeUnavailableSelections(sortedSeats, isRefresh);
         this.isLoading.set(false);
       },
 
       error: (error: any) => {
         console.error('Failed to load seats:', error);
 
-        this.errorMessage.set(
-          'Unable to load seats. Error: ' + (error.message || JSON.stringify(error))
-        );
+        if (error?.status === 409) {
+          this.handleConflict();
+        } else {
+          this.errorMessage.set(
+            'Unable to load seat availability. Please try again.'
+          );
+        }
 
         this.isLoading.set(false);
       }
     });
   }
 
+  refreshSeats(): void {
+    this.loadSeats(true);
+  }
+
   toggleSeat(seat: Seat): void {
-    if (seat.status.toLowerCase() !== 'available') {
+    if ((seat.status || '').toLowerCase() !== 'available') {
       return;
     }
 
-    const selectedSeats = this.selectedSeats();
-    const index = selectedSeats.findIndex(s => s.seatId === seat.seatId);
+    const currentSelected = this.selectedSeats();
+    const index = currentSelected.findIndex(s => s.seatId === seat.seatId);
 
     if (index >= 0) {
-      this.selectedSeats.set(selectedSeats.filter(s => s.seatId !== seat.seatId));
+      const updated = currentSelected.filter(s => s.seatId !== seat.seatId);
+      this.selectedSeats.set(updated);
+      this.bookingState.setSelectedSeats(updated);
     } else {
-      this.selectedSeats.set([...selectedSeats, seat]);
+      const updated = [...currentSelected, seat];
+      this.selectedSeats.set(updated);
+      this.bookingState.setSelectedSeats(updated);
     }
 
     this.errorMessage.set('');
+    this.conflictMessage.set('');
   }
 
   isSelected(seatId: number): boolean {
@@ -118,18 +145,19 @@ export class SeatSelection implements OnInit {
     });
   }
 
-  private getPosition(value: number | string): number {
+  private getPosition(value: number | string | null | undefined): number {
+    if (value === null || value === undefined) return 0;
     if (typeof value === 'number') {
       return value;
     }
 
-    return Number(value.match(/\d+/)?.[0] ?? 0);
+    return Number(String(value).match(/\d+/)?.[0] ?? 0);
   }
 
-  private removeUnavailableSelections(seats: Seat[]): void {
+  private removeUnavailableSelections(seats: Seat[], isRefresh = false): void {
     const availableSeatIds = new Set(
       seats
-        .filter(seat => seat.status.toLowerCase() === 'available')
+        .filter(seat => (seat.status || '').toLowerCase() === 'available')
         .map(seat => seat.seatId)
     );
     const availableSelections = this.selectedSeats().filter(seat =>
@@ -139,17 +167,30 @@ export class SeatSelection implements OnInit {
     if (availableSelections.length !== this.selectedSeats().length) {
       this.selectedSeats.set(availableSelections);
       this.bookingState.setSelectedSeats(availableSelections);
+      this.conflictMessage.set(
+        'One or more of your selected seats are no longer available. We have refreshed the seat map.'
+      );
+    } else if (isRefresh) {
+      this.conflictMessage.set('Seat map refreshed successfully.');
+      setTimeout(() => this.conflictMessage.set(''), 3000);
     }
+  }
+
+  handleConflict(): void {
+    this.conflictMessage.set(
+      'One or more selected seats are no longer available. Re-fetching seat availability...'
+    );
+    this.loadSeats(true);
   }
 
   get totalPrice(): number {
     const event = this.event();
-    return event ? this.selectedSeats().length * event.ticketPrice : 0;
+    return event ? this.selectedSeats().length * (event.ticketPrice || 0) : 0;
   }
 
   continueToParking(): void {
     if (this.selectedSeats().length === 0) {
-      this.errorMessage.set('Please select at least one seat.');
+      this.errorMessage.set('Please select at least one seat to continue.');
       return;
     }
 
@@ -161,15 +202,15 @@ export class SeatSelection implements OnInit {
     
     this.bookingState.setSelectedSeats(this.selectedSeats());
 
-    console.log(
-      'Selected seats saved to state:',
-      this.selectedSeats()
-    );
-
     this.router.navigate([
       '/events',
       this.eventId,
       'parking-selection'
     ]);
   }
+
+  navigateBack(): void {
+    this.router.navigate(['/events', this.eventId]);
+  }
 }
+

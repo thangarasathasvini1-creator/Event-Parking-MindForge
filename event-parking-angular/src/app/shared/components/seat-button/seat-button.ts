@@ -16,7 +16,23 @@ export class SeatButton {
   @Output() seatSelected = new EventEmitter<void>();
 
   get isAvailable(): boolean {
-    return (this.status || '').toLowerCase() === 'available';
+    return (this.status || '').trim().toLowerCase() === 'available';
+  }
+
+  get isHeld(): boolean {
+    return (this.status || '').trim().toLowerCase() === 'held';
+  }
+
+  get isBooked(): boolean {
+    const s = (this.status || '').trim().toLowerCase();
+    return s === 'booked' || s === 'occupied' || s === 'reserved';
+  }
+
+  get ariaLabel(): string {
+    if (this.selected) {
+      return `Seat ${this.seatNumber}, selected`;
+    }
+    return `Seat ${this.seatNumber}, ${this.status.toLowerCase()}`;
   }
 
   onSeatClick(): void {
@@ -26,4 +42,4 @@ export class SeatButton {
 
     this.seatSelected.emit();
   }
-}
+}
