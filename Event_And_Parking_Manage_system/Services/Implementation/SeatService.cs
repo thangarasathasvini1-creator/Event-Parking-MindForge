@@ -65,6 +65,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             int eventId,
             CreateSeatDto dto)
         {
+            await using var transaction = await _context.BeginReservationTransactionAsync();
             var eventEntity = await _eventRepository
                 .GetByIdAsync(eventId);
 
@@ -112,6 +113,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
             await _seatRepository.AddAsync(seat);
             await _seatRepository.SaveChangesAsync();
+                await transaction.CommitAsync();
 
             return MapToDto(seat);
         }
@@ -122,6 +124,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             int seatId,
             UpdateSeatDto dto)
         {
+            await using var transaction = await _context.BeginReservationTransactionAsync();
             var eventEntity = await _eventRepository
                 .GetByIdAsync(eventId);
 
@@ -174,8 +177,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                     "Seat number already exists for this event.");
             }
 
-            if (seat.Status == SeatStatus.Booked &&
-                dto.Status != SeatStatus.Booked)
+            if ((seat.Status == SeatStatus.Booked || seat.Status == SeatStatus.Held) && dto.Status != seat.Status)
             {
                 throw new InvalidOperationException(
                     "A booked seat cannot be changed.");
@@ -192,6 +194,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             try
             {
                 await _seatRepository.SaveChangesAsync();
+                await transaction.CommitAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -207,6 +210,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             int eventId,
             int seatId)
         {
+            await using var transaction = await _context.BeginReservationTransactionAsync();
             var eventEntity = await _eventRepository
                 .GetByIdAsync(eventId);
 
@@ -241,6 +245,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             try
             {
                 await _seatRepository.SaveChangesAsync();
+                await transaction.CommitAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -265,6 +270,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                     "At least one seat must be selected.");
             }
 
+            await using var transaction = await _context.BeginReservationTransactionAsync();
             var booking = await _bookingRepository
                 .GetByIdAsync(bookingId);
 
@@ -304,10 +310,6 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                     "Duplicate seat IDs are not allowed.");
             }
 
-            await using var transaction =
-                await _context.Database.BeginTransactionAsync(
-                    IsolationLevel.Serializable);
-
             try
             {
                 var seats = (await _seatRepository
@@ -328,7 +330,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                             $"Seat {seat.SeatNumber} does not belong to the booking event.");
                     }
 
-                    if (seat.Status != SeatStatus.Available)
+                    if (seat.Status != SeatStatus.Available || await _bookingRepository.HasActiveSeatBookingAsync(seat.SeatId, booking.EventId))
                     {
                         throw new InvalidOperationException(
                             $"Seat {seat.SeatNumber} is not available.");

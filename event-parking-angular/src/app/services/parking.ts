@@ -9,6 +9,9 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class ParkingService {
+  generateLayout(eventId: number, count: number, zone: string, vehicleType: string, fee: number): Observable<unknown> {
+    return this.http.post(`${environment.apiUrl}/events/${eventId}/parking-slots/generate`, { count, zone, vehicleType, fee });
+  }
 
   private readonly http = inject(HttpClient);
 
@@ -70,4 +73,4 @@ export class ParkingService {
       `${environment.apiUrl}/bookings/${bookingId}/parking`
     );
   }
-}
+}

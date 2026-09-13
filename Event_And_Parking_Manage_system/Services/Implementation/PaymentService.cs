@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.Data;
+using Event_And_Parking_Manage_system.Data;
 using Event_And_Parking_Manage_system.DTOs.Payments;
 using Event_And_Parking_Manage_system.Models.Entities;
 using Event_And_Parking_Manage_system.Models.Enums;
@@ -53,8 +53,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             }
 
             await using var transaction =
-                await _context.Database.BeginTransactionAsync(
-                    IsolationLevel.Serializable);
+                await _context.BeginReservationTransactionAsync();
 
             try
             {
@@ -94,6 +93,8 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 // 4. Idempotency
                 // =================================================
 
+                if (booking.Status is BookingStatus.Cancelled or BookingStatus.Expired)
+                    throw new InvalidOperationException("Cancelled or expired bookings cannot be paid.");
                 if (existingPayment != null &&
                     existingPayment.Status == PaymentStatus.Completed)
                 {
@@ -139,8 +140,8 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 if (existingPayment != null &&
                     existingPayment.Status == PaymentStatus.Failed)
                 {
-                    existingPayment.Status =
-                        paymentStatus;
+                    existingPayment.Amount = booking.TotalAmount;
+                    existingPayment.Status = paymentStatus;
 
                     existingPayment.PaymentMethod =
                         dto.PaymentMethod.Trim();
@@ -180,6 +181,8 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                     await _bookingRepository
                         .UpdateAsync(booking);
 
+                    if (paymentStatus == PaymentStatus.Completed)
+                        await SendPaymentSuccessNotificationsAsync(booking.CustomerId, booking.BookingNumber);
                     await _context.SaveChangesAsync();
 
                     // ---------------------------------------------
@@ -191,14 +194,6 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                     // ---------------------------------------------
                     // Notifications after successful commit
                     // ---------------------------------------------
-
-                    if (paymentStatus ==
-                        PaymentStatus.Completed)
-                    {
-                        await SendPaymentSuccessNotificationsAsync(
-                            booking.CustomerId,
-                            booking.BookingNumber);
-                    }
 
                     return MapToDto(existingPayment);
                 }
@@ -260,7 +255,9 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 await _bookingRepository
                     .UpdateAsync(booking);
 
-                await _context.SaveChangesAsync();
+                if (paymentStatus == PaymentStatus.Completed)
+                        await SendPaymentSuccessNotificationsAsync(booking.CustomerId, booking.BookingNumber);
+                    await _context.SaveChangesAsync();
 
                 // =================================================
                 // 12. Commit Transaction
@@ -271,14 +268,6 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 // =================================================
                 // 13. Notifications After Successful Commit
                 // =================================================
-
-                if (paymentStatus ==
-                    PaymentStatus.Completed)
-                {
-                    await SendPaymentSuccessNotificationsAsync(
-                        booking.CustomerId,
-                        booking.BookingNumber);
-                }
 
                 // =================================================
                 // 14. Return Payment
@@ -309,46 +298,13 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
         // SEND PAYMENT SUCCESS NOTIFICATIONS
         // =========================================================
 
-        private async Task SendPaymentSuccessNotificationsAsync(
-            int customerId,
-            string bookingNumber)
+        private Task SendPaymentSuccessNotificationsAsync(int customerId, string bookingNumber)
         {
-            try
-            {
-                // -------------------------------------------------
-                // Payment Completed Notification
-                // -------------------------------------------------
-
-                await _notificationService
-                    .CreateNotificationAsync(
-                        customerId,
-                        "PaymentCompleted",
-                        $"Payment completed successfully for booking {bookingNumber}.");
-
-                // -------------------------------------------------
-                // Booking Confirmed Notification
-                // -------------------------------------------------
-
-                await _notificationService
-                    .CreateNotificationAsync(
-                        customerId,
-                        "BookingConfirmed",
-                        $"Your booking {bookingNumber} has been confirmed successfully.");
-            }
-            catch (Exception ex)
-            {
-                // Payment and booking have already been committed.
-                // Notification failure must not undo the payment.
-                _logger.LogError(
-                    ex,
-                    "Payment for booking {BookingNumber} was completed successfully, but notification creation failed.",
-                    bookingNumber);
-            }
+            _context.Notifications.AddRange(
+                new Notification { CustomerId = customerId, Type = "PaymentCompleted", Message = $"Payment completed for {bookingNumber}." },
+                new Notification { CustomerId = customerId, Type = "BookingConfirmed", Message = $"Booking {bookingNumber} is confirmed." });
+            return Task.CompletedTask;
         }
-
-        // =========================================================
-        // GET PAYMENT BY BOOKING ID
-        // =========================================================
 
         public async Task<PaymentDto?> GetPaymentByBookingIdAsync(
             int bookingId)
@@ -358,8 +314,11 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                     .GetByBookingIdAsync(bookingId);
 
             if (payment == null)
-                return null;
-
+            {
+                var booking = await _bookingRepository.GetByIdAsync(bookingId);
+                return booking == null ? null : new PaymentDto { BookingId = bookingId,
+                    Amount = booking.TotalAmount, Status = "Pending", CreatedAt = booking.CreatedAt };
+            }
             return MapToDto(payment);
         }
 
@@ -404,6 +363,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
         private static void SetResourcesAsBooked(
             Booking booking)
         {
+            booking.HoldExpiresAt = null;
             // -----------------------------------------------------
             // Seats → Booked
             // -----------------------------------------------------

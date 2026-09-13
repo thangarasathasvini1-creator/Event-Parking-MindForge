@@ -1,276 +1,32 @@
 using Event_And_Parking_Manage_system.Services.Interfaces;
+using Event_And_Parking_Manage_system.Helpers;
 using System.Net;
 using System.Net.Mail;
-
-namespace Event_And_Parking_Manage_system.Services
+namespace Event_And_Parking_Manage_system.Services;
+public class EmailService(IConfiguration configuration, ILogger<EmailService> logger) : IEmailService
 {
-    public class EmailService : IEmailService
+    private string Link(string page, string token) => $"{(configuration["Frontend:BaseUrl"] ?? "http://localhost:4200").TrimEnd('/')}/{page}?token={Uri.EscapeDataString(token)}";
+    private string Content(string name, string text, string? otp, string? token, string page) =>
+        $"<h2>Hello {WebUtility.HtmlEncode(name)}</h2><p>{text}</p>" +
+        (otp == null ? "" : $"<p>Your code is <strong>{WebUtility.HtmlEncode(otp)}</strong>. You have five attempts.</p>") +
+        (token == null ? "" : $"<p><a href='{WebUtility.HtmlEncode(Link(page, token))}'>Continue securely</a></p>") +
+        $"<p>This code/link expires in {AccountSecurity.Minutes(configuration, "Token")} minutes. Ignore this email if you did not request it.</p>";
+    public Task SendVerificationEmailAsync(string email, string name, string token) => SendAsync(email, "Verify your email", Content(name,"Verify your email address.",null,token,"verify-email"));
+    public Task SendVerificationOtpEmailAsync(string email, string name, string otp, string? token = null) => SendAsync(email,"Verify your email",Content(name,"Use the code or link to verify your email.",otp,token,"verify-email"));
+    public Task SendPasswordResetEmailAsync(string email, string name, string token) => SendAsync(email,"Reset your password",Content(name,"Reset your password.",null,token,"reset-password"));
+    public Task SendPasswordResetOtpEmailAsync(string email, string name, string otp, string? token = null) => SendAsync(email,"Reset your password",Content(name,"Use the code or link to reset your password.",otp,token,"reset-password"));
+    private async Task SendAsync(string recipient, string subject, string body)
     {
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<EmailService> _logger;
-
-        public EmailService(
-            IConfiguration configuration,
-            ILogger<EmailService> logger)
+        using var message = new MailMessage { From = new MailAddress(configuration["EmailSettings:SenderEmail"] ?? "noreply@example.test", configuration["EmailSettings:SenderName"] ?? "Eventra"), Subject = subject, Body = body, IsBodyHtml = true };
+        message.To.Add(recipient);
+        using var smtp = new SmtpClient(configuration["EmailSettings:SmtpServer"], configuration.GetValue<int?>("EmailSettings:Port") ?? 587);
+        if (configuration["EmailSettings:DeliveryMethod"] == "Pickup")
         {
-            _configuration = configuration;
-            _logger = logger;
+            var folder = Path.GetFullPath(configuration["EmailSettings:PickupDirectory"] ?? throw new InvalidOperationException("Email pickup directory is required."));
+            Directory.CreateDirectory(folder); smtp.DeliveryMethod = SmtpDeliveryMethod.SpecifiedPickupDirectory; smtp.PickupDirectoryLocation = folder;
         }
-
-        public async Task SendVerificationEmailAsync(
-            string email,
-            string name,
-            string token)
-        {
-            var verificationLink =
-                $"https://localhost:7291/api/Auth/verify-email?token={token}";
-
-            var subject =
-                "Verify Your Email - Event & Parking Reservation System";
-
-            var body = $@"
-                <h2>Hello {name},</h2>
-
-                <p>
-                    Thank you for registering with
-                    Event & Parking Reservation System.
-                </p>
-
-                <p>
-                    Please click the button below
-                    to verify your email:
-                </p>
-
-                <p>
-                    <a href='{verificationLink}'>
-                        Verify Email
-                    </a>
-                </p>
-
-                <p>
-                    This verification link will expire
-                    in 24 hours.
-                </p>
-
-                <p>
-                    If you did not create this account,
-                    please ignore this email.
-                </p>
-            ";
-
-            await SendEmailAsync(
-                email,
-                subject,
-                body);
-        }
-
-        // ==========================================
-        // Email Verification OTP
-        // ==========================================
-
-        public async Task SendVerificationOtpEmailAsync(
-            string email,
-            string name,
-            string otp)
-        {
-            var subject =
-                "Email Verification OTP - Event & Parking Reservation System";
-
-            var body = $@"
-                <h2>Hello {name},</h2>
-
-                <p>
-                    Thank you for registering with
-                    Event & Parking Reservation System.
-                </p>
-
-                <p>
-                    Your email verification OTP is:
-                </p>
-
-                <h1>{otp}</h1>
-
-                <p>
-                    Please enter this 6-digit OTP
-                    in the application to verify your email.
-                </p>
-
-                <p>
-                    This OTP will expire in 10 minutes.
-                </p>
-
-                <p>
-                    You have a maximum of 5 verification attempts.
-                </p>
-
-                <p>
-                    If you did not create this account,
-                    please ignore this email.
-                </p>
-            ";
-
-            await SendEmailAsync(
-                email,
-                subject,
-                body);
-        }
-
-        public async Task SendPasswordResetOtpEmailAsync(
-                string email,
-                string name,
-                string otp)
-        {
-            var subject =
-                "Password Reset OTP - Event & Parking Reservation System";
-
-            var body = $@"
-                        <h2>Hello {name},</h2>
-
-                        <p>
-                            We received a request to reset
-                            your password.
-                        </p>
-
-                        <p>
-                            Your password reset OTP is:
-                        </p>
-
-                        <h1>{otp}</h1>
-
-                        <p>
-                            Please enter this 6-digit OTP
-                            in the application to reset your password.
-                        </p>
-
-                        <p>
-                            This OTP will expire in 10 minutes.
-                        </p>
-
-                        <p>
-                            You have a maximum of 5 attempts.
-                        </p>
-
-                        <p>
-                            If you did not request a password reset,
-                            please ignore this email.
-                        </p>
-                    ";
-
-            await SendEmailAsync(
-                email,
-                subject,
-                body);
-        }
-
-        public async Task SendPasswordResetEmailAsync(
-            string email,
-            string name,
-            string token)
-        {
-            var resetLink =
-                $"https://localhost:4200/reset-password?token={token}";
-
-            var subject =
-                "Reset Your Password - Event & Parking Reservation System";
-
-            var body = $@"
-                <h2>Hello {name},</h2>
-
-                <p>
-                    We received a request to reset
-                    your password.
-                </p>
-
-                <p>
-                    <a href='{resetLink}'>
-                        Reset Password
-                    </a>
-                </p>
-
-                <p>
-                    This reset link will expire
-                    in 1 hour.
-                </p>
-
-                <p>
-                    If you did not request this,
-                    please ignore this email.
-                </p>
-            ";
-
-            await SendEmailAsync(
-                email,
-                subject,
-                body);
-        }
-
-        private async Task SendEmailAsync(
-            string recipientEmail,
-            string subject,
-            string body)
-        {
-            var smtpServer =
-                _configuration["EmailSettings:SmtpServer"];
-
-            var port =
-                _configuration.GetValue<int>(
-                    "EmailSettings:Port");
-
-            var senderName =
-                _configuration["EmailSettings:SenderName"];
-
-            var senderEmail =
-                _configuration["EmailSettings:SenderEmail"];
-
-            var username =
-                _configuration["EmailSettings:Username"];
-
-            var password =
-                _configuration["EmailSettings:Password"];
-
-            var enableSsl =
-                _configuration.GetValue<bool>(
-                    "EmailSettings:EnableSsl");
-
-            using var message = new MailMessage();
-
-            message.From =
-                new MailAddress(
-                    senderEmail!,
-                    senderName);
-
-            message.To.Add(recipientEmail);
-
-            message.Subject = subject;
-
-            message.Body = body;
-
-            message.IsBodyHtml = true;
-
-            using var smtp =
-                new SmtpClient(
-                    smtpServer,
-                    port);
-
-            smtp.Credentials =
-                new NetworkCredential(
-                    username,
-                    password);
-
-            smtp.EnableSsl = enableSsl;
-
-            try
-            {
-                await smtp.SendMailAsync(message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "Failed to send email to {RecipientEmail} with subject '{Subject}'.",
-                    recipientEmail,
-                    subject);
-            }
-        }
+        else { smtp.EnableSsl = configuration.GetValue<bool>("EmailSettings:EnableSsl"); smtp.Credentials = new NetworkCredential(configuration["EmailSettings:Username"], configuration["EmailSettings:Password"]); }
+        try { await smtp.SendMailAsync(message); }
+        catch (Exception ex) { logger.LogError(ex,"Unable to send account email. User can request a new code."); }
     }
 }

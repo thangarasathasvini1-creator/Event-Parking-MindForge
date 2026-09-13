@@ -10,3 +10,7 @@ dist/
 
 .env
 .env.*
+
+# Audit and temporary analysis artifacts
+.audit/
+*.log

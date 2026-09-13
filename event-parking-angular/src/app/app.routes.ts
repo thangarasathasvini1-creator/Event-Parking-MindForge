@@ -3,6 +3,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth-guard';
 import { adminGuard } from './core/guards/admin-guard';
 import { checkoutGuard } from './core/guards/checkout-guard';
+import { customerGuard } from './core/guards/customer-guard';
 
 export const routes: Routes = [
 
@@ -88,7 +89,7 @@ export const routes: Routes = [
 
   {
     path: '',
-    canActivate: [authGuard],
+    canActivate: [customerGuard],
     loadComponent: () =>
       import(
         './features/customer/layout/customer-layout/customer-layout'
@@ -262,6 +263,7 @@ export const routes: Routes = [
         './features/admin/layout/admin-layout/admin-layout'
       ).then((m) => m.AdminLayout),
     children: [
+      { path: 'customers', loadComponent: () => import('./features/admin/pages/customers/customers').then(m => m.Customers) },
       {
         path: '',
         pathMatch: 'full',

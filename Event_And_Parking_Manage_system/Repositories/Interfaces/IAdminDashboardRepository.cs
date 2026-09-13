@@ -1,7 +1,9 @@
-﻿namespace Event_And_Parking_Manage_system.Repositories.Interfaces
+namespace Event_And_Parking_Manage_system.Repositories.Interfaces
 {
     public interface IAdminDashboardRepository
     {
+        Task<int> GetTotalEventsAsync();
+        Task<int> GetTotalCustomersAsync();
         Task<int> GetTotalBookingsAsync();
 
         Task<decimal> GetTotalRevenueAsync();

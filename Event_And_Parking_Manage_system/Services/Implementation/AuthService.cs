@@ -1,4 +1,5 @@
-﻿using Event_And_Parking_Manage_system.DTOs.Auth;
+using Event_And_Parking_Manage_system.Helpers;
+using Event_And_Parking_Manage_system.DTOs.Auth;
 using Event_And_Parking_Manage_system.DTOs.Customers;
 using Event_And_Parking_Manage_system.Models.Entities;
 using Event_And_Parking_Manage_system.Repositories.Interfaces;
@@ -39,8 +40,6 @@ namespace Event_And_Parking_Manage_system.Services
             if (customer == null)
                 return null;
 
-            if (customer.Status != Models.Enums.CustomerStatus.Active)
-                return null;
 
             if (!BCrypt.Net.BCrypt.Verify(
                     dto.Password,
@@ -49,8 +48,10 @@ namespace Event_And_Parking_Manage_system.Services
                 return null;
             }
 
+            if (customer.Status != Models.Enums.CustomerStatus.Active)
+                throw new UnauthorizedAccessException("Account is deactivated. Please contact support.");
             if (!customer.EmailVerified)
-                return null;
+                throw new UnauthorizedAccessException("Verify your email before logging in.");
 
             return new LoginResponseDto
             {
@@ -99,6 +100,9 @@ namespace Event_And_Parking_Manage_system.Services
                 if (!customer.EmailVerified)
                 {
                     customer.EmailVerified = true;
+                    customer.EmailVerificationOtpHash = null;
+                    customer.EmailVerificationTokenHash = null;
+                    customer.EmailVerificationTokenExpiresAt = null;
                     customer.UpdatedAt = DateTime.UtcNow;
 
                     await _customerRepository.UpdateAsync(customer);
@@ -236,15 +240,20 @@ namespace Event_And_Parking_Manage_system.Services
 
             // OTP expires after 10 minutes
             customer.PasswordResetOtpExpiresAt =
-                DateTime.UtcNow.AddMinutes(10);
+                DateTime.UtcNow.AddMinutes(AccountSecurity.Minutes(_configuration, "Token"));
 
             // Reset failed attempt count
             customer.PasswordResetOtpAttempts = 0;
 
             // Invalidate old token-based reset data
+            customer.PasswordResetAuthorizationTokenHash = null;
+            customer.PasswordResetAuthorizationTokenExpiresAt = null;
             customer.PasswordResetTokenHash = null;
             customer.PasswordResetTokenExpiresAt = null;
 
+            var resetLinkToken = AccountSecurity.NewToken();
+            customer.PasswordResetAuthorizationTokenHash = BCrypt.Net.BCrypt.HashPassword(resetLinkToken);
+            customer.PasswordResetAuthorizationTokenExpiresAt = DateTime.UtcNow.AddMinutes(AccountSecurity.Minutes(_configuration, "Token"));
             customer.UpdatedAt = DateTime.UtcNow;
 
             await _customerRepository.UpdateAsync(customer);
@@ -253,7 +262,7 @@ namespace Event_And_Parking_Manage_system.Services
             await _emailService.SendPasswordResetOtpEmailAsync(
                 customer.Email,
                 customer.Name,
-                otp);
+                otp, resetLinkToken);
 
             return true;
         }
@@ -301,6 +310,8 @@ namespace Event_And_Parking_Manage_system.Services
                     token,
                     customer.PasswordResetAuthorizationTokenHash))
                 {
+                    customer.PasswordResetOtpHash = null;
+                    customer.PasswordResetOtpExpiresAt = null;
                     customer.PasswordHash =
                         BCrypt.Net.BCrypt.HashPassword(
                             newPassword);
@@ -364,6 +375,9 @@ namespace Event_And_Parking_Manage_system.Services
                     customer.EmailVerificationTokenHash))
                 {
                     customer.EmailVerified = true;
+                    customer.EmailVerificationOtpHash = null;
+                    customer.EmailVerificationTokenHash = null;
+                    customer.EmailVerificationTokenExpiresAt = null;
 
                     customer.EmailVerificationTokenHash =
                         null;
@@ -389,9 +403,7 @@ namespace Event_And_Parking_Manage_system.Services
 
         private static string GenerateEmailVerificationOtp()
         {
-            return Random.Shared
-                .Next(100000, 1000000)
-                .ToString();
+            return AccountSecurity.NewOtp();
         }
 
         // =========================================================
@@ -400,9 +412,7 @@ namespace Event_And_Parking_Manage_system.Services
 
         private static string GeneratePasswordResetOtp()
         {
-            return Random.Shared
-                .Next(100000, 1000000)
-                .ToString();
+            return AccountSecurity.NewOtp();
         }
 
         // =========================================================
@@ -472,14 +482,14 @@ namespace Event_And_Parking_Manage_system.Services
 
             // Generate short-lived authorization token
             var resetToken =
-                Guid.NewGuid().ToString("N");
+                AccountSecurity.NewToken();
 
             customer.PasswordResetAuthorizationTokenHash =
                 BCrypt.Net.BCrypt.HashPassword(
                     resetToken);
 
             customer.PasswordResetAuthorizationTokenExpiresAt =
-                DateTime.UtcNow.AddMinutes(10);
+                DateTime.UtcNow.AddMinutes(AccountSecurity.Minutes(_configuration, "Token"));
 
             // OTP can no longer be reused
             customer.PasswordResetOtpHash = null;
@@ -567,6 +577,9 @@ namespace Event_And_Parking_Manage_system.Services
             }
 
             customer.EmailVerified = true;
+                    customer.EmailVerificationOtpHash = null;
+                    customer.EmailVerificationTokenHash = null;
+                    customer.EmailVerificationTokenExpiresAt = null;
 
             customer.EmailVerificationOtpHash = null;
 
@@ -608,11 +621,14 @@ namespace Event_And_Parking_Manage_system.Services
 
             // OTP expires after 10 minutes
             customer.EmailVerificationOtpExpiresAt =
-                DateTime.UtcNow.AddMinutes(10);
+                DateTime.UtcNow.AddMinutes(AccountSecurity.Minutes(_configuration, "Token"));
 
             // Reset failed attempt count
             customer.EmailVerificationOtpAttempts = 0;
 
+            var verificationToken = AccountSecurity.NewToken();
+            customer.EmailVerificationTokenHash = BCrypt.Net.BCrypt.HashPassword(verificationToken);
+            customer.EmailVerificationTokenExpiresAt = DateTime.UtcNow.AddMinutes(AccountSecurity.Minutes(_configuration, "Token"));
             customer.UpdatedAt = DateTime.UtcNow;
 
             await _customerRepository.UpdateAsync(
@@ -622,7 +638,7 @@ namespace Event_And_Parking_Manage_system.Services
             await _emailService.SendVerificationOtpEmailAsync(
                 customer.Email,
                 customer.Name,
-                otp);
+                otp, verificationToken);
 
             return true;
         }

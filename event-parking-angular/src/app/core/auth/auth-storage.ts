@@ -42,7 +42,14 @@ export class AuthStorageService {
   }
 
   hasToken(): boolean {
-    return this.getToken() !== null;
+    const token = this.getToken();
+    if (!token) return false;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+      if (typeof payload.exp === 'number' && payload.exp * 1000 > Date.now()) return true;
+    } catch { /* Invalid token: treat as signed out. */ }
+    this.clear();
+    return false;
   }
 
   clear(): void {

@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.DTOs.Dashboard;
+using Event_And_Parking_Manage_system.DTOs.Dashboard;
 using Event_And_Parking_Manage_system.Repositories.Interfaces;
 using Event_And_Parking_Manage_system.Services.Interfaces;
 
@@ -113,8 +113,9 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
             return new AdminDashboardDto
             {
-                TotalBookings =
-                    totalBookings,
+                TotalEvents = await _dashboardRepository.GetTotalEventsAsync(),
+                TotalCustomers = await _dashboardRepository.GetTotalCustomersAsync(),
+                TotalBookings = totalBookings,
 
                 TotalRevenue =
                     totalRevenue,

@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -10,6 +11,11 @@ import { LoadingSpinner } from '../../../../shared/components/loading-spinner/lo
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { ConfirmationDialog } from '../../../../shared/components/confirmation-dialog/confirmation-dialog';
 import { StatusBadge } from '../../../../shared/components/status-badge/status-badge';
+
+export interface RowGroup {
+  rowName: string;
+  seats: Seat[];
+}
 
 @Component({
   selector: 'app-seats',
@@ -25,19 +31,24 @@ import { StatusBadge } from '../../../../shared/components/status-badge/status-b
   templateUrl: './seats.html',
   styleUrl: './seats.css',
 })
-
 export class Seats implements OnInit {
+  readonly Math = Math;
   private readonly seatService = inject(SeatService);
   private readonly eventService = inject(EventService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly events = signal<Event[]>([]);
   readonly selectedEventId = signal<number | null>(null);
   readonly seats = signal<Seat[]>([]);
 
+  readonly viewMode = signal<'grid' | 'table'>('grid');
+
   readonly isLoadingEvents = signal(false);
   readonly isLoadingSeats = signal(false);
   readonly isSubmitting = signal(false);
   readonly isDeleting = signal(false);
+  readonly generating = signal(false);
 
   readonly errorMessage = signal('');
   readonly modalErrorMessage = signal('');
@@ -46,20 +57,36 @@ export class Seats implements OnInit {
   readonly searchQuery = signal('');
   readonly statusFilter = signal('ALL');
 
-  // Modal State
-  readonly isFormModalOpen = signal(false);
-  readonly isEditMode = signal(false);
-  readonly editingSeatId = signal<number | null>(null);
+  // Bulk Generator State
+  readonly isBulkModalOpen = signal(false);
+  readonly showGenerateConfirmation = signal(false);
+  columns = 10;
+  vipCount = 0;
 
-  // Form Fields
-  seatNumber = '';
-  row = '';
-  column = '';
-  status = 'Available';
+  get capacity(): number {
+    return this.events().find((e) => e.eventId === this.selectedEventId())?.capacity || 0;
+  }
 
-  // Delete Confirmation State
-  readonly isDeleteDialogOpen = signal(false);
-  readonly deletingSeat = signal<Seat | null>(null);
+  // Selected Event computed
+  readonly currentEvent = computed(() => {
+    const id = this.selectedEventId();
+    return this.events().find((e) => e.eventId === id) || null;
+  });
+
+  // Seat Stats computed
+  readonly totalSeatsCount = computed(() => this.seats().length);
+  readonly availableSeatsCount = computed(
+    () => this.seats().filter((s) => s.status === 'Available').length
+  );
+  readonly heldSeatsCount = computed(
+    () => this.seats().filter((s) => s.status === 'Held').length
+  );
+  readonly bookedSeatsCount = computed(
+    () => this.seats().filter((s) => s.status === 'Booked').length
+  );
+  readonly vipSeatsCount = computed(
+    () => this.seats().filter((s) => (s.status || '').toLowerCase() === 'vip').length
+  );
 
   // Filtered Seats computed property
   readonly filteredSeats = computed(() => {
@@ -85,6 +112,64 @@ export class Seats implements OnInit {
     return result;
   });
 
+  // Grouped by Row for the Visual Seat Map Layout
+  readonly seatsByRow = computed<RowGroup[]>(() => {
+    const allSeats = [...this.seats()];
+    if (allSeats.length === 0) return [];
+
+    // Group by row
+    const map = new Map<string, Seat[]>();
+    for (const s of allSeats) {
+      const r = s.row ? `Row ${s.row}` : 'General';
+      if (!map.has(r)) {
+        map.set(r, []);
+      }
+      map.get(r)!.push(s);
+    }
+
+    // Sort seats in each row by column or seatNumber
+    const result: RowGroup[] = [];
+    for (const [rowName, rowSeats] of map.entries()) {
+      rowSeats.sort((a, b) => {
+        const colA = Number(a.column) || 0;
+        const colB = Number(b.column) || 0;
+        if (colA !== colB) return colA - colB;
+        return a.seatNumber.localeCompare(b.seatNumber, undefined, { numeric: true });
+      });
+      result.push({ rowName, seats: rowSeats });
+    }
+
+    // Sort rows numerically (Row 1, Row 2... Row 100) and ensure VIP rows appear first
+    result.sort((a, b) => {
+      const numA = parseInt(a.rowName.replace(/\D/g, ''), 10);
+      const numB = parseInt(b.rowName.replace(/\D/g, ''), 10);
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+      if (a.rowName.toLowerCase().includes('vip')) return -1;
+      if (b.rowName.toLowerCase().includes('vip')) return 1;
+      return a.rowName.localeCompare(b.rowName, undefined, { numeric: true });
+    });
+    return result;
+  });
+
+  isRowVip(group: RowGroup): boolean {
+    return group.seats.some(s => (s.status || '').toUpperCase() === 'VIP');
+  }
+
+  // Modal State
+  readonly isFormModalOpen = signal(false);
+  readonly isEditMode = signal(false);
+  readonly editingSeatId = signal<number | null>(null);
+
+  // Form Fields
+  seatNumber = '';
+  row = '';
+  column = '';
+  status = 'Available';
+
+  // Delete Confirmation State
+  readonly isDeleteDialogOpen = signal(false);
+  readonly deletingSeat = signal<Seat | null>(null);
+
   ngOnInit(): void {
     this.loadEvents();
   }
@@ -99,7 +184,11 @@ export class Seats implements OnInit {
         this.isLoadingEvents.set(false);
 
         if (eventList.length > 0) {
-          this.selectedEventId.set(eventList[0].eventId);
+          const queryId = Number(this.route.snapshot.queryParams['eventId']);
+          const targetId = queryId && eventList.some((e) => e.eventId === queryId)
+            ? queryId
+            : eventList[0].eventId;
+          this.selectedEventId.set(targetId);
           this.loadSeats();
         }
       },
@@ -111,10 +200,15 @@ export class Seats implements OnInit {
     });
   }
 
-  onEventChange(eventIdStr: string): void {
-    const eventId = Number(eventIdStr);
+  onEventChange(eventIdVal: unknown): void {
+    const eventId = Number(eventIdVal);
     if (eventId) {
       this.selectedEventId.set(eventId);
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { eventId },
+        queryParamsHandling: 'merge',
+      });
       this.loadSeats();
     }
   }
@@ -136,6 +230,37 @@ export class Seats implements OnInit {
         console.error('Failed to load seats:', err);
         this.errorMessage.set('Failed to load seats for the selected event.');
         this.isLoadingSeats.set(false);
+      },
+    });
+  }
+
+  openBulkModal(): void {
+    this.isBulkModalOpen.set(true);
+  }
+
+  closeBulkModal(): void {
+    this.isBulkModalOpen.set(false);
+    this.showGenerateConfirmation.set(false);
+  }
+
+  generate(): void {
+    const id = this.selectedEventId();
+    if (!id || this.generating()) return;
+
+    this.showGenerateConfirmation.set(false);
+    this.generating.set(true);
+    this.errorMessage.set('');
+
+    this.seatService.generateMap(id, this.capacity, Number(this.columns), Number(this.vipCount) || 0).subscribe({
+      next: () => {
+        this.generating.set(false);
+        this.closeBulkModal();
+        this.showSuccess(`Successfully generated full seat map with ${this.capacity} seats!`);
+        this.loadSeats();
+      },
+      error: (e) => {
+        this.generating.set(false);
+        this.errorMessage.set(e.error?.message || 'Unable to generate the seat map.');
       },
     });
   }
@@ -241,7 +366,7 @@ export class Seats implements OnInit {
     this.deletingSeat.set(null);
   }
 
-  deleteSeatConfirmed(): void {
+  deleteSeat(): void {
     const eventId = this.selectedEventId();
     const seat = this.deletingSeat();
     if (!eventId || !seat) return;
@@ -251,17 +376,15 @@ export class Seats implements OnInit {
     this.seatService.deleteSeat(eventId, seat.seatId).subscribe({
       next: () => {
         this.isDeleting.set(false);
-        this.isDeleteDialogOpen.set(false);
-        this.deletingSeat.set(null);
-        this.showSuccess(`Seat ${seat.seatNumber} deleted successfully.`);
+        this.cancelDelete();
+        this.showSuccess(`Seat "${seat.seatNumber}" deleted successfully.`);
         this.loadSeats();
       },
       error: (err) => {
         this.isDeleting.set(false);
-        this.isDeleteDialogOpen.set(false);
-        this.deletingSeat.set(null);
+        this.cancelDelete();
         this.errorMessage.set(
-          err?.error?.message || 'Failed to delete seat. It may be part of an existing booking.'
+          err?.error?.message || 'Failed to delete seat.'
         );
       },
     });
@@ -269,6 +392,8 @@ export class Seats implements OnInit {
 
   private showSuccess(msg: string): void {
     this.successMessage.set(msg);
-    setTimeout(() => this.successMessage.set(''), 4000);
+    setTimeout(() => {
+      this.successMessage.set('');
+    }, 4000);
   }
 }

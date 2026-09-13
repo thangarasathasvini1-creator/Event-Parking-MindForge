@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.Data;
+using Event_And_Parking_Manage_system.Data;
 using Event_And_Parking_Manage_system.Models.Entities;
 using Event_And_Parking_Manage_system.Models.Enums;
 using Event_And_Parking_Manage_system.Repositories.Interfaces;
@@ -74,9 +74,9 @@ namespace Event_And_Parking_Manage_system.Repositories
                 .Include(b => b.Event)
                 .AnyAsync(b =>
                     b.CustomerId == customerId &&
-                    (b.Status == BookingStatus.Pending ||
+                    ((b.Status == BookingStatus.Pending && b.HoldExpiresAt > DateTime.UtcNow) ||
                      b.Status == BookingStatus.Confirmed) &&
-                    b.Event.EventDate >= DateTime.UtcNow.Date);
+                    (b.Event.EventDate.Date > DateTime.UtcNow.Date || (b.Event.EventDate.Date == DateTime.UtcNow.Date && b.Event.StartTime > DateTime.UtcNow.TimeOfDay)));
         }
 
         public async Task<int> GetUpcomingBookingsCountAsync(int customerId)
@@ -85,9 +85,9 @@ namespace Event_And_Parking_Manage_system.Repositories
                 .Include(b => b.Event)
                 .CountAsync(b =>
                     b.CustomerId == customerId &&
-                    (b.Status == BookingStatus.Pending ||
+                    ((b.Status == BookingStatus.Pending && b.HoldExpiresAt > DateTime.UtcNow) ||
                      b.Status == BookingStatus.Confirmed) &&
-                    b.Event.EventDate >= DateTime.UtcNow.Date);
+                    (b.Event.EventDate.Date > DateTime.UtcNow.Date || (b.Event.EventDate.Date == DateTime.UtcNow.Date && b.Event.StartTime > DateTime.UtcNow.TimeOfDay)));
         }
 
         public async Task<int> GetReservedParkingCountAsync(int customerId)
@@ -95,7 +95,9 @@ namespace Event_And_Parking_Manage_system.Repositories
             return await _context.ParkingReservations
                 .Include(p => p.Booking)
                 .CountAsync(p =>
-                    p.Booking.CustomerId == customerId);
+                    p.Booking.CustomerId == customerId &&
+                    (p.Booking.Status == BookingStatus.Confirmed || (p.Booking.Status == BookingStatus.Pending && p.Booking.HoldExpiresAt > DateTime.UtcNow)) &&
+                    (p.Booking.Event.EventDate.Date > DateTime.UtcNow.Date || (p.Booking.Event.EventDate.Date == DateTime.UtcNow.Date && p.Booking.Event.EndTime > DateTime.UtcNow.TimeOfDay)));
         }
 
         public async Task<int> GetRecentPaymentsCountAsync(int customerId)
@@ -103,7 +105,7 @@ namespace Event_And_Parking_Manage_system.Repositories
             return await _context.Payments
                 .Include(p => p.Booking)
                 .CountAsync(p =>
-                    p.Booking.CustomerId == customerId);
+                    p.Booking.CustomerId == customerId && p.Status == PaymentStatus.Completed && p.PaidAt >= DateTime.UtcNow.AddDays(-30));
         }
 
         public async Task<int> GetUnreadNotificationsCountAsync(int customerId)

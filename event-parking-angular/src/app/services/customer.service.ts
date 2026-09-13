@@ -5,6 +5,8 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface CustomerProfile {
+  totalBookings?: number;
+  upcomingBookings?: number;
   customerId: number;
   name: string;
   email: string;
@@ -30,6 +32,11 @@ export class CustomerService {
 
   private readonly apiUrl = `${environment.apiUrl}/customers`;
 
+  searchCustomers(search = ''): Observable<CustomerProfile[]> {
+    return this.http.get<CustomerProfile[]>(this.apiUrl, { params: { search } });
+  }
+  deactivate(id: number): Observable<unknown> { return this.http.delete(`${this.apiUrl}/${id}`); }
+  reactivate(id: number): Observable<unknown> { return this.http.post(`${this.apiUrl}/${id}/reactivate`, {}); }
   getProfile(customerId: number): Observable<CustomerProfile> {
     return this.http.get<CustomerProfile>(
       `${this.apiUrl}/${customerId}`

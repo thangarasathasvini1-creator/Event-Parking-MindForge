@@ -124,31 +124,56 @@
               </div>
 
               <!-- Action Buttons -->
-              <div class="border-t border-slate-100 p-4 bg-slate-50/50 flex items-center gap-2">
-                <button
-                  type="button"
-                  (click)="viewEvent(event.eventId)"
-                  class="rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 py-2 px-3 text-xs font-bold transition cursor-pointer"
-                  title="View as customer"
-                >
-                  View
-                </button>
+              <div class="border-t border-slate-100 p-4 bg-slate-50/50 space-y-2">
+                <!-- Allocation Quick Links -->
+                <div class="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    (click)="manageSeats(event.eventId)"
+                    class="rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-700 py-1.5 px-3 text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5"
+                    title="View and configure seat allocations"
+                  >
+                    <span>🗺️</span>
+                    <span>Seats</span>
+                  </button>
 
-                <button
-                  type="button"
-                  (click)="editEvent(event.eventId)"
-                  class="flex-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 py-2 px-3 text-xs font-bold transition cursor-pointer text-center"
-                >
-                  Edit
-                </button>
+                  <button
+                    type="button"
+                    (click)="manageParking(event.eventId)"
+                    class="rounded-xl border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 text-indigo-700 py-1.5 px-3 text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5"
+                    title="View and configure parking bays"
+                  >
+                    <span>🅿️</span>
+                    <span>Parking</span>
+                  </button>
+                </div>
 
-                <button
-                  type="button"
-                  (click)="initiateDelete(event)"
-                  class="rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 py-2 px-3 text-xs font-bold transition cursor-pointer"
-                >
-                  Delete
-                </button>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    (click)="viewEvent(event.eventId)"
+                    class="rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 py-2 px-3 text-xs font-bold transition cursor-pointer"
+                    title="View as customer"
+                  >
+                    View
+                  </button>
+
+                  <button
+                    type="button"
+                    (click)="editEvent(event.eventId)"
+                    class="flex-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 py-2 px-3 text-xs font-bold transition cursor-pointer text-center"
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    type="button"
+                    (click)="initiateDelete(event)"
+                    class="rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 py-2 px-3 text-xs font-bold transition cursor-pointer"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </article>
           }

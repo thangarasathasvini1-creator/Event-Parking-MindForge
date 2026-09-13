@@ -4,7 +4,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormControl, FormRecord, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { CategoryService } from '../../../../../services/category';
@@ -14,7 +14,7 @@ import { ErrorMessage } from '../../../../../shared/components/error-message/err
 @Component({
   selector: 'app-category-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, ErrorMessage],
+  imports: [CommonModule, ReactiveFormsModule, ErrorMessage],
   templateUrl: './category-form.html',
   styleUrl: './category-form.css',
 })
@@ -31,6 +31,12 @@ export class CategoryForm {
     name: '',
     description: '',
   };
+  readonly form = new FormRecord<FormControl<any>>({
+    name: new FormControl(this.category.name ?? '', { nonNullable: true, validators: [Validators.required] }),
+    description: new FormControl(this.category.description ?? '', { nonNullable: true, validators: [] }),
+  });
+  constructor() { this.form.valueChanges.subscribe(value => Object.assign(this.category, value)); }
+
 
   goBack(): void {
     this.router.navigate(['/admin/categories']);

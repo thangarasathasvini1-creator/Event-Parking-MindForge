@@ -1,3 +1,4 @@
+using Event_And_Parking_Manage_system.Data;
 using Event_And_Parking_Manage_system.DTOs.Events;
 using Event_And_Parking_Manage_system.Models.Entities;
 using Event_And_Parking_Manage_system.Repositories.Interfaces;
@@ -8,6 +9,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 {
     public class EventService : IEventService
     {
+        private readonly ApplicationDbContext _context;
         private readonly IEventRepository _eventRepository;
         private readonly IVenueRepository _venueRepository;
         private readonly ICategoryRepository _categoryRepository;
@@ -16,7 +18,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
         private readonly INotificationService _notificationService;
         private readonly ILogger<EventService> _logger;
 
-        public EventService(
+        public EventService(ApplicationDbContext context, 
             IEventRepository eventRepository,
             IVenueRepository venueRepository,
             ICategoryRepository categoryRepository,
@@ -25,6 +27,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             INotificationService notificationService,
             ILogger<EventService> logger)
         {
+            _context = context;
             _eventRepository = eventRepository;
             _venueRepository = venueRepository;
             _categoryRepository = categoryRepository;
@@ -125,6 +128,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
         public async Task<EventDetailsDto> CreateAsync(
             CreateEventDto dto)
         {
+            await using var transaction = await _context.BeginReservationTransactionAsync();
             var validationError =
                 EventValidator.Validate(dto);
 
@@ -206,6 +210,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             await _eventRepository.AddAsync(eventEntity);
 
             await _eventRepository.SaveChangesAsync();
+            await transaction.CommitAsync();
 
             // -----------------------------------------
             // Return Created Event
@@ -236,6 +241,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             int id,
             UpdateEventDto dto)
         {
+            await using var transaction = await _context.BeginReservationTransactionAsync();
             var validationError =
                 EventValidator.Validate(dto);
 
@@ -396,6 +402,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
             var updated =
                 await _eventRepository.SaveChangesAsync();
+            await transaction.CommitAsync();
 
             if (!updated)
                 return false;
@@ -440,6 +447,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
         public async Task<bool> DeleteAsync(int id)
         {
+            await using var transaction = await _context.BeginReservationTransactionAsync();
             var eventEntity =
                 await _eventRepository.GetByIdAsync(id);
 
@@ -461,7 +469,9 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
             _eventRepository.Delete(eventEntity);
 
-            return await _eventRepository.SaveChangesAsync();
+            var saved = await _eventRepository.SaveChangesAsync();
+            await transaction.CommitAsync();
+            return saved;
         }
     }
 }

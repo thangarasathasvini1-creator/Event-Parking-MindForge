@@ -1,81 +1,112 @@
 <div class="min-h-screen bg-slate-50/60 py-8 px-4 sm:px-6 lg:px-8 font-sans text-slate-900">
   <div class="max-w-7xl mx-auto space-y-6">
 
-    <!-- Header Section -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <!-- ==================== HEADER SECTION ==================== -->
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
       <div>
-        <span class="text-xs font-bold tracking-widest text-blue-600 uppercase">
-          EVENTRA · ADMIN
+        <span class="inline-block text-xs font-bold uppercase tracking-widest text-blue-600">
+          EVENTRA ADMIN
         </span>
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight">
+        <h1 class="mt-1 text-3xl font-extrabold text-slate-950 tracking-tight">
           Parking Slot Management
         </h1>
-        <p class="text-slate-500 text-sm mt-0.5">
-          Manage event parking slot layouts, zones, vehicle type rules, and fees.
+        <p class="mt-1 text-xs text-slate-500">
+          Configure event parking layouts, manage zones, set vehicle tariffs, monitor bay occupancy, and generate bulk allocations.
         </p>
       </div>
 
-      <div class="flex items-center gap-3 flex-wrap">
+      <div class="flex items-center gap-2.5 flex-wrap self-start sm:self-auto">
+        <!-- Refresh Button -->
         <button
           type="button"
           (click)="loadSlots()"
           [disabled]="isLoadingSlots() || !selectedEventId()"
-          class="px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition cursor-pointer shadow-2xs flex items-center gap-2 disabled:opacity-50"
+          class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-xs transition cursor-pointer disabled:opacity-50"
+          title="Refresh parking slots"
         >
-          <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          Refresh
+          <span [class.animate-spin]="isLoadingSlots()">↻</span>
+          <span>{{ isLoadingSlots() ? 'Loading...' : 'Refresh' }}</span>
         </button>
 
+        <!-- Bulk Generate Parking Zone Button -->
+        <button
+          type="button"
+          (click)="openBulkModal()"
+          [disabled]="!selectedEventId()"
+          class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-700 text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-50"
+          title="Generate a batch of slots for a zone"
+        >
+          <span>⚡</span>
+          <span>Generate Zone</span>
+        </button>
+
+        <!-- Add New Parking Slot Button -->
         <button
           type="button"
           (click)="openCreateModal()"
           [disabled]="!selectedEventId()"
-          class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-sm transition cursor-pointer disabled:opacity-50 flex items-center gap-2"
+          class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-50"
         >
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          Add Parking Slot
+          <span>+</span>
+          <span>Add Slot</span>
         </button>
       </div>
-    </div>
+    </header>
 
-    <!-- Success Message Banner -->
+    <!-- ==================== NOTIFICATIONS ==================== -->
     @if (successMessage()) {
-      <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold flex items-center justify-between gap-3 shadow-2xs">
-        <span>{{ successMessage() }}</span>
-        <button type="button" (click)="successMessage.set('')" class="text-emerald-700 hover:text-emerald-950 font-bold text-xs">✕</button>
+      <div role="status" class="flex items-center justify-between rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-xs font-medium text-emerald-800 animate-in fade-in duration-200">
+        <div class="flex items-center gap-2">
+          <svg class="h-4 w-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>{{ successMessage() }}</span>
+        </div>
+        <button type="button" (click)="successMessage.set('')" class="text-emerald-500 hover:text-emerald-800 p-1 cursor-pointer">✕</button>
       </div>
     }
 
-    <!-- Error Message Banner -->
     @if (errorMessage()) {
-      <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-semibold flex items-center justify-between gap-3 shadow-2xs">
-        <span>{{ errorMessage() }}</span>
+      <div role="alert" class="flex items-center justify-between rounded-xl bg-rose-50 border border-rose-200 p-4 text-xs font-medium text-rose-800 animate-in fade-in duration-200">
+        <div class="flex items-center gap-2">
+          <svg class="h-4 w-4 text-rose-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <span>{{ errorMessage() }}</span>
+        </div>
         <button type="button" (click)="errorMessage.set('')" class="text-rose-700 hover:text-rose-950 font-bold text-xs">✕</button>
       </div>
     }
 
-    <!-- Controls Card: Event Selector, Search & Filters -->
-    <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 space-y-4">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center">
+    @if (occupiedSlotsCount() > 0) {
+      <div class="flex items-center justify-between rounded-xl bg-amber-50 border border-amber-200 p-4 text-xs font-medium text-amber-900 animate-in fade-in duration-200">
+        <div class="flex items-center gap-2">
+          <span class="text-base">🔒</span>
+          <span>
+            <strong>Active Reservations Protected:</strong> This event has {{ occupiedSlotsCount() }} confirmed occupied parking slot(s). Existing allocations cannot be overridden to protect customer bookings.
+          </span>
+        </div>
+      </div>
+    }
 
+    <!-- ==================== EVENT SELECTOR & TOOLBAR ==================== -->
+    <div class="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        
         <!-- Event Selector -->
         <div>
           <label for="eventSelector" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-            Select Event
+            Select Target Event
           </label>
           <select
             id="eventSelector"
             [ngModel]="selectedEventId()"
             (ngModelChange)="onEventChange($event)"
-            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
           >
             @for (ev of events(); track ev.eventId) {
               <option [value]="ev.eventId">
-                {{ ev.name || ev.eventName }} (ID: {{ ev.eventId }})
+                #{{ ev.eventId }} — {{ ev.name || ev.eventName }}
               </option>
             }
           </select>
@@ -84,7 +115,7 @@
         <!-- Search Input -->
         <div>
           <label for="searchSlots" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-            Search Slots
+            Filter by Slot / Zone
           </label>
           <input
             id="searchSlots"
@@ -92,262 +123,622 @@
             [ngModel]="searchQuery()"
             (ngModelChange)="searchQuery.set($event)"
             placeholder="Search slot number, zone..."
-            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
           />
         </div>
 
-        <!-- Vehicle Type Filter -->
+        <!-- View Mode Toggle -->
         <div>
-          <label for="vehicleFilter" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-            Vehicle Type
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+            Layout View Mode
           </label>
-          <select
-            id="vehicleFilter"
-            [ngModel]="vehicleFilter()"
-            (ngModelChange)="vehicleFilter.set($event)"
-            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-          >
-            <option value="ALL">All Vehicle Types</option>
-            @for (vType of vehicleTypes; track vType) {
-              <option [value]="vType">{{ vType }}</option>
-            }
-          </select>
+          <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+            <button
+              type="button"
+              (click)="viewMode.set('grid')"
+              [class.bg-white]="viewMode() === 'grid'"
+              [class.text-blue-700]="viewMode() === 'grid'"
+              [class.font-bold]="viewMode() === 'grid'"
+              [class.shadow-xs]="viewMode() === 'grid'"
+              [class.text-slate-600]="viewMode() !== 'grid'"
+              class="flex-1 py-1.5 text-xs transition cursor-pointer text-center rounded-lg flex items-center justify-center gap-1"
+            >
+              <span>🅿️</span>
+              <span>Visual Bays</span>
+            </button>
+
+            <button
+              type="button"
+              (click)="viewMode.set('table')"
+              [class.bg-white]="viewMode() === 'table'"
+              [class.text-blue-700]="viewMode() === 'table'"
+              [class.font-bold]="viewMode() === 'table'"
+              [class.shadow-xs]="viewMode() === 'table'"
+              [class.text-slate-600]="viewMode() !== 'table'"
+              class="flex-1 py-1.5 text-xs transition cursor-pointer text-center rounded-lg flex items-center justify-center gap-1"
+            >
+              <span>📋</span>
+              <span>Table List</span>
+            </button>
+          </div>
         </div>
 
-        <!-- Status Filter -->
-        <div>
-          <label for="statusFilter" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-            Status
-          </label>
-          <select
-            id="statusFilter"
-            [ngModel]="statusFilter()"
-            (ngModelChange)="statusFilter.set($event)"
-            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-          >
-            <option value="ALL">All Statuses</option>
-            <option value="Available">Available</option>
-            <option value="Held">Held</option>
-            <option value="Occupied">Occupied</option>
-          </select>
+      </div>
+
+      <!-- Quick Filter Pills: Vehicle Type & Status -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs">
+        <!-- Vehicle Filters -->
+        <div class="flex items-center gap-1.5 overflow-x-auto">
+          <span class="text-[11px] font-bold text-slate-400 mr-1 uppercase tracking-wider">Vehicle:</span>
+          @for (vOpt of ['ALL', 'Car', 'Bike', 'Bus', 'Van']; track vOpt) {
+            <button
+              type="button"
+              (click)="vehicleFilter.set(vOpt)"
+              [class.bg-blue-600]="vehicleFilter() === vOpt"
+              [class.text-white]="vehicleFilter() === vOpt"
+              [class.bg-slate-100]="vehicleFilter() !== vOpt"
+              [class.text-slate-600]="vehicleFilter() !== vOpt"
+              class="px-2.5 py-1 rounded-lg font-medium transition cursor-pointer text-[11px] whitespace-nowrap"
+            >
+              @if (vOpt !== 'ALL') {
+                {{ getVehicleIcon(vOpt) }}
+              }
+              {{ vOpt }}
+            </button>
+          }
         </div>
 
+        <!-- Status Filters -->
+        <div class="flex items-center gap-1.5 overflow-x-auto">
+          <span class="text-[11px] font-bold text-slate-400 mr-1 uppercase tracking-wider">Status:</span>
+          @for (sOpt of ['ALL', 'Available', 'Held', 'Occupied']; track sOpt) {
+            <button
+              type="button"
+              (click)="statusFilter.set(sOpt)"
+              [class.bg-indigo-600]="statusFilter() === sOpt"
+              [class.text-white]="statusFilter() === sOpt"
+              [class.bg-slate-100]="statusFilter() !== sOpt"
+              [class.text-slate-600]="statusFilter() !== sOpt"
+              class="px-2.5 py-1 rounded-lg font-medium transition cursor-pointer text-[11px] whitespace-nowrap"
+            >
+              {{ sOpt }}
+            </button>
+          }
+        </div>
       </div>
     </div>
 
-    <!-- Loading State -->
+    <!-- ==================== PARKING KPI STATS ==================== -->
+    <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      
+      <!-- Total Slots -->
+      <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition hover:shadow-sm">
+        <div class="flex items-center justify-between">
+          <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Parking Bays</p>
+          <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 text-sm">
+            🅿️
+          </div>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <h3 class="text-2xl font-black text-slate-900">{{ totalSlotsCount() }}</h3>
+          <span class="text-xs text-slate-400">slots</span>
+        </div>
+        <p class="text-[11px] text-slate-500 font-medium mt-0.5">{{ slotsByZone().length }} active zones</p>
+      </div>
+
+      <!-- Available Slots -->
+      <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition hover:shadow-sm">
+        <div class="flex items-center justify-between">
+          <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Available Bays</p>
+          <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        </div>
+        <h3 class="mt-2 text-2xl font-black text-emerald-600">{{ availableSlotsCount() }}</h3>
+        <p class="text-[11px] text-emerald-700 font-medium mt-0.5">Open for reservation</p>
+      </div>
+
+      <!-- Held Slots -->
+      <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition hover:shadow-sm">
+        <div class="flex items-center justify-between">
+          <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Temporary Holds</p>
+          <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        </div>
+        <h3 class="mt-2 text-2xl font-black text-amber-600">{{ heldSlotsCount() }}</h3>
+        <p class="text-[11px] text-amber-700 font-medium mt-0.5">In customer checkout</p>
+      </div>
+
+      <!-- Occupied Slots -->
+      <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition hover:shadow-sm">
+        <div class="flex items-center justify-between">
+          <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Occupied / Booked</p>
+          <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+        </div>
+        <h3 class="mt-2 text-2xl font-black text-indigo-600">{{ occupiedSlotsCount() }}</h3>
+        <p class="text-[11px] text-indigo-700 font-medium mt-0.5">Confirmed bookings</p>
+      </div>
+
+    </div>
+
+    <!-- ==================== CONTENT VIEW: VISUAL BAYS OR TABLE ==================== -->
     @if (isLoadingEvents() || isLoadingSlots()) {
-      <div class="bg-white rounded-3xl border border-slate-200/90 p-12 shadow-2xs">
+      <div class="bg-white rounded-3xl border border-slate-200/90 p-12 shadow-xs text-center">
         <app-loading-spinner message="Loading parking slots data..."></app-loading-spinner>
+      </div>
+    } @else {
+
+      <!-- VIEW 1: INTERACTIVE VISUAL PARKING BAYS -->
+      @if (viewMode() === 'grid') {
+        <div class="space-y-6">
+          @if (slotsByZone().length > 0) {
+            
+            @for (zoneGroup of slotsByZone(); track zoneGroup.zoneName) {
+              <div class="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs space-y-4">
+                
+                <!-- Zone Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                  <div class="flex items-center gap-2.5">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 text-blue-800 text-xs font-black">
+                      {{ zoneGroup.zoneName.slice(0, 2).toUpperCase() }}
+                    </span>
+                    <div>
+                      <h3 class="text-sm font-extrabold text-slate-900">
+                        {{ zoneGroup.zoneName }}
+                      </h3>
+                      <p class="text-[11px] text-slate-400">
+                        {{ zoneGroup.totalCount }} total bays · {{ zoneGroup.availableCount }} available
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-bold">
+                      <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                      {{ zoneGroup.availableCount }} Available
+                    </span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 text-[11px] font-semibold">
+                      {{ zoneGroup.totalCount - zoneGroup.availableCount }} Taken
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Parking Bays Grid in this Zone -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+                  @for (slot of zoneGroup.slots; track slot.parkingSlotId) {
+                    <button
+                      type="button"
+                      (click)="openEditModal(slot)"
+                      [title]="'Slot ' + slot.slotNumber + ' (' + slot.vehicleType + ') · ' + slot.status + ' · LKR ' + (slot.fee | number) + ' (Click to edit)'"
+                      class="flex flex-col items-center justify-between p-3 rounded-xl border-2 transition-all cursor-pointer shadow-2xs hover:scale-105 relative group text-left"
+                      [class.bg-emerald-50/70]="slot.status === 'Available'"
+                      [class.border-emerald-300]="slot.status === 'Available'"
+                      [class.hover:border-emerald-500]="slot.status === 'Available'"
+                      [class.bg-amber-50/70]="slot.status === 'Held'"
+                      [class.border-amber-300]="slot.status === 'Held'"
+                      [class.hover:border-amber-500]="slot.status === 'Held'"
+                      [class.bg-indigo-50/70]="slot.status === 'Occupied'"
+                      [class.border-indigo-300]="slot.status === 'Occupied'"
+                      [class.hover:border-indigo-500]="slot.status === 'Occupied'"
+                    >
+                      <!-- Top row: Vehicle Icon & Status Dot -->
+                      <div class="w-full flex items-center justify-between">
+                        <span class="text-base" [title]="slot.vehicleType">{{ getVehicleIcon(slot.vehicleType) }}</span>
+                        <span
+                          class="h-2 w-2 rounded-full"
+                          [class.bg-emerald-500]="slot.status === 'Available'"
+                          [class.bg-amber-500]="slot.status === 'Held'"
+                          [class.bg-indigo-500]="slot.status === 'Occupied'"
+                        ></span>
+                      </div>
+
+                      <!-- Slot Number -->
+                      <div class="my-1.5 text-center w-full">
+                        <span class="font-mono text-xs font-black text-slate-900 block truncate">
+                          {{ slot.slotNumber }}
+                        </span>
+                        <span class="text-[10px] text-slate-500 block truncate">
+                          {{ slot.vehicleType }}
+                        </span>
+                      </div>
+
+                      <!-- Fee & Status Pill -->
+                      <div class="w-full text-center pt-1 border-t border-slate-200/60">
+                        <span class="text-[10px] font-bold text-slate-700 font-mono">
+                          LKR {{ slot.fee | number }}
+                        </span>
+                      </div>
+                    </button>
+                  }
+                </div>
+
+              </div>
+            }
+
+            <!-- Visual Legend -->
+            <div class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-xs flex flex-wrap items-center justify-center gap-6 text-xs text-slate-600">
+              <div class="flex items-center gap-2">
+                <span class="h-3.5 w-3.5 rounded-md bg-emerald-100 border border-emerald-300"></span>
+                <span>Available</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="h-3.5 w-3.5 rounded-md bg-amber-100 border border-amber-300"></span>
+                <span>Held (In Checkout)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="h-3.5 w-3.5 rounded-md bg-indigo-100 border border-indigo-300"></span>
+                <span>Occupied / Booked</span>
+              </div>
+              <div class="flex items-center gap-3 text-slate-500 pl-4 border-l border-slate-200">
+                <span>🚗 Car</span>
+                <span>🏍️ Bike</span>
+                <span>🚐 Van</span>
+                <span>🚌 Bus</span>
+              </div>
+              <span class="text-slate-400 italic text-[11px]">• Click any slot to modify its status or fee</span>
+            </div>
+
+          } @else {
+            <div class="rounded-2xl border border-slate-200/90 bg-white p-12 shadow-xs text-center">
+              <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 text-2xl mb-3">
+                🅿️
+              </div>
+              <h3 class="text-base font-bold text-slate-900">No Parking Bays Configured Yet</h3>
+              <p class="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+                There are no parking slots created for this event. You can quickly generate a complete zone of slots with custom vehicle types and fees.
+              </p>
+              <div class="mt-4 flex items-center justify-center gap-2">
+                <button
+                  type="button"
+                  (click)="openBulkModal()"
+                  class="rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-indigo-700 shadow-xs transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>⚡</span>
+                  <span>Generate Parking Zone</span>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- VIEW 2: TABLE LIST VIEW -->
+      @if (viewMode() === 'table') {
+        @if (filteredSlots().length > 0) {
+          <div class="rounded-2xl border border-slate-200/90 bg-white shadow-xs overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-slate-700">
+                <thead class="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  <tr>
+                    <th scope="col" class="px-6 py-3.5">Slot Number</th>
+                    <th scope="col" class="px-6 py-3.5">Zone</th>
+                    <th scope="col" class="px-6 py-3.5">Vehicle Type</th>
+                    <th scope="col" class="px-6 py-3.5">Parking Fee</th>
+                    <th scope="col" class="px-6 py-3.5">Status</th>
+                    <th scope="col" class="px-6 py-3.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium">
+                  @for (slot of filteredSlots(); track slot.parkingSlotId) {
+                    <tr class="hover:bg-slate-50/80 transition">
+                      <td class="px-6 py-3.5 font-bold text-slate-900 font-mono">
+                        {{ slot.slotNumber }}
+                      </td>
+                      <td class="px-6 py-3.5">
+                        <span class="rounded-lg bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600">
+                          {{ slot.zone || 'General' }}
+                        </span>
+                      </td>
+                      <td class="px-6 py-3.5">
+                        <span class="inline-flex items-center gap-1 font-semibold text-slate-800">
+                          <span>{{ getVehicleIcon(slot.vehicleType) }}</span>
+                          <span>{{ slot.vehicleType }}</span>
+                        </span>
+                      </td>
+                      <td class="px-6 py-3.5 font-bold text-blue-600 font-mono">
+                        LKR {{ slot.fee | number }}
+                      </td>
+                      <td class="px-6 py-3.5">
+                        <app-status-badge [status]="slot.status"></app-status-badge>
+                      </td>
+                      <td class="px-6 py-3.5 text-right space-x-2">
+                        <button
+                          type="button"
+                          (click)="openEditModal(slot)"
+                          class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 hover:text-blue-600 transition cursor-pointer"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          (click)="confirmDelete(slot)"
+                          class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition cursor-pointer"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <div class="p-4 bg-slate-50 border-t border-slate-100 text-xs text-slate-500 flex justify-between items-center">
+              <span>Showing {{ filteredSlots().length }} of {{ slots().length }} parking bays</span>
+            </div>
+          </div>
+        } @else {
+          <div class="rounded-2xl border border-slate-200/90 bg-white p-8 shadow-xs">
+            <app-empty-state
+              title="No Parking Slots Found"
+              description="No parking slots exist for this event or match your current filter parameters."
+              actionText="Add Parking Slot"
+              (action)="openCreateModal()"
+            ></app-empty-state>
+          </div>
+        }
+      }
+
+    }
+
+    <!-- ==================== BULK ZONE GENERATOR MODAL ==================== -->
+    @if (isBulkModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+        <div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-100 overflow-hidden">
+          
+          <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/50">
+            <div class="flex items-center gap-2">
+              <span class="text-base">⚡</span>
+              <h3 class="text-sm font-bold text-slate-900">Generate Parking Zone</h3>
+            </div>
+            <button
+              type="button"
+              (click)="closeBulkModal()"
+              class="text-slate-400 hover:text-slate-600 text-sm font-bold cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div class="p-6 space-y-4">
+            <div class="rounded-xl bg-blue-50 border border-blue-100 p-3.5 text-xs text-blue-900 space-y-1">
+              <p class="font-bold">Target Event: {{ currentEvent()?.name || currentEvent()?.eventName || ('Event #' + selectedEventId()) }}</p>
+              <p class="text-blue-700">
+                This will create a batch of consecutive parking slots automatically labeled by Zone (e.g. Zone A-1, Zone A-2, etc.).
+              </p>
+            </div>
+
+            <!-- Zone Name -->
+            <div>
+              <label for="bulkZoneName" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                Zone Identifier <span class="text-rose-500">*</span>
+              </label>
+              <input
+                id="bulkZoneName"
+                type="text"
+                maxlength="20"
+                [(ngModel)]="generateZone"
+                placeholder="e.g. Zone A, VIP, North-Lot"
+                class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
+              <p class="text-[11px] text-slate-400 mt-1">Maximum 20 characters.</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <!-- Slot Count -->
+              <div>
+                <label for="bulkSlotCount" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Number of Slots <span class="text-rose-500">*</span>
+                </label>
+                <input
+                  id="bulkSlotCount"
+                  type="number"
+                  min="1"
+                  max="1000"
+                  [(ngModel)]="generateCount"
+                  class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+
+              <!-- Vehicle Type -->
+              <div>
+                <label for="bulkVehicleType" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Vehicle Type <span class="text-rose-500">*</span>
+                </label>
+                <select
+                  id="bulkVehicleType"
+                  [(ngModel)]="generateVehicle"
+                  class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                >
+                  @for (v of vehicleTypes; track v) {
+                    <option [value]="v">{{ getVehicleIcon(v) }} {{ v }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <!-- Parking Fee -->
+            <div>
+              <label for="bulkFee" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                Tariff per Slot (LKR)
+              </label>
+              <input
+                id="bulkFee"
+                type="number"
+                min="0"
+                [(ngModel)]="generateFee"
+                class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs font-bold text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
+              />
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 border-t border-slate-100 bg-slate-50/50 p-4">
+            <button
+              type="button"
+              (click)="closeBulkModal()"
+              class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer shadow-xs"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="button"
+              (click)="generate()"
+              [disabled]="generating() || !generateZone.trim() || !generateCount"
+              class="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition cursor-pointer shadow-xs disabled:opacity-50 flex items-center gap-1.5"
+            >
+              <span [class.animate-spin]="generating()">⚡</span>
+              <span>{{ generating() ? 'Generating...' : 'Generate Slots' }}</span>
+            </button>
+          </div>
+
+        </div>
       </div>
     }
 
-    <!-- Parking Table Card -->
-    @if (!isLoadingEvents() && !isLoadingSlots()) {
-      @if (filteredSlots().length > 0) {
-        <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm text-slate-700">
-              <thead class="bg-slate-50 border-b border-slate-200 text-xs uppercase font-bold text-slate-500 tracking-wider">
-                <tr>
-                  <th scope="col" class="px-6 py-4">Slot Number</th>
-                  <th scope="col" class="px-6 py-4">Zone</th>
-                  <th scope="col" class="px-6 py-4">Vehicle Type</th>
-                  <th scope="col" class="px-6 py-4">Parking Fee</th>
-                  <th scope="col" class="px-6 py-4">Status</th>
-                  <th scope="col" class="px-6 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100 font-medium">
-                @for (slot of filteredSlots(); track slot.parkingSlotId) {
-                  <tr class="hover:bg-slate-50/80 transition">
-                    <td class="px-6 py-4 font-bold text-slate-900 font-mono">
-                      {{ slot.slotNumber }}
-                    </td>
-                    <td class="px-6 py-4">
-                      {{ slot.zone || 'General' }}
-                    </td>
-                    <td class="px-6 py-4 font-semibold text-slate-800">
-                      {{ slot.vehicleType }}
-                    </td>
-                    <td class="px-6 py-4 font-bold text-blue-600">
-                      LKR {{ slot.fee | number }}
-                    </td>
-                    <td class="px-6 py-4">
-                      <app-status-badge [status]="slot.status"></app-status-badge>
-                    </td>
-                    <td class="px-6 py-4 text-right space-x-2">
-                      <button
-                        type="button"
-                        (click)="openEditModal(slot)"
-                        class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition cursor-pointer"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        (click)="confirmDelete(slot)"
-                        class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition cursor-pointer"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
+    <!-- ==================== CREATE / EDIT PARKING SLOT MODAL ==================== -->
+    @if (isFormModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-5">
+
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h2 class="text-base font-extrabold text-slate-900">
+              {{ isEditMode() ? 'Edit Parking Slot' : 'Create Parking Slot' }}
+            </h2>
+            <button type="button" (click)="closeFormModal()" class="text-slate-400 hover:text-slate-700 font-bold cursor-pointer">
+              ✕
+            </button>
           </div>
 
-          <div class="p-4 bg-slate-50 border-t border-slate-100 text-xs text-slate-500 flex justify-between items-center">
-            <span>Showing {{ filteredSlots().length }} of {{ slots().length }} parking slots</span>
-          </div>
+          @if (modalErrorMessage()) {
+            <div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
+              {{ modalErrorMessage() }}
+            </div>
+          }
+
+          <form (ngSubmit)="saveSlot()" class="space-y-4">
+            <div>
+              <label for="modalSlotNumber" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                Slot Number <span class="text-rose-500">*</span>
+              </label>
+              <input
+                id="modalSlotNumber"
+                type="text"
+                [(ngModel)]="slotNumber"
+                name="slotNumber"
+                placeholder="e.g. P-01 or Zone A-10"
+                required
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label for="modalZone" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Zone
+                </label>
+                <input
+                  id="modalZone"
+                  type="text"
+                  [(ngModel)]="zone"
+                  name="zone"
+                  placeholder="e.g. Zone A"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label for="modalVehicleType" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Vehicle Type
+                </label>
+                <select
+                  id="modalVehicleType"
+                  [(ngModel)]="vehicleType"
+                  name="vehicleType"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                >
+                  @for (vType of vehicleTypes; track vType) {
+                    <option [value]="vType">{{ getVehicleIcon(vType) }} {{ vType }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label for="modalFee" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                Parking Fee (LKR)
+              </label>
+              <input
+                id="modalFee"
+                type="number"
+                min="0"
+                [(ngModel)]="fee"
+                name="fee"
+                placeholder="e.g. 500"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
+              />
+            </div>
+
+            @if (isEditMode()) {
+              <div>
+                <label for="modalStatus" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Status
+                </label>
+                <select
+                  id="modalStatus"
+                  [(ngModel)]="status"
+                  name="status"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                >
+                  <option value="Available">Available</option>
+                  <option value="Held">Held</option>
+                  <option value="Occupied">Occupied</option>
+                </select>
+              </div>
+            }
+
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                (click)="closeFormModal()"
+                class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                [disabled]="isSubmitting()"
+                class="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 transition cursor-pointer disabled:opacity-50 flex items-center gap-1"
+              >
+                <span>{{ isSubmitting() ? 'Saving...' : (isEditMode() ? 'Update Slot' : 'Create Slot') }}</span>
+              </button>
+            </div>
+          </form>
+
         </div>
-      } @else {
-        <div class="bg-white rounded-3xl border border-slate-200/90 p-8 shadow-sm">
-          <app-empty-state
-            title="No Parking Slots Found"
-            description="No parking slots exist for this event or match your current filter parameters."
-            actionText="Add Parking Slot"
-            (action)="openCreateModal()"
-          ></app-empty-state>
-        </div>
-      }
+      </div>
+    }
+
+    <!-- Delete Parking Slot Confirmation Dialog -->
+    @if (isDeleteDialogOpen()) {
+      <app-confirmation-dialog
+        title="Delete Parking Slot"
+        [message]="'Are you sure you want to delete Parking Slot &quot;' + (deletingSlot()?.slotNumber || '') + '&quot;? This action cannot be undone.'"
+        confirmLabel="Delete Slot"
+        [busy]="isDeleting()"
+        (confirmed)="deleteSlotConfirmed()"
+        (cancelled)="cancelDelete()"
+      ></app-confirmation-dialog>
     }
 
   </div>
 </div>
-
-<!-- Modal Dialog: Create / Edit Parking Slot -->
-@if (isFormModalOpen()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-fadeIn">
-    <div class="bg-white rounded-3xl border border-slate-200 shadow-xl max-w-md w-full p-6 sm:p-8 space-y-6">
-
-      <div class="flex items-center justify-between border-b border-slate-100 pb-4">
-        <h2 class="text-xl font-extrabold text-slate-900">
-          {{ isEditMode() ? 'Edit Parking Slot' : 'Create Parking Slot' }}
-        </h2>
-        <button type="button" (click)="closeFormModal()" class="text-slate-400 hover:text-slate-700 font-bold">
-          ✕
-        </button>
-      </div>
-
-      @if (modalErrorMessage()) {
-        <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
-          {{ modalErrorMessage() }}
-        </div>
-      }
-
-      <form (ngSubmit)="saveSlot()" class="space-y-4">
-        <div>
-          <label for="modalSlotNumber" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
-            Slot Number <span class="text-rose-500">*</span>
-          </label>
-          <input
-            id="modalSlotNumber"
-            type="text"
-            [(ngModel)]="slotNumber"
-            name="slotNumber"
-            placeholder="e.g. P-01 or A-10"
-            required
-            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label for="modalZone" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
-              Zone
-            </label>
-            <input
-              id="modalZone"
-              type="text"
-              [(ngModel)]="zone"
-              name="zone"
-              placeholder="e.g. Zone A"
-              class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label for="modalVehicleType" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
-              Vehicle Type
-            </label>
-            <select
-              id="modalVehicleType"
-              [(ngModel)]="vehicleType"
-              name="vehicleType"
-              class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              @for (vType of vehicleTypes; track vType) {
-                <option [value]="vType">{{ vType }}</option>
-              }
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label for="modalFee" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
-            Parking Fee (LKR)
-          </label>
-          <input
-            id="modalFee"
-            type="number"
-            min="0"
-            [(ngModel)]="fee"
-            name="fee"
-            placeholder="e.g. 500"
-            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-bold text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        @if (isEditMode()) {
-          <div>
-            <label for="modalStatus" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
-              Status
-            </label>
-            <select
-              id="modalStatus"
-              [(ngModel)]="status"
-              name="status"
-              class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="Available">Available</option>
-              <option value="Held">Held</option>
-              <option value="Occupied">Occupied</option>
-            </select>
-          </div>
-        }
-
-        <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
-          <button
-            type="button"
-            (click)="closeFormModal()"
-            class="px-5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold cursor-pointer"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            [disabled]="isSubmitting()"
-            class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm cursor-pointer disabled:opacity-50"
-          >
-            {{ isSubmitting() ? 'Saving...' : (isEditMode() ? 'Update Slot' : 'Create Slot') }}
-          </button>
-        </div>
-      </form>
-
-    </div>
-  </div>
-}
-
-<!-- Confirmation Dialog: Delete Parking Slot -->
-@if (isDeleteDialogOpen()) {
-  <app-confirmation-dialog
-    title="Delete Parking Slot"
-    [message]="'Are you sure you want to delete Parking Slot ' + (deletingSlot()?.slotNumber || '') + '? This action cannot be undone.'"
-    confirmLabel="Delete Slot"
-    [busy]="isDeleting()"
-    (confirmed)="deleteSlotConfirmed()"
-    (cancelled)="cancelDelete()"
-  ></app-confirmation-dialog>
-}

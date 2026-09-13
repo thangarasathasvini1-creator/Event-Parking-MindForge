@@ -1,107 +1,469 @@
 <div class="min-h-screen bg-slate-50/60 py-8 px-4 sm:px-6 lg:px-8 font-sans text-slate-900">
-
-  <div class="mx-auto max-w-5xl space-y-8">
+  <div class="max-w-7xl mx-auto space-y-6">
 
     <!-- ==================== HEADER ==================== -->
-    <header class="pb-2 border-b border-slate-200/80">
-      <span class="inline-block text-xs font-bold uppercase tracking-widest text-blue-600">
-        EVENTRA ADMIN · PAYMENTS
-      </span>
-      <h1 class="mt-1 text-3xl font-extrabold text-slate-950 tracking-tight">
-        Payment Management
-      </h1>
-      <p class="mt-1 text-xs text-slate-500">
-        System payment gateway telemetry, revenue reconciliation, and audit information.
-      </p>
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
+      <div>
+        <span class="inline-block text-xs font-bold uppercase tracking-widest text-blue-600">
+          EVENTRA ADMIN
+        </span>
+        <h1 class="mt-1 text-3xl font-extrabold text-slate-950 tracking-tight">
+          Payments & Revenue
+        </h1>
+        <p class="mt-1 text-xs text-slate-500">
+          Audit customer payment transactions, track revenue collected, inspect bank reference IDs, and generate receipts.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3 self-start sm:self-auto">
+        <button
+          type="button"
+          (click)="load()"
+          [disabled]="loading()"
+          class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-xs transition cursor-pointer disabled:opacity-50"
+          title="Refresh transaction records"
+        >
+          <span [class.animate-spin]="loading()">↻</span>
+          <span>{{ loading() ? 'Refreshing...' : 'Refresh' }}</span>
+        </button>
+      </div>
     </header>
 
-    <!-- ==================== ARCHITECTURE / BACKEND LIMITATION NOTICE ==================== -->
-    <section class="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-xs">
-      <div class="flex items-start gap-4">
-        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 text-2xl font-bold">
-          ℹ️
+    <!-- ==================== ERROR BANNER ==================== -->
+    @if (error()) {
+      <div role="alert" class="flex items-center justify-between rounded-xl bg-rose-50 border border-rose-200 p-4 text-xs font-medium text-rose-800 animate-in fade-in duration-200">
+        <div class="flex items-center gap-2">
+          <svg class="h-4 w-4 text-rose-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <span>{{ error() }}</span>
         </div>
+        <button type="button" (click)="error.set('')" class="text-rose-500 hover:text-rose-800 p-1 cursor-pointer">✕</button>
+      </div>
+    }
 
-        <div class="space-y-3">
-          <h2 class="text-lg font-bold text-slate-950">
-            Payment Telemetry Architecture Notice
-          </h2>
-
-          <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-            In accordance with the backend security design in <code class="px-1.5 py-0.5 rounded bg-slate-100 font-mono text-[11px] text-slate-800">PaymentsController.cs</code>,
-            payment transactions are securely tied to individual customer bookings:
-          </p>
-
-          <ul class="text-xs text-slate-600 space-y-2 list-disc list-inside">
-            <li>
-              <strong>Total Financial Revenue:</strong> Aggregate gross revenue is continuously computed and available via the
-              <code class="px-1 py-0.5 rounded bg-slate-100 font-mono text-[11px] text-slate-800">GET /api/admin/dashboard</code> endpoint.
-            </li>
-            <li>
-              <strong>Booking Payment Statuses:</strong> Individual transaction references and settlement statuses are tracked on a per-event basis via
-              <code class="px-1 py-0.5 rounded bg-slate-100 font-mono text-[11px] text-slate-800">GET /api/bookings?eventId=&#123;id&#125;</code>.
-            </li>
-            <li>
-              <strong>Cross-Customer Payment Querying:</strong> An unfiltered global payment endpoint is intentionally not exposed on the backend to preserve customer privacy.
-            </li>
-          </ul>
-
-          <div class="pt-4 flex flex-col sm:flex-row items-center gap-3">
-            <button
-              type="button"
-              (click)="goToDashboard()"
-              class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center justify-center gap-2"
-            >
-              <span>📊</span>
-              <span>View Executive Revenue Dashboard</span>
-            </button>
-
-            <button
-              type="button"
-              (click)="goToBookings()"
-              class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-xs transition cursor-pointer flex items-center justify-center gap-2"
-            >
-              <span>📋</span>
-              <span>Inspect Bookings & Payment Statuses</span>
-            </button>
+    <!-- ==================== FINANCIAL KPI METRIC CARDS ==================== -->
+    <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      
+      <!-- 1. Total Revenue -->
+      <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition hover:shadow-sm">
+        <div class="flex items-center justify-between">
+          <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Collected</p>
+          <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
           </div>
         </div>
-      </div>
-    </section>
-
-    <!-- ==================== QUICK SHORTCUTS ==================== -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div
-        (click)="goToDashboard()"
-        class="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-xs hover:border-blue-300 transition cursor-pointer group"
-      >
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition">
-            Executive Financial Analytics
-          </span>
-          <span class="text-xl">💰</span>
-        </div>
-        <p class="mt-1 text-xs text-slate-500">
-          Review total realized revenue, pending holds, and revenue generated per event.
-        </p>
+        <h3 class="mt-2 text-2xl font-black text-emerald-600 truncate">
+          {{ totalRevenue() | currency:'LKR':'symbol':'1.0-0' }}
+        </h3>
+        <p class="text-[11px] text-emerald-700 font-medium mt-0.5">Verified settlements</p>
       </div>
 
-      <div
-        (click)="goToBookings()"
-        class="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-xs hover:border-blue-300 transition cursor-pointer group"
-      >
+      <!-- 2. Completed Transactions -->
+      <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition hover:shadow-sm">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition">
-            Booking Settlement Statuses
-          </span>
-          <span class="text-xl">🎟️</span>
+          <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Successful Orders</p>
+          <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
         </div>
-        <p class="mt-1 text-xs text-slate-500">
-          Verify whether bookings have been paid, are pending hold, or were cancelled.
-        </p>
+        <h3 class="mt-2 text-2xl font-black text-slate-900">{{ completedCount() }}</h3>
+        <p class="text-[11px] text-slate-400 mt-0.5">Completed payments</p>
       </div>
-    </section>
+
+      <!-- 3. Failed / Incomplete -->
+      <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition hover:shadow-sm">
+        <div class="flex items-center justify-between">
+          <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Failed / Pending</p>
+          <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        </div>
+        <h3 class="mt-2 text-2xl font-black text-rose-600">{{ failedCount() }}</h3>
+        <p class="text-[11px] text-rose-600 font-medium mt-0.5">Unsettled attempts</p>
+      </div>
+
+      <!-- 4. Average Ticket Size -->
+      <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition hover:shadow-sm">
+        <div class="flex items-center justify-between">
+          <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Avg. Booking Value</p>
+          <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+          </div>
+        </div>
+        <h3 class="mt-2 text-2xl font-black text-indigo-600 truncate">
+          {{ averageTicket() | currency:'LKR':'symbol':'1.0-0' }}
+        </h3>
+        <p class="text-[11px] text-indigo-700 font-medium mt-0.5">Average revenue per order</p>
+      </div>
+
+    </div>
+
+    <!-- ==================== SEARCH & FILTERS BAR ==================== -->
+    <div class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-xs flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
+      
+      <!-- Search Form -->
+      <form (ngSubmit)="load()" class="relative flex-1 max-w-lg">
+        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+          <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+
+        <input
+          [formControl]="search"
+          type="search"
+          placeholder="Search by customer name, booking code, or TXN ID..."
+          class="w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-10 pr-24 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+        />
+
+        <div class="absolute inset-y-0 right-1 flex items-center gap-1">
+          @if (search.value) {
+            <button
+              type="button"
+              (click)="clearSearch()"
+              class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200/50 cursor-pointer"
+              title="Clear search"
+            >
+              ✕
+            </button>
+          }
+          <button
+            type="submit"
+            class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-700 shadow-xs transition cursor-pointer"
+            [disabled]="loading()"
+          >
+            Search
+          </button>
+        </div>
+      </form>
+
+      <!-- Status Filter Tabs -->
+      <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl self-start md:self-auto overflow-x-auto">
+        <button
+          type="button"
+          (click)="setStatusFilter('')"
+          [class.bg-white]="status.value === ''"
+          [class.text-blue-700]="status.value === ''"
+          [class.font-bold]="status.value === ''"
+          [class.shadow-xs]="status.value === ''"
+          [class.text-slate-600]="status.value !== ''"
+          class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer whitespace-nowrap"
+        >
+          All ({{ totalTransactions() }})
+        </button>
+
+        <button
+          type="button"
+          (click)="setStatusFilter('Completed')"
+          [class.bg-white]="status.value === 'Completed'"
+          [class.text-emerald-700]="status.value === 'Completed'"
+          [class.font-bold]="status.value === 'Completed'"
+          [class.shadow-xs]="status.value === 'Completed'"
+          [class.text-slate-600]="status.value !== 'Completed'"
+          class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer whitespace-nowrap"
+        >
+          Completed ({{ completedCount() }})
+        </button>
+
+        <button
+          type="button"
+          (click)="setStatusFilter('Failed')"
+          [class.bg-white]="status.value === 'Failed'"
+          [class.text-rose-700]="status.value === 'Failed'"
+          [class.font-bold]="status.value === 'Failed'"
+          [class.shadow-xs]="status.value === 'Failed'"
+          [class.text-slate-600]="status.value !== 'Failed'"
+          class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer whitespace-nowrap"
+        >
+          Failed ({{ failedCount() }})
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================== PAYMENTS DATA TABLE ==================== -->
+    <div class="rounded-2xl border border-slate-200/90 bg-white shadow-xs overflow-hidden">
+      @if (loading()) {
+        <div class="p-12 text-center">
+          <div class="inline-block h-8 w-8 animate-spin rounded-full border-3 border-blue-600 border-t-transparent"></div>
+          <p class="mt-3 text-xs font-semibold text-slate-500">Retrieving payment audit logs...</p>
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <tr>
+                <th class="px-6 py-3.5">Customer & Order</th>
+                <th class="px-6 py-3.5">Event</th>
+                <th class="px-6 py-3.5">Settlement Amount</th>
+                <th class="px-6 py-3.5">Status</th>
+                <th class="px-6 py-3.5">Transaction Audit</th>
+                <th class="px-6 py-3.5 text-right">Receipt</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              @for (p of filteredPayments(); track p.paymentId) {
+                <tr class="hover:bg-slate-50/60 transition">
+                  
+                  <!-- Customer & Booking Reference -->
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                      <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-xs font-black text-white shadow-xs">
+                        {{ getInitials(p.customerName) }}
+                      </div>
+                      <div class="space-y-0.5">
+                        <div class="font-bold text-slate-900">{{ p.customerName }}</div>
+                        <div>
+                          <button
+                            type="button"
+                            (click)="openReceipt(p)"
+                            class="inline-flex items-center font-mono text-[11px] font-semibold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer text-left"
+                            title="Click to view receipt in admin console"
+                          >
+                            {{ p.bookingNumber }}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+
+                  <!-- Event Name -->
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-1.5 font-medium text-slate-800">
+                      <svg class="h-3.5 w-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span class="max-w-[180px] truncate" [title]="p.eventName">{{ p.eventName }}</span>
+                    </div>
+                  </td>
+
+                  <!-- Settlement Amount -->
+                  <td class="px-6 py-4">
+                    <div class="font-black text-slate-900 text-sm">
+                      {{ p.amount | currency:'LKR':'symbol':'1.2-2' }}
+                    </div>
+                  </td>
+
+                  <!-- Payment Status Badge -->
+                  <td class="px-6 py-4">
+                    @if (p.status === 'Completed') {
+                      <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-600/20">
+                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                        Completed
+                      </span>
+                    } @else if (p.status === 'Pending') {
+                      <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700 ring-1 ring-amber-600/20">
+                        <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                        Pending
+                      </span>
+                    } @else {
+                      <span class="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-bold text-rose-700 ring-1 ring-rose-600/20">
+                        <span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
+                        {{ p.status }}
+                      </span>
+                    }
+                  </td>
+
+                  <!-- Transaction Audit Reference & Date -->
+                  <td class="px-6 py-4">
+                    <div class="space-y-1">
+                      <div class="font-mono text-[11px] text-slate-600 truncate max-w-[200px]" [title]="p.transactionReference || '—'">
+                        {{ p.transactionReference || '—' }}
+                      </div>
+                      <div class="flex items-center gap-1 text-[10px] text-slate-400">
+                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{{ p.paidAt ? (p.paidAt | date:'medium') : 'Awaiting settlement' }}</span>
+                      </div>
+                    </div>
+                  </td>
+
+                  <!-- Receipt Button (Opens Receipt Modal in Same Admin Page) -->
+                  <td class="px-6 py-4 text-right">
+                    @if (p.status === 'Completed') {
+                      <button
+                        type="button"
+                        (click)="openReceipt(p)"
+                        class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-xs hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition cursor-pointer"
+                        title="View receipt on this page"
+                      >
+                        <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span>Receipt</span>
+                      </button>
+                    } @else {
+                      <span class="inline-flex items-center px-2.5 py-1 text-[11px] text-slate-400 italic">
+                        Not available
+                      </span>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6" class="py-12 text-center">
+                    <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 mb-3">
+                      <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                    </div>
+                    <p class="text-sm font-bold text-slate-900">No payment transactions found</p>
+                    <p class="text-xs text-slate-400 mt-1">Try adjusting your search criteria or resetting status filters.</p>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <!-- ==================== INLINE ADMIN RECEIPT MODAL ==================== -->
+    @if (viewingReceipt(); as r) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+        <div class="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh]">
+          
+          <!-- Modal Header -->
+          <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/50">
+            <div class="flex items-center gap-2.5">
+              <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-xs shadow-xs">
+                E
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">Official Payment Receipt</h3>
+                <p class="text-[11px] text-slate-500 font-mono">Receipt #{{ r.paymentId }}</p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              (click)="closeReceipt()"
+              class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition cursor-pointer"
+              aria-label="Close receipt"
+            >
+              ✕
+            </button>
+          </div>
+
+          <!-- Modal Body: Styled Invoice Slip -->
+          <div class="flex-1 overflow-y-auto p-6 space-y-6">
+            
+            <!-- Amount & Settlement Status Banner -->
+            <div class="text-center rounded-2xl bg-gradient-to-b from-slate-50 to-white border border-slate-200/80 p-5 space-y-2">
+              <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 font-bold text-base mb-1">
+                ✓
+              </div>
+              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Settlement</p>
+              <h2 class="text-3xl font-black text-slate-950">
+                {{ r.amount | currency:'LKR':'symbol':'1.2-2' }}
+              </h2>
+              <div class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 ring-1 ring-emerald-600/20">
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                Settlement Completed
+              </div>
+            </div>
+
+            <!-- Receipt Breakdown Grid -->
+            <div class="rounded-xl border border-slate-200 divide-y divide-slate-100 text-xs">
+              
+              <!-- Customer -->
+              <div class="flex items-center justify-between p-3">
+                <span class="text-slate-500">Customer Name</span>
+                <span class="font-bold text-slate-900">{{ r.customerName }}</span>
+              </div>
+
+              <!-- Customer ID -->
+              <div class="flex items-center justify-between p-3">
+                <span class="text-slate-500">Customer ID</span>
+                <span class="font-mono text-slate-700">#{{ r.customerId }}</span>
+              </div>
+
+              <!-- Event -->
+              <div class="flex items-center justify-between p-3">
+                <span class="text-slate-500">Event</span>
+                <span class="font-semibold text-slate-900">{{ r.eventName }}</span>
+              </div>
+
+              <!-- Booking Reference -->
+              <div class="flex items-center justify-between p-3">
+                <span class="text-slate-500">Booking Reference</span>
+                <span class="font-mono font-bold text-blue-600 break-all text-right max-w-[260px]">{{ r.bookingNumber }}</span>
+              </div>
+
+              <!-- Transaction Reference -->
+              <div class="flex items-center justify-between p-3">
+                <span class="text-slate-500">Transaction ID</span>
+                <span class="font-mono text-slate-700 break-all text-right max-w-[260px]">{{ r.transactionReference || 'N/A' }}</span>
+              </div>
+
+              <!-- Payment Method -->
+              <div class="flex items-center justify-between p-3">
+                <span class="text-slate-500">Payment Channel</span>
+                <span class="font-semibold text-slate-800">Online Card Gateway</span>
+              </div>
+
+              <!-- Paid Timestamp -->
+              <div class="flex items-center justify-between p-3">
+                <span class="text-slate-500">Settlement Date</span>
+                <span class="text-slate-700">{{ r.paidAt ? (r.paidAt | date:'medium') : 'N/A' }}</span>
+              </div>
+
+            </div>
+
+            <!-- Security Notice -->
+            <p class="text-[10px] text-center text-slate-400">
+              Verified electronic payment receipt recorded by EVENTRA Management System.
+            </p>
+
+          </div>
+
+          <!-- Modal Actions Footer -->
+          <div class="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 p-4 gap-2">
+            <button
+              type="button"
+              (click)="downloadReceipt()"
+              class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer shadow-xs"
+            >
+              <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span>Download .txt</span>
+            </button>
+
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                (click)="printReceipt()"
+                class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer shadow-xs"
+              >
+                <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                <span>Print</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="closeReceipt()"
+                class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 transition cursor-pointer shadow-xs"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    }
 
   </div>
-
 </div>

@@ -90,9 +90,9 @@ export class BookingService {
 
   getHoldStatus(
     bookingId: number
-  ): Observable<unknown> {
+  ): Observable<HoldStatus> {
 
-    return this.http.get<unknown>(
+    return this.http.get<HoldStatus>(
       `${this.apiUrl}/${bookingId}/hold-status`
     );
   }
@@ -127,3 +127,4 @@ export class BookingService {
   }
 
 }
+export interface HoldStatus { bookingId: number; status: string; serverTimeUtc: string; holdExpiresAt: string | null; remainingSeconds: number; canPay: boolean; }

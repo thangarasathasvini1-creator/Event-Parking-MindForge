@@ -23,6 +23,10 @@ export class SeatButton {
     return (this.status || '').trim().toLowerCase() === 'held';
   }
 
+  get isVIP(): boolean {
+    return (this.status || '').trim().toLowerCase() === 'vip';
+  }
+
   get isBooked(): boolean {
     const s = (this.status || '').trim().toLowerCase();
     return s === 'booked' || s === 'occupied' || s === 'reserved';
@@ -31,6 +35,9 @@ export class SeatButton {
   get ariaLabel(): string {
     if (this.selected) {
       return `Seat ${this.seatNumber}, selected`;
+    }
+    if (this.isVIP) {
+      return `Seat ${this.seatNumber}, VIP (Not bookable)`;
     }
     return `Seat ${this.seatNumber}, ${this.status.toLowerCase()}`;
   }
