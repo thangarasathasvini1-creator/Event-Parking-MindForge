@@ -1,9 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
-  imports: [],
   selector: 'app-loading-spinner',
-  styleUrl: './loading-spinner.css',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './loading-spinner.html',
+  styleUrl: './loading-spinner.css',
 })
-export class LoadingSpinner {}
+export class LoadingSpinner {
+  @Input() message = 'Loading...';
+}
+

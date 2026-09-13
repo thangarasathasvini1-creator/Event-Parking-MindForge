@@ -10,10 +10,23 @@ import { Router } from '@angular/router';
 import { EventService } from '../../../../services/event';
 import { Event } from '../../../../models/event.model';
 
+import { Navbar } from '../../../../shared/components/navbar/navbar';
+import { Footer } from '../../../../shared/components/footer/footer';
+import { EventCard } from '../../../../shared/components/event-card/event-card';
+import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
+import { ErrorMessage } from '../../../../shared/components/error-message/error-message';
+
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    Navbar,
+    Footer,
+    EventCard,
+    LoadingSpinner,
+    ErrorMessage
+  ],
   templateUrl: './landing.html',
   styleUrl: './landing.css',
 })

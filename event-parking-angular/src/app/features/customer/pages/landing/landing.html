@@ -1,621 +1,264 @@
-<div class="min-h-screen bg-slate-50">
+<div class="min-h-screen bg-slate-50 flex flex-col justify-between">
 
-  <!-- ==================== NAVBAR ==================== -->
-  <header class="border-b border-slate-200 bg-white/95 backdrop-blur">
-    <div
-      class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+  <!-- Persistent Top Navbar -->
+  <app-navbar></app-navbar>
 
-      <!-- Logo -->
-      <button
-        type="button"
-        (click)="exploreEvents()"
-        class="text-2xl font-extrabold tracking-tight text-slate-900">
-        EVENT<span class="text-blue-600">RA</span>
-      </button>
-
-      <!-- Desktop Navigation -->
-      <nav class="hidden items-center gap-8 md:flex">
-
-        <button
-          type="button"
-          (click)="exploreEvents()"
-          class="text-sm font-medium text-slate-600 transition hover:text-blue-600">
-          Events
-        </button>
-
-        <button
-          type="button"
-          (click)="login()"
-          class="text-sm font-medium text-slate-600 transition hover:text-blue-600">
-          Login
-        </button>
-
-        <button
-          type="button"
-          (click)="register()"
-          class="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700">
-          Register
-        </button>
-
-      </nav>
-    </div>
-  </header>
-
-
-  <!-- ==================== HERO ==================== -->
-  <section
-    class="relative overflow-hidden bg-slate-950 px-6 py-20 text-white md:py-28">
-
-    <div
-      class="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-blue-600/20 blur-3xl">
-    </div>
-
-    <div
-      class="absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-violet-600/20 blur-3xl">
-    </div>
+  <!-- HERO SECTION -->
+  <section class="relative overflow-hidden bg-slate-950 px-6 py-20 text-white md:py-28">
+    <div class="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-blue-600/20 blur-3xl"></div>
+    <div class="absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-violet-600/20 blur-3xl"></div>
 
     <div class="relative mx-auto max-w-7xl">
-
       <div class="max-w-3xl">
-
-        <p
-          class="mb-5 inline-flex rounded-full border border-blue-400/30 bg-blue-500/10 px-4 py-2 text-sm font-semibold text-blue-300">
+        <span class="mb-5 inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/10 px-4 py-2 text-xs font-semibold text-blue-300">
+          <span class="h-2 w-2 rounded-full bg-blue-400"></span>
           EVENTRA · Event & Parking Reservation
-        </p>
+        </span>
 
-        <h1
-          class="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl md:text-6xl">
-
-          Discover.
-          <span class="text-blue-400">Reserve.</span>
-          Experience.
-
+        <h1 class="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl md:text-6xl">
+          Events. Seats. Parking.
+          <span class="text-blue-400">Simplified.</span>
         </h1>
 
-        <p
-          class="mt-6 max-w-2xl text-lg leading-8 text-slate-300 md:text-xl">
-
-          Discover exciting events, choose your preferred seats,
-          reserve convenient parking, and complete your booking
-          through one seamless experience.
-
+        <p class="mt-6 max-w-2xl text-lg leading-8 text-slate-300 md:text-xl">
+          Discover exciting live events, select your preferred seats, reserve guaranteed parking, and complete your reservation securely through one seamless platform.
         </p>
 
         <div class="mt-8 flex flex-col gap-4 sm:flex-row">
-
           <button
             type="button"
             (click)="exploreEvents()"
-            class="rounded-xl bg-blue-600 px-7 py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-blue-700">
-
+            class="rounded-xl bg-blue-600 px-7 py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-600/20"
+          >
             Explore Events →
-
           </button>
 
           <button
             type="button"
             (click)="register()"
-            class="rounded-xl border border-slate-600 bg-white/5 px-7 py-3.5 text-sm font-bold text-white transition hover:bg-white/10">
-
-            Create Account
-
+            class="rounded-xl border border-slate-700 bg-white/5 px-7 py-3.5 text-sm font-bold text-white transition hover:bg-white/10 focus:outline-none focus:ring-4 focus:ring-white/20"
+          >
+            Get Started
           </button>
-
         </div>
-
       </div>
-
     </div>
   </section>
 
-
-  <!-- ==================== FEATURED EVENTS ==================== -->
+  <!-- FEATURE SECTION -->
   <section class="px-6 py-20">
-
     <div class="mx-auto max-w-7xl">
-
-      <div
-        class="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-
-        <div>
-          <p
-            class="text-sm font-bold uppercase tracking-wider text-blue-600">
-            Discover
-          </p>
-
-          <h2
-            class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">
-            Featured Events
-          </h2>
-
-          <p class="mt-2 text-slate-600">
-            Find your next experience with EVENTRA.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          (click)="exploreEvents()"
-          class="text-sm font-bold text-blue-600 hover:text-blue-700">
-          View all events →
-        </button>
-
-      </div>
-
-
-      <!-- Loading -->
-      @if (isLoading()) {
-
-        <div class="grid gap-6 md:grid-cols-3">
-
-          @for (item of [1, 2, 3]; track item) {
-
-            <div
-              class="animate-pulse overflow-hidden rounded-2xl border border-slate-200 bg-white">
-
-              <div class="h-40 bg-slate-200"></div>
-
-              <div class="space-y-4 p-6">
-                <div class="h-5 w-3/4 rounded bg-slate-200"></div>
-                <div class="h-4 w-1/2 rounded bg-slate-200"></div>
-                <div class="h-4 w-2/3 rounded bg-slate-200"></div>
-              </div>
-
-            </div>
-
-          }
-
-        </div>
-
-      }
-
-      <!-- Error -->
-      @else if (errorMessage()) {
-
-        <div
-          class="rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
-
-          <p class="font-medium text-red-700">
-            {{ errorMessage() }}
-          </p>
-
-          <button
-            type="button"
-            (click)="exploreEvents()"
-            class="mt-4 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
-            Browse Events
-          </button>
-
-        </div>
-
-      }
-
-      <!-- Events -->
-      @else if (featuredEvents().length > 0) {
-
-        <div class="grid gap-6 md:grid-cols-3">
-
-          @for (
-            event of featuredEvents();
-            track event.eventId
-          ) {
-
-            <article
-              class="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
-
-              <!-- Event Visual -->
-              <div
-                class="relative flex h-40 items-end overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 p-6">
-
-                <div
-                  class="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10">
-                </div>
-
-                <div
-                  class="absolute -bottom-10 -left-6 h-28 w-28 rounded-full bg-white/10">
-                </div>
-
-                <div class="relative">
-                  <p class="text-xs font-semibold uppercase text-blue-100">
-                    Event
-                  </p>
-
-                  <h3
-                    class="mt-1 line-clamp-2 text-xl font-bold text-white">
-                    {{ event.name }}
-                  </h3>
-                </div>
-
-              </div>
-
-
-              <!-- Event Details -->
-              <div class="p-6">
-
-                <div class="space-y-3">
-
-                  <div class="flex items-center gap-3">
-                    <span class="text-sm">📅</span>
-
-                    <span class="text-sm text-slate-600">
-                      {{ event.eventDate | date:'mediumDate' }}
-                    </span>
-                  </div>
-
-                  <div class="flex items-center gap-3">
-                    <span class="text-sm">🕒</span>
-
-                    <span class="text-sm text-slate-600">
-                      {{ event.startTime }}
-                      -
-                      {{ event.endTime }}
-                    </span>
-                  </div>
-
-                  <div class="flex items-center gap-3">
-                    <span class="text-sm">🎟️</span>
-
-                    <span class="text-sm font-semibold text-slate-700">
-                      {{ event.ticketPrice | currency }}
-                    </span>
-                  </div>
-
-                </div>
-
-
-                <button
-                  type="button"
-                  (click)="viewEvent(event.eventId)"
-                  class="mt-6 w-full rounded-lg border border-blue-600 px-4 py-3 text-sm font-bold text-blue-600 transition hover:bg-blue-600 hover:text-white">
-
-                  View Event
-
-                </button>
-
-              </div>
-
-            </article>
-
-          }
-
-        </div>
-
-      }
-
-      <!-- Empty -->
-      @else {
-
-        <div
-          class="rounded-2xl border border-slate-200 bg-white p-10 text-center">
-
-          <h3 class="text-xl font-bold text-slate-800">
-            No events available
-          </h3>
-
-          <p class="mt-2 text-slate-500">
-            Check back soon for upcoming events.
-          </p>
-
-        </div>
-
-      }
-
-    </div>
-
-  </section>
-
-
-  <!-- ==================== HOW IT WORKS ==================== -->
-  <section class="bg-white px-6 py-20">
-
-    <div class="mx-auto max-w-7xl">
-
       <div class="mx-auto max-w-2xl text-center">
-
-        <p
-          class="text-sm font-bold uppercase tracking-wider text-blue-600">
-          Simple Journey
-        </p>
-
-        <h2
-          class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">
-          How EVENTRA Works
+        <h2 class="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+          Everything you need for a great event experience
         </h2>
-
-        <p class="mt-3 text-slate-600">
-          Everything you need for your event reservation,
-          all in one seamless journey.
+        <p class="mt-4 text-base text-slate-600">
+          EVENTRA brings event discovery, seat selection, parking, and reservations together in one place.
         </p>
-
       </div>
 
-
-      <div class="mt-12 grid gap-8 md:grid-cols-4">
-
-        <!-- Step 1 -->
-        <div class="text-center">
-
-          <div
-            class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-2xl">
-            🔎
+      <div class="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition hover:shadow-md">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 font-bold text-xl">
+            🔍
           </div>
-
-          <div
-            class="mx-auto mt-4 flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
-            1
-          </div>
-
-          <h3 class="mt-3 font-bold text-slate-900">
-            Discover
-          </h3>
-
-          <p class="mt-2 text-sm leading-6 text-slate-500">
-            Browse events and find the experience you want.
+          <h3 class="mt-6 text-lg font-bold text-slate-900">Discover Events</h3>
+          <p class="mt-2 text-sm leading-6 text-slate-600">
+            Browse upcoming concerts, sports events, theater performances, and corporate events with detailed schedules and prices.
           </p>
-
         </div>
 
-
-        <!-- Step 2 -->
-        <div class="text-center">
-
-          <div
-            class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-50 text-2xl">
+        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition hover:shadow-md">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 text-violet-600 font-bold text-xl">
             💺
           </div>
-
-          <div
-            class="mx-auto mt-4 flex h-7 w-7 items-center justify-center rounded-full bg-violet-600 text-xs font-bold text-white">
-            2
-          </div>
-
-          <h3 class="mt-3 font-bold text-slate-900">
-            Select Seats
-          </h3>
-
-          <p class="mt-2 text-sm leading-6 text-slate-500">
-            Choose your preferred available seats.
+          <h3 class="mt-6 text-lg font-bold text-slate-900">Choose Your Seat</h3>
+          <p class="mt-2 text-sm leading-6 text-slate-600">
+            Select your exact seat position with real-time seat mapping, pricing tier breakdowns, and live availability updates.
           </p>
-
         </div>
 
-
-        <!-- Step 3 -->
-        <div class="text-center">
-
-          <div
-            class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 text-2xl">
+        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition hover:shadow-md">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 font-bold text-xl">
             🚗
           </div>
-
-          <div
-            class="mx-auto mt-4 flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
-            3
-          </div>
-
-          <h3 class="mt-3 font-bold text-slate-900">
-            Reserve Parking
-          </h3>
-
-          <p class="mt-2 text-sm leading-6 text-slate-500">
-            Add convenient parking to your reservation.
+          <h3 class="mt-6 text-lg font-bold text-slate-900">Reserve Parking</h3>
+          <p class="mt-2 text-sm leading-6 text-slate-600">
+            Add optional guaranteed parking spots near your event venue to ensure a stress-free arrival and departure.
           </p>
-
         </div>
 
-
-        <!-- Step 4 -->
-        <div class="text-center">
-
-          <div
-            class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 text-2xl">
+        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition hover:shadow-md">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 font-bold text-xl">
             💳
           </div>
-
-          <div
-            class="mx-auto mt-4 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">
-            4
-          </div>
-
-          <h3 class="mt-3 font-bold text-slate-900">
-            Book & Pay
-          </h3>
-
-          <p class="mt-2 text-sm leading-6 text-slate-500">
-            Complete checkout and secure your reservation.
+          <h3 class="mt-6 text-lg font-bold text-slate-900">Secure Checkout</h3>
+          <p class="mt-2 text-sm leading-6 text-slate-600">
+            Fast, secure checkout processing with immediate digital booking confirmation and downloadable receipts.
           </p>
-
         </div>
 
+        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition hover:shadow-md">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-600 font-bold text-xl">
+            📋
+          </div>
+          <h3 class="mt-6 text-lg font-bold text-slate-900">Manage Bookings</h3>
+          <p class="mt-2 text-sm leading-6 text-slate-600">
+            Access your full reservation history, seat numbers, parking passes, and payment details anytime from your dashboard.
+          </p>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition hover:shadow-md">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 text-violet-600 font-bold text-xl">
+            🔔
+          </div>
+          <h3 class="mt-6 text-lg font-bold text-slate-900">Real-time Notifications</h3>
+          <p class="mt-2 text-sm leading-6 text-slate-600">
+            Receive timely updates about booking confirmations, schedule changes, and payment receipts directly in your navbar.
+          </p>
+        </div>
       </div>
-
     </div>
-
   </section>
 
-
-  <!-- ==================== WHY EVENTRA ==================== -->
-  <section class="bg-slate-50 px-6 py-20">
-
+  <!-- HOW IT WORKS -->
+  <section class="bg-slate-100 px-6 py-20">
     <div class="mx-auto max-w-7xl">
-
-      <div class="grid gap-12 lg:grid-cols-2 lg:items-center">
-
-        <div>
-
-          <p
-            class="text-sm font-bold uppercase tracking-wider text-blue-600">
-            Why EVENTRA
-          </p>
-
-          <h2
-            class="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
-            One platform for your complete event journey.
-          </h2>
-
-          <p class="mt-5 leading-7 text-slate-600">
-            EVENTRA brings event discovery, seat reservation,
-            parking reservation, booking, and payment together
-            into one connected experience.
-          </p>
-
-        </div>
-
-
-        <div class="grid gap-4 sm:grid-cols-2">
-
-          <div
-            class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
-            <div class="text-2xl">🎟️</div>
-
-            <h3 class="mt-4 font-bold text-slate-900">
-              Easy Event Booking
-            </h3>
-
-            <p class="mt-2 text-sm leading-6 text-slate-500">
-              Discover and reserve events through a simple flow.
-            </p>
-
-          </div>
-
-
-          <div
-            class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
-            <div class="text-2xl">💺</div>
-
-            <h3 class="mt-4 font-bold text-slate-900">
-              Seat Selection
-            </h3>
-
-            <p class="mt-2 text-sm leading-6 text-slate-500">
-              Select available seats that match your preference.
-            </p>
-
-          </div>
-
-
-          <div
-            class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
-            <div class="text-2xl">🚗</div>
-
-            <h3 class="mt-4 font-bold text-slate-900">
-              Parking Reservation
-            </h3>
-
-            <p class="mt-2 text-sm leading-6 text-slate-500">
-              Reserve parking together with your event booking.
-            </p>
-
-          </div>
-
-
-          <div
-            class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
-            <div class="text-2xl">🔒</div>
-
-            <h3 class="mt-4 font-bold text-slate-900">
-              Secure Experience
-            </h3>
-
-            <p class="mt-2 text-sm leading-6 text-slate-500">
-              Keep your reservations and payment journey connected.
-            </p>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <!-- ==================== CTA ==================== -->
-  <section class="bg-slate-950 px-6 py-20">
-
-    <div class="mx-auto max-w-4xl text-center">
-
-      <p class="text-sm font-bold uppercase tracking-wider text-blue-400">
-        Your next experience starts here
-      </p>
-
-      <h2
-        class="mt-3 text-3xl font-extrabold tracking-tight text-white md:text-4xl">
-        Ready to discover your next event?
-      </h2>
-
-      <p class="mx-auto mt-4 max-w-2xl text-slate-400">
-        Explore upcoming events and start your EVENTRA journey today.
-      </p>
-
-      <button
-        type="button"
-        (click)="exploreEvents()"
-        class="mt-8 rounded-xl bg-blue-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-blue-700">
-        Explore Events →
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <!-- ==================== FOOTER ==================== -->
-  <footer class="border-t border-slate-800 bg-slate-950 px-6 py-10">
-
-    <div
-      class="mx-auto flex max-w-7xl flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-
-      <div>
-
-        <div class="text-xl font-extrabold text-white">
-          EVENT<span class="text-blue-500">RA</span>
-        </div>
-
-        <p class="mt-2 text-sm text-slate-500">
-          Event & Parking Reservation System
+      <div class="mx-auto max-w-2xl text-center">
+        <span class="text-xs font-semibold uppercase tracking-wider text-blue-600">Simple Process</span>
+        <h2 class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+          How EVENTRA Works
+        </h2>
+        <p class="mt-4 text-base text-slate-600">
+          Book your tickets and parking in six straightforward steps.
         </p>
-
       </div>
 
-      <div class="flex gap-6">
+      <div class="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 font-bold text-white text-xs">1</span>
+          <h3 class="mt-4 font-bold text-slate-900">Discover Event</h3>
+          <p class="mt-2 text-xs text-slate-500">Find events by date, category, or venue location.</p>
+        </div>
+
+        <div class="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 font-bold text-white text-xs">2</span>
+          <h3 class="mt-4 font-bold text-slate-900">Choose Seats</h3>
+          <p class="mt-2 text-xs text-slate-500">Pick preferred seats from the interactive layout.</p>
+        </div>
+
+        <div class="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 font-bold text-white text-xs">3</span>
+          <h3 class="mt-4 font-bold text-slate-900">Add Parking</h3>
+          <p class="mt-2 text-xs text-slate-500">Optionally reserve a parking space at the venue.</p>
+        </div>
+
+        <div class="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 font-bold text-white text-xs">4</span>
+          <h3 class="mt-4 font-bold text-slate-900">Review Checkout</h3>
+          <p class="mt-2 text-xs text-slate-500">Verify your seats, parking pass, and itemized total.</p>
+        </div>
+
+        <div class="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 font-bold text-white text-xs">5</span>
+          <h3 class="mt-4 font-bold text-slate-900">Complete Payment</h3>
+          <p class="mt-2 text-xs text-slate-500">Pay securely with instant processing confirmation.</p>
+        </div>
+
+        <div class="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 font-bold text-white text-xs">6</span>
+          <h3 class="mt-4 font-bold text-slate-900">Receive Confirmation</h3>
+          <p class="mt-2 text-xs text-slate-500">Get your booking confirmation and live notifications.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURED EVENTS -->
+  <section class="px-6 py-20">
+    <div class="mx-auto max-w-7xl">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <span class="text-xs font-semibold uppercase tracking-wider text-blue-600">Upcoming Experiences</span>
+          <h2 class="mt-1 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+            Featured Events
+          </h2>
+        </div>
 
         <button
           type="button"
           (click)="exploreEvents()"
-          class="text-sm text-slate-400 hover:text-white">
-          Events
+          class="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+        >
+          View All Events →
         </button>
+      </div>
 
+      <!-- Loading State -->
+      @if (isLoading()) {
+        <app-loading-spinner message="Loading featured events..."></app-loading-spinner>
+      }
+
+      <!-- Error State -->
+      @else if (errorMessage()) {
+        <app-error-message [message]="errorMessage()" [showRetry]="true" (retry)="exploreEvents()"></app-error-message>
+      }
+
+      <!-- Events List -->
+      @else if (featuredEvents().length > 0) {
+        <div class="mt-10 grid gap-6 md:grid-cols-3">
+          @for (event of featuredEvents(); track event.eventId) {
+            <app-event-card [event]="event" (selectEvent)="viewEvent($event)"></app-event-card>
+          }
+        </div>
+      }
+
+      <!-- Empty State -->
+      @else {
+        <div class="mt-10">
+          <app-empty-state
+            title="No featured events available"
+            description="Check back soon for new concerts, sports, and live performances."
+            actionText="Browse All Events"
+            (action)="exploreEvents()"
+          ></app-empty-state>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="bg-slate-950 px-6 py-20 text-center text-white">
+    <div class="mx-auto max-w-3xl">
+      <h2 class="text-3xl font-extrabold tracking-tight sm:text-4xl">
+        Ready to experience your next event?
+      </h2>
+
+      <p class="mt-4 text-slate-300">
+        Join EVENTRA today to explore events, reserve premier seating, and secure parking in seconds.
+      </p>
+
+      <div class="mt-8 flex justify-center gap-4">
         <button
           type="button"
-          (click)="login()"
-          class="text-sm text-slate-400 hover:text-white">
-          Login
+          (click)="exploreEvents()"
+          class="rounded-xl bg-blue-600 px-7 py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-blue-700"
+        >
+          Explore Events
         </button>
 
         <button
           type="button"
           (click)="register()"
-          class="text-sm text-slate-400 hover:text-white">
-          Register
+          class="rounded-xl border border-slate-700 bg-white/5 px-7 py-3.5 text-sm font-bold text-white transition hover:bg-white/10"
+        >
+          Create Account
         </button>
-
       </div>
-
     </div>
+  </section>
 
-    <div
-      class="mx-auto mt-8 max-w-7xl border-t border-slate-800 pt-6 text-center text-xs text-slate-600">
-      © 2026 EVENTRA. All rights reserved.
-    </div>
-
-  </footer>
+  <!-- Persistent Bottom Footer -->
+  <app-footer></app-footer>
 
 </div>
