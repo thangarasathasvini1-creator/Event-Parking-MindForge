@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, Input, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { Notification } from '../../../../models/notification.model';
@@ -16,10 +16,15 @@ export class Notifications implements OnInit {
   private readonly notificationService = inject(NotificationService);
   private readonly authState = inject(AuthStateService);
 
-  notifications: Notification[] = [];
+  @Input() isEmbedded = false;
 
-  isLoading = false;
-  errorMessage = '';
+  readonly notifications = signal<Notification[]>([]);
+  readonly isLoading = signal(false);
+  readonly errorMessage = signal('');
+
+  readonly unreadCount = computed(() => {
+    return this.notifications().filter((n) => !n.isRead).length;
+  });
 
   ngOnInit(): void {
     this.loadNotifications();
@@ -30,15 +35,16 @@ export class Notifications implements OnInit {
   // ============================================================
 
   loadNotifications(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
+    this.isLoading.set(true);
+    this.errorMessage.set('');
 
     const user = this.authState.getUser();
 
     if (!user?.customerId) {
-      this.isLoading = false;
-      this.errorMessage =
-        'Unable to identify the logged-in customer. Please log in again.';
+      this.isLoading.set(false);
+      this.errorMessage.set(
+        'Unable to identify the logged-in customer. Please log in again.'
+      );
       return;
     }
 
@@ -46,8 +52,8 @@ export class Notifications implements OnInit {
       .getCustomerNotifications(user.customerId)
       .subscribe({
         next: (notifications: Notification[]) => {
-          this.notifications = notifications ?? [];
-          this.isLoading = false;
+          this.notifications.set(notifications ?? []);
+          this.isLoading.set(false);
         },
 
         error: (error: unknown) => {
@@ -56,7 +62,7 @@ export class Notifications implements OnInit {
             error
           );
 
-          this.isLoading = false;
+          this.isLoading.set(false);
           this.handleError(error);
         },
       });
@@ -75,8 +81,13 @@ export class Notifications implements OnInit {
       .markAsRead(notification.notificationId)
       .subscribe({
         next: () => {
-          notification.isRead = true;
-          notification.readAt = new Date().toISOString();
+          this.notifications.update((list) =>
+            list.map((n) =>
+              n.notificationId === notification.notificationId
+                ? { ...n, isRead: true, readAt: new Date().toISOString() }
+                : n
+            )
+          );
         },
 
         error: (error: unknown) => {
@@ -93,35 +104,36 @@ export class Notifications implements OnInit {
   // ============================================================
 
   markAllAsRead(): void {
-    const unreadNotifications =
-      this.notifications.filter(
-        (notification) => !notification.isRead
-      );
+    const unreadNotifications = this.notifications().filter(
+      (notification) => !notification.isRead
+    );
 
     if (unreadNotifications.length === 0) {
       return;
     }
 
-    unreadNotifications.forEach(
-      (notification) => {
-        this.notificationService
-          .markAsRead(notification.notificationId)
-          .subscribe({
-            next: () => {
-              notification.isRead = true;
-              notification.readAt =
-                new Date().toISOString();
-            },
+    unreadNotifications.forEach((notification) => {
+      this.notificationService
+        .markAsRead(notification.notificationId)
+        .subscribe({
+          next: () => {
+            this.notifications.update((list) =>
+              list.map((n) =>
+                n.notificationId === notification.notificationId
+                  ? { ...n, isRead: true, readAt: new Date().toISOString() }
+                  : n
+              )
+            );
+          },
 
-            error: (error: unknown) => {
-              console.error(
-                `Failed to mark notification ${notification.notificationId} as read:`,
-                error
-              );
-            },
-          });
-      }
-    );
+          error: (error: unknown) => {
+            console.error(
+              `Failed to mark notification ${notification.notificationId} as read:`,
+              error
+            );
+          },
+        });
+    });
   }
 
   // ============================================================
@@ -130,16 +142,6 @@ export class Notifications implements OnInit {
 
   refresh(): void {
     this.loadNotifications();
-  }
-
-  // ============================================================
-  // UNREAD COUNT
-  // ============================================================
-
-  get unreadCount(): number {
-    return this.notifications.filter(
-      (notification) => !notification.isRead
-    ).length;
   }
 
   // ============================================================
@@ -217,20 +219,17 @@ export class Notifications implements OnInit {
     };
 
     if (httpError.status === 401) {
-      this.errorMessage =
-        'Your session has expired. Please log in again.';
+      this.errorMessage.set('Your session has expired. Please log in again.');
       return;
     }
 
     if (httpError.status === 403) {
-      this.errorMessage =
-        'You do not have permission to view notifications.';
+      this.errorMessage.set('You do not have permission to view notifications.');
       return;
     }
 
     if (httpError.status === 404) {
-      this.errorMessage =
-        'Notifications were not found.';
+      this.errorMessage.set('Notifications were not found.');
       return;
     }
 
@@ -238,13 +237,15 @@ export class Notifications implements OnInit {
       httpError.status !== undefined &&
       httpError.status >= 500
     ) {
-      this.errorMessage =
-        'The notification service is temporarily unavailable. Please try again later.';
+      this.errorMessage.set(
+        'The notification service is temporarily unavailable. Please try again later.'
+      );
       return;
     }
 
-    this.errorMessage =
+    this.errorMessage.set(
       httpError.error?.message ??
-      'Unable to load notifications. Please try again.';
+        'Unable to load notifications. Please try again.'
+    );
   }
 }

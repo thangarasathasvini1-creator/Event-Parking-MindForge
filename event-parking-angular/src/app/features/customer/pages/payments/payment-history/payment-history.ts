@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, Input, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -29,6 +29,8 @@ export class PaymentHistory implements OnInit {
   private readonly paymentService = inject(PaymentService);
   private readonly authState = inject(AuthStateService);
   private readonly router = inject(Router);
+
+  @Input() isEmbedded = false;
 
   // ==================== STATE ====================
 
@@ -112,11 +114,23 @@ export class PaymentHistory implements OnInit {
   // ==================== NAVIGATION ====================
 
   goToBookings(): void {
-    this.router.navigate(['/bookings']);
+    if (this.isEmbedded) {
+      this.router.navigate(['/customer/dashboard'], {
+        queryParams: { tab: 'bookings' },
+      });
+    } else {
+      this.router.navigate(['/bookings']);
+    }
   }
 
   goToEvents(): void {
-    this.router.navigate(['/events']);
+    if (this.isEmbedded) {
+      this.router.navigate(['/customer/dashboard'], {
+        queryParams: { tab: 'events' },
+      });
+    } else {
+      this.router.navigate(['/events']);
+    }
   }
 
   viewBooking(bookingId: number): void {
@@ -130,7 +144,7 @@ export class PaymentHistory implements OnInit {
     if (!paymentId) {
       return;
     }
-    this.router.navigate(['/payments/receipt', paymentId]);
+    this.router.navigate(['/payments', paymentId, 'receipt']);
   }
 
   // ==================== PAYMENT STATUS ====================

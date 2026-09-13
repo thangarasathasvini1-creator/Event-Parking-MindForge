@@ -1,4 +1,14 @@
-<div class="min-h-screen bg-slate-50/60 py-10 px-4 sm:px-6 lg:px-8 font-sans text-slate-900">
+<div
+  class="font-sans text-slate-900"
+  [class.min-h-screen]="!isEmbedded"
+  [class.bg-slate-50/60]="!isEmbedded"
+  [class.py-10]="!isEmbedded"
+  [class.px-4]="!isEmbedded"
+  [class.sm:px-6]="!isEmbedded"
+  [class.lg:px-8]="!isEmbedded"
+  [class.py-2]="isEmbedded"
+  [class.px-0]="isEmbedded"
+>
 
   <!-- ==================== PAGE HEADER ==================== -->
   <header class="max-w-7xl mx-auto mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -7,10 +17,12 @@
         EVENTRA
       </span>
       <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight">
-        My Bookings
+        {{ showOnlyParking ? 'Parking Reservations' : 'My Bookings' }}
       </h1>
       <p class="text-slate-500 text-sm sm:text-base mt-1.5 leading-relaxed">
-        Track your reservation statuses, complete pending payments, and view tickets.
+        {{ showOnlyParking
+            ? 'Track your reserved parking spaces and vehicle passes for upcoming events.'
+            : 'Track your reservation statuses, complete pending payments, and view tickets.' }}
       </p>
     </div>
 
@@ -157,6 +169,35 @@
               Expired ({{ statusCounts().expired }})
             </button>
           }
+
+          <div class="h-4 w-px bg-slate-200 shrink-0 mx-1 hidden sm:block"></div>
+
+          <!-- With Parking Filter Button -->
+          <button
+            type="button"
+            (click)="toggleParkingFilter()"
+            class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer shrink-0 inline-flex items-center gap-1.5 border"
+            [class.bg-emerald-600]="filterWithParking()"
+            [class.border-emerald-600]="filterWithParking()"
+            [class.text-white]="filterWithParking()"
+            [class.shadow-xs]="filterWithParking()"
+            [class.bg-white]="!filterWithParking()"
+            [class.border-slate-200]="!filterWithParking()"
+            [class.text-slate-700]="!filterWithParking()"
+            [class.hover:bg-slate-50]="!filterWithParking()"
+            title="Show only bookings with reserved parking"
+          >
+            <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C2.0 10.9 2 11.2 2 11.5V16c0 .6.4 1 1 1h2"/>
+              <circle cx="7" cy="17" r="2"/>
+              <path d="M9 17h6"/>
+              <circle cx="17" cy="17" r="2"/>
+            </svg>
+            <span>With Parking ({{ statusCounts().withParking }})</span>
+            @if (filterWithParking()) {
+              <span class="ml-0.5 text-[10px] bg-emerald-700 text-white rounded-full w-4 h-4 inline-flex items-center justify-center font-bold">✕</span>
+            }
+          </button>
         </div>
 
         <!-- Search Input -->
@@ -186,10 +227,10 @@
       @if (filteredBookings().length === 0) {
         <div class="max-w-md mx-auto my-12">
           <app-empty-state
-            title="No matching bookings found"
-            description="No bookings match your current search or status filters. Try clearing your filters."
-            actionText="Reset Filters"
-            (action)="clearSearch(); setStatusFilter('ALL')"
+            [title]="(showOnlyParking || filterWithParking()) ? 'No parking reservations found' : 'No matching bookings found'"
+            [description]="(showOnlyParking || filterWithParking()) ? 'No bookings with reserved parking match your current search or filters.' : 'No bookings match your current search or status filters. Try clearing your filters.'"
+            [actionText]="(showOnlyParking || filterWithParking()) ? 'Reset Filters' : 'Reset Filters'"
+            (action)="onEmptyStateAction()"
           ></app-empty-state>
         </div>
       }
@@ -211,6 +252,17 @@
               </div>
 
               <div class="flex items-center gap-2">
+                @if (booking.parkingSlotId) {
+                  <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                    <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C2.0 10.9 2 11.2 2 11.5V16c0 .6.4 1 1 1h2"/>
+                      <circle cx="7" cy="17" r="2"/>
+                      <path d="M9 17h6"/>
+                      <circle cx="17" cy="17" r="2"/>
+                    </svg>
+                    <span>Parking Reserved (Slot #{{ booking.parkingSlotId }})</span>
+                  </span>
+                }
                 <app-status-badge [status]="booking.status"></app-status-badge>
                 <app-status-badge [status]="booking.paymentStatus || 'Pending'"></app-status-badge>
               </div>

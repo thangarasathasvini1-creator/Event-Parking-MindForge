@@ -1,194 +1,471 @@
-<div class="min-h-screen bg-slate-50 flex flex-col justify-between">
+<div class="min-h-screen bg-slate-50 flex flex-col justify-between font-sans text-slate-900 selection:bg-blue-600 selection:text-white">
 
   <!-- Persistent Top Navbar -->
   <app-navbar></app-navbar>
 
-  <!-- HERO SECTION -->
-  <section class="relative overflow-hidden bg-slate-950 px-6 py-20 text-white md:py-28">
-    <div class="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-blue-600/20 blur-3xl"></div>
-    <div class="absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-violet-600/20 blur-3xl"></div>
+  <!-- ============================================================ -->
+  <!-- HERO SECTION                                                 -->
+  <!-- ============================================================ -->
+  <section class="relative overflow-hidden bg-slate-950 text-white pt-12 pb-24 lg:pt-20 lg:pb-32">
+    <!-- Atmospheric Ambient Glows -->
+    <div class="pointer-events-none absolute -top-40 right-0 h-[600px] w-[600px] rounded-full bg-blue-600/15 blur-[120px]"></div>
+    <div class="pointer-events-none absolute bottom-0 -left-20 h-[500px] w-[500px] rounded-full bg-indigo-600/15 blur-[130px]"></div>
+    <div class="pointer-events-none absolute top-1/2 left-1/3 h-[400px] w-[400px] -translate-y-1/2 rounded-full bg-teal-500/10 blur-[140px]"></div>
 
-    <div class="relative mx-auto max-w-7xl">
-      <div class="max-w-3xl">
-        <span class="mb-5 inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/10 px-4 py-2 text-xs font-semibold text-blue-300">
-          <span class="h-2 w-2 rounded-full bg-blue-400"></span>
-          EVENTRA · Event & Parking Reservation
-        </span>
+    <!-- Subtle Dot Grid Background -->
+    <div
+      class="pointer-events-none absolute inset-0 opacity-[0.12] bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:28px_28px]"
+    ></div>
 
-        <h1 class="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl md:text-6xl">
-          Events. Seats. Parking.
-          <span class="text-blue-400">Simplified.</span>
-        </h1>
+    <div class="relative mx-auto max-w-7xl px-5 sm:px-8">
+      <div class="grid gap-12 lg:grid-cols-12 lg:gap-8 items-center">
 
-        <p class="mt-6 max-w-2xl text-lg leading-8 text-slate-300 md:text-xl">
-          Discover exciting live events, select your preferred seats, reserve guaranteed parking, and complete your reservation securely through one seamless platform.
-        </p>
+        <!-- Left Column: Compelling Copy & Interactive Search (7 cols) -->
+        <div class="lg:col-span-7 space-y-7 text-center lg:text-left">
 
-        <div class="mt-8 flex flex-col gap-4 sm:flex-row">
-          <button
-            type="button"
-            (click)="exploreEvents()"
-            class="rounded-xl bg-blue-600 px-7 py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-600/20"
+          <!-- Launch Badge -->
+          <div class="inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/10 px-4 py-1.5 text-xs font-semibold text-blue-300 backdrop-blur-md shadow-xs">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            <span>EVENTRA · Unified Live Events & Parking Platform</span>
+          </div>
+
+          <!-- Headline -->
+          <h1 class="text-4xl font-black tracking-tight sm:text-6xl lg:text-6.5xl leading-[1.08]">
+            Events. Seats. Parking.
+            <span class="block mt-1 bg-gradient-to-r from-blue-400 via-indigo-300 to-teal-300 bg-clip-text text-transparent">
+              Effortlessly Unified.
+            </span>
+          </h1>
+
+          <!-- Subtitle -->
+          <p class="max-w-2xl text-base sm:text-lg text-slate-300 leading-relaxed font-normal mx-auto lg:mx-0">
+            Say goodbye to ticket confusion and parking panic. Discover premier live concerts, sports, and theatre, reserve your exact seats, and guarantee nearby parking in a single, seamless checkout.
+          </p>
+
+          <!-- Interactive Quick Search Bar -->
+          <form
+            (ngSubmit)="onSearch()"
+            class="relative max-w-xl mx-auto lg:mx-0 rounded-2xl bg-white/10 p-2 backdrop-blur-xl border border-white/15 shadow-2xl transition hover:border-white/25 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-500/20"
           >
-            Explore Events →
-          </button>
+            <div class="flex flex-col sm:flex-row items-center gap-2">
+              <div class="relative flex-1 w-full flex items-center">
+                <span class="absolute left-3.5 text-slate-400 text-sm">
+                  🔍
+                </span>
+                <input
+                  type="text"
+                  [ngModel]="searchQuery()"
+                  (ngModelChange)="searchQuery.set($event)"
+                  name="heroSearch"
+                  placeholder="Search artist, concert, match, or venue..."
+                  class="w-full bg-transparent pl-10 pr-3 py-3 text-sm text-white placeholder-slate-400 focus:outline-none"
+                />
+              </div>
 
-          <button
-            type="button"
-            (click)="register()"
-            class="rounded-xl border border-slate-700 bg-white/5 px-7 py-3.5 text-sm font-bold text-white transition hover:bg-white/10 focus:outline-none focus:ring-4 focus:ring-white/20"
-          >
-            Get Started
-          </button>
+              <button
+                type="submit"
+                class="w-full sm:w-auto shrink-0 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-blue-600/30 transition active:scale-95 cursor-pointer"
+              >
+                Find Events →
+              </button>
+            </div>
+          </form>
+
+          <!-- Category Quick-Pills -->
+          <div class="flex flex-wrap items-center justify-center lg:justify-start gap-2 pt-1 text-xs">
+            <span class="text-slate-400 font-medium mr-1">Trending:</span>
+            @for (cat of categories; track cat.slug) {
+              <button
+                type="button"
+                (click)="filterByCategory(cat.name)"
+                class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/15 hover:text-white hover:border-white/20 cursor-pointer"
+              >
+                {{ cat.icon }} {{ cat.name }}
+              </button>
+            }
+          </div>
+
+          <!-- Social Proof / Trust Strip -->
+          <div class="pt-4 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 border-t border-slate-800/80">
+            <div class="flex -space-x-2.5 p-1 shrink-0">
+              <div class="flex h-8 w-8 items-center justify-center rounded-full ring-2 ring-slate-950 bg-blue-500 text-[11px] font-bold text-white shadow-xs">JD</div>
+              <div class="flex h-8 w-8 items-center justify-center rounded-full ring-2 ring-slate-950 bg-indigo-500 text-[11px] font-bold text-white shadow-xs">SK</div>
+              <div class="flex h-8 w-8 items-center justify-center rounded-full ring-2 ring-slate-950 bg-emerald-500 text-[11px] font-bold text-white shadow-xs">AR</div>
+              <div class="flex h-8 w-8 items-center justify-center rounded-full ring-2 ring-slate-950 bg-amber-500 text-[11px] font-bold text-white shadow-xs">ML</div>
+            </div>
+
+            <div class="text-xs text-slate-400 text-center sm:text-left">
+              <div class="flex items-center justify-center sm:justify-start gap-1 text-amber-400 font-bold">
+                ★★★★★ <span class="text-white text-xs font-extrabold ml-1">4.9 / 5.0</span>
+              </div>
+              <p class="text-slate-400 text-[11px]">
+                Trusted by <strong class="text-slate-200">50,000+</strong> fans across 150+ live events
+              </p>
+            </div>
+          </div>
+
         </div>
+
+        <!-- Right Column: Interactive 3D Pass & Parking Simulation Card (5 cols) -->
+        <div class="lg:col-span-5 relative flex justify-center lg:justify-end mt-4 lg:mt-0">
+
+          <!-- Ambient Backlight -->
+          <div class="absolute inset-0 -m-6 rounded-3xl bg-gradient-to-tr from-blue-600/30 to-indigo-600/30 blur-2xl opacity-60"></div>
+
+          <!-- Floating Micro Card 1: Parking Reserved -->
+          <div
+            class="absolute -top-6 -left-4 sm:-left-6 z-20 rounded-2xl border border-emerald-500/30 bg-slate-900/95 p-3.5 backdrop-blur-xl shadow-2xl flex items-center gap-3 animate-float"
+          >
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 font-bold text-lg">
+              🚗
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Bay #P-04 Guaranteed</span>
+              </div>
+              <p class="text-xs font-bold text-white mt-0.5">VIP Venue Parking Included</p>
+            </div>
+          </div>
+
+          <!-- Floating Micro Card 2: Live Seat Lock -->
+          <div
+            class="absolute -bottom-6 -right-4 sm:-right-6 z-20 rounded-2xl border border-blue-500/30 bg-slate-900/95 p-3.5 backdrop-blur-xl shadow-2xl flex items-center gap-3 animate-float-reverse"
+          >
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/20 text-blue-400 font-bold text-lg">
+              💺
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="h-2 w-2 rounded-full bg-blue-400 animate-pulse"></span>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-blue-400">Live Seat Lock</span>
+              </div>
+              <p class="text-xs font-bold text-white mt-0.5">Row A · Seats 07, 08 Reserved</p>
+            </div>
+          </div>
+
+          <!-- Main VIP Pass Mockup Card -->
+          <div
+            class="relative w-full max-w-sm rounded-3xl border border-white/20 bg-gradient-to-b from-slate-900/95 to-slate-950/95 p-6 backdrop-blur-2xl shadow-2xl text-white overflow-hidden"
+          >
+            <!-- Foil Holographic Header Strip -->
+            <div class="relative -mx-6 -mt-6 mb-5 h-28 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 p-5 flex flex-col justify-between overflow-hidden">
+              <div class="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-white/20 blur-xl"></div>
+              <div class="flex items-center justify-between">
+                <span class="rounded-full bg-black/30 backdrop-blur px-2.5 py-0.5 text-[10px] font-bold tracking-widest uppercase text-white">
+                  VIP ALL-ACCESS PASS
+                </span>
+                <span class="text-xs font-mono font-bold text-blue-200">
+                  #EVT-89410
+                </span>
+              </div>
+
+              <div>
+                <h2 class="text-lg font-black tracking-tight text-white leading-tight">
+                  Summer Beats Fest 2026
+                </h2>
+                <p class="text-[11px] text-blue-100 font-medium">
+                  Grand Arena Stadium · Main Stage
+                </p>
+              </div>
+            </div>
+
+            <!-- Pass Details Grid -->
+            <div class="grid grid-cols-2 gap-3 py-2 border-b border-slate-800">
+              <div class="rounded-xl bg-slate-800/60 p-3 border border-slate-700/50">
+                <span class="block text-[9px] font-bold uppercase tracking-wider text-slate-400">Seat Allocation</span>
+                <span class="text-sm font-black text-white font-mono mt-0.5 block">Row A · Seat 07</span>
+                <span class="text-[10px] text-blue-400 font-semibold">Tier: VIP Front</span>
+              </div>
+
+              <div class="rounded-xl bg-slate-800/60 p-3 border border-slate-700/50">
+                <span class="block text-[9px] font-bold uppercase tracking-wider text-slate-400">Parking Pass</span>
+                <span class="text-sm font-black text-emerald-400 font-mono mt-0.5 block">Bay #P-04</span>
+                <span class="text-[10px] text-emerald-400/90 font-semibold">Car · Covered Deck</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 py-3 border-b border-slate-800 text-xs">
+              <div>
+                <span class="text-[10px] text-slate-400 block font-medium">Date & Time</span>
+                <span class="font-bold text-slate-200">Sat, Oct 24 · 7:30 PM</span>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] text-slate-400 block font-medium">Total Paid</span>
+                <span class="font-black text-blue-400 font-mono text-sm">LKR 4,500</span>
+              </div>
+            </div>
+
+            <!-- QR Code & Barcode Mockup -->
+            <div class="mt-4 pt-2 flex items-center justify-between gap-4">
+              <div class="rounded-xl bg-white p-2 shadow-sm">
+                <!-- Mini simulated QR pattern -->
+                <div class="h-12 w-12 bg-slate-950 rounded grid grid-cols-4 gap-0.5 p-1">
+                  <div class="bg-white rounded-xs"></div>
+                  <div class="bg-white rounded-xs"></div>
+                  <div class="bg-transparent"></div>
+                  <div class="bg-white rounded-xs"></div>
+                  <div class="bg-white rounded-xs"></div>
+                  <div class="bg-transparent"></div>
+                  <div class="bg-white rounded-xs"></div>
+                  <div class="bg-white rounded-xs"></div>
+                  <div class="bg-transparent"></div>
+                  <div class="bg-white rounded-xs"></div>
+                  <div class="bg-white rounded-xs"></div>
+                  <div class="bg-transparent"></div>
+                  <div class="bg-white rounded-xs"></div>
+                  <div class="bg-white rounded-xs"></div>
+                  <div class="bg-transparent"></div>
+                  <div class="bg-white rounded-xs"></div>
+                </div>
+              </div>
+
+              <div class="flex-1">
+                <div class="flex items-center gap-1 text-[10px] font-bold text-emerald-400">
+                  <span>●</span> <span>Pass Ready for Entry</span>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-0.5">
+                  Scan at Entrance Gate 3 & Parking Gate B.
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
       </div>
     </div>
   </section>
 
-  <!-- FEATURE SECTION -->
-  <section class="px-6 py-20">
-    <div class="mx-auto max-w-7xl">
-      <div class="mx-auto max-w-2xl text-center">
-        <h2 class="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-          Everything you need for a great event experience
+
+  <!-- ============================================================ -->
+  <!-- TRUST & METRICS STATS BAR                                    -->
+  <!-- ============================================================ -->
+  <section class="relative z-10 -mt-8 mx-auto max-w-7xl px-5 sm:px-8">
+    <div class="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-xl shadow-slate-900/5">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
+
+        <div class="pt-2 sm:pt-0 sm:px-4 text-center lg:text-left">
+          <p class="text-3xl sm:text-4xl font-black text-slate-950 font-mono tracking-tight">50,000+</p>
+          <p class="text-xs font-bold uppercase tracking-wider text-blue-600 mt-1">Tickets Booked</p>
+          <p class="text-[11px] text-slate-400 mt-0.5">Across all genres & premier venues</p>
+        </div>
+
+        <div class="pt-4 lg:pt-0 sm:px-4 text-center lg:text-left">
+          <p class="text-3xl sm:text-4xl font-black text-slate-950 font-mono tracking-tight">100%</p>
+          <p class="text-xs font-bold uppercase tracking-wider text-emerald-600 mt-1">Guaranteed Parking</p>
+          <p class="text-[11px] text-slate-400 mt-0.5">Zero circling, dedicated reserved slot</p>
+        </div>
+
+        <div class="pt-4 lg:pt-0 sm:px-4 text-center lg:text-left">
+          <p class="text-3xl sm:text-4xl font-black text-slate-950 font-mono tracking-tight">150+</p>
+          <p class="text-xs font-bold uppercase tracking-wider text-indigo-600 mt-1">Live Events Hosted</p>
+          <p class="text-[11px] text-slate-400 mt-0.5">Concerts, matches, theatre & expos</p>
+        </div>
+
+        <div class="pt-4 lg:pt-0 sm:px-4 text-center lg:text-left">
+          <p class="text-3xl sm:text-4xl font-black text-slate-950 font-mono tracking-tight">4.9 / 5.0</p>
+          <p class="text-xs font-bold uppercase tracking-wider text-amber-500 mt-1">Customer Satisfaction</p>
+          <p class="text-[11px] text-slate-400 mt-0.5">Over 9,400+ verified customer reviews</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================ -->
+  <!-- POPULAR CATEGORIES STRIP                                     -->
+  <!-- ============================================================ -->
+  <section class="py-16 px-5 sm:px-8 max-w-7xl mx-auto w-full">
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-blue-600">Browse by Genre</span>
+        <h2 class="mt-1 text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight">
+          Explore Popular Categories
         </h2>
-        <p class="mt-4 text-base text-slate-600">
-          EVENTRA brings event discovery, seat selection, parking, and reservations together in one place.
+      </div>
+      <button
+        type="button"
+        (click)="exploreEvents()"
+        class="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+      >
+        View All Events <span>→</span>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      @for (cat of categories; track cat.slug) {
+        <button
+          type="button"
+          (click)="filterByCategory(cat.name)"
+          class="group flex flex-col items-center justify-center rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs transition-all duration-200 hover:-translate-y-1 hover:border-blue-300 hover:shadow-md hover:shadow-blue-600/5 cursor-pointer text-center"
+        >
+          <span class="text-3xl mb-3 transition transform group-hover:scale-110">{{ cat.icon }}</span>
+          <span class="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition">{{ cat.name }}</span>
+          <span class="text-[11px] text-slate-400 mt-1 font-medium">Explore passes</span>
+        </button>
+      }
+    </div>
+  </section>
+
+
+  <!-- ============================================================ -->
+  <!-- WHY CHOOSE EVENTRA (THE 4 PILLARS)                           -->
+  <!-- ============================================================ -->
+  <section class="bg-slate-900 text-white py-20 px-5 sm:px-8 relative overflow-hidden">
+    <!-- Background Accents -->
+    <div class="pointer-events-none absolute -top-40 -left-40 h-96 w-96 rounded-full bg-blue-600/10 blur-3xl"></div>
+    <div class="pointer-events-none absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-indigo-600/10 blur-3xl"></div>
+
+    <div class="max-w-7xl mx-auto relative">
+      <div class="max-w-2xl mx-auto text-center mb-16">
+        <span class="text-xs font-bold uppercase tracking-widest text-blue-400">The EVENTRA Advantage</span>
+        <h2 class="mt-2 text-3xl sm:text-4xl font-black tracking-tight text-white">
+          Why Fans Choose Us Over Old Ticket Sites
+        </h2>
+        <p class="mt-3 text-sm sm:text-base text-slate-400">
+          Traditional platforms sell tickets and leave you stranded on parking. EVENTRA integrates everything into one frictionless experience.
         </p>
       </div>
 
-      <div class="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition hover:shadow-md">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 font-bold text-xl">
-            🔍
-          </div>
-          <h3 class="mt-6 text-lg font-bold text-slate-900">Discover Events</h3>
-          <p class="mt-2 text-sm leading-6 text-slate-600">
-            Browse upcoming concerts, sports events, theater performances, and corporate events with detailed schedules and prices.
-          </p>
-        </div>
+      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
 
-        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition hover:shadow-md">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 text-violet-600 font-bold text-xl">
+        <!-- Pillar 1 -->
+        <div class="rounded-3xl border border-slate-800 bg-slate-950/60 p-7 backdrop-blur-md shadow-xl transition hover:border-blue-500/40 hover:bg-slate-900/80 group">
+          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-400 text-2xl font-bold mb-5 group-hover:scale-110 transition">
             💺
           </div>
-          <h3 class="mt-6 text-lg font-bold text-slate-900">Choose Your Seat</h3>
-          <p class="mt-2 text-sm leading-6 text-slate-600">
-            Select your exact seat position with real-time seat mapping, pricing tier breakdowns, and live availability updates.
+          <h3 class="text-base font-bold text-white mb-2">Live Visual Seat Map</h3>
+          <p class="text-xs leading-relaxed text-slate-400">
+            Pick your exact seat position with clear pricing tier previews, real-time lock protection, and live availability updates.
           </p>
         </div>
 
-        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition hover:shadow-md">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 font-bold text-xl">
+        <!-- Pillar 2 -->
+        <div class="rounded-3xl border border-slate-800 bg-slate-950/60 p-7 backdrop-blur-md shadow-xl transition hover:border-emerald-500/40 hover:bg-slate-900/80 group">
+          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 text-2xl font-bold mb-5 group-hover:scale-110 transition">
             🚗
           </div>
-          <h3 class="mt-6 text-lg font-bold text-slate-900">Reserve Parking</h3>
-          <p class="mt-2 text-sm leading-6 text-slate-600">
-            Add optional guaranteed parking spots near your event venue to ensure a stress-free arrival and departure.
+          <h3 class="text-base font-bold text-white mb-2">Guaranteed Venue Parking</h3>
+          <p class="text-xs leading-relaxed text-slate-400">
+            Never circle venue streets again. Reserve a designated parking slot right at checkout and drive straight to your spot.
           </p>
         </div>
 
-        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition hover:shadow-md">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 font-bold text-xl">
+        <!-- Pillar 3 -->
+        <div class="rounded-3xl border border-slate-800 bg-slate-950/60 p-7 backdrop-blur-md shadow-xl transition hover:border-indigo-500/40 hover:bg-slate-900/80 group">
+          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-400 text-2xl font-bold mb-5 group-hover:scale-110 transition">
             💳
           </div>
-          <h3 class="mt-6 text-lg font-bold text-slate-900">Secure Checkout</h3>
-          <p class="mt-2 text-sm leading-6 text-slate-600">
-            Fast, secure checkout processing with immediate digital booking confirmation and downloadable receipts.
+          <h3 class="text-base font-bold text-white mb-2">Single Itemized Checkout</h3>
+          <p class="text-xs leading-relaxed text-slate-400">
+            Tickets, seat allocations, and parking bundled in one transparent bill with zero surprise checkout fees.
           </p>
         </div>
 
-        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition hover:shadow-md">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-600 font-bold text-xl">
-            📋
+        <!-- Pillar 4 -->
+        <div class="rounded-3xl border border-slate-800 bg-slate-950/60 p-7 backdrop-blur-md shadow-xl transition hover:border-amber-500/40 hover:bg-slate-900/80 group">
+          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-400 text-2xl font-bold mb-5 group-hover:scale-110 transition">
+            📱
           </div>
-          <h3 class="mt-6 text-lg font-bold text-slate-900">Manage Bookings</h3>
-          <p class="mt-2 text-sm leading-6 text-slate-600">
-            Access your full reservation history, seat numbers, parking passes, and payment details anytime from your dashboard.
+          <h3 class="text-base font-bold text-white mb-2">Instant Digital Receipts</h3>
+          <p class="text-xs leading-relaxed text-slate-400">
+            Immediate confirmation emails, in-app notifications, and official downloadable receipts ready for door entry.
           </p>
         </div>
 
-        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition hover:shadow-md">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 text-violet-600 font-bold text-xl">
-            🔔
-          </div>
-          <h3 class="mt-6 text-lg font-bold text-slate-900">Real-time Notifications</h3>
-          <p class="mt-2 text-sm leading-6 text-slate-600">
-            Receive timely updates about booking confirmations, schedule changes, and payment receipts directly in your navbar.
-          </p>
-        </div>
       </div>
     </div>
   </section>
 
-  <!-- HOW IT WORKS -->
-  <section class="bg-slate-100 px-6 py-20">
-    <div class="mx-auto max-w-7xl">
-      <div class="mx-auto max-w-2xl text-center">
-        <span class="text-xs font-semibold uppercase tracking-wider text-blue-600">Simple Process</span>
-        <h2 class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-          How EVENTRA Works
-        </h2>
-        <p class="mt-4 text-base text-slate-600">
-          Book your tickets and parking in six straightforward steps.
+
+  <!-- ============================================================ -->
+  <!-- HOW IT WORKS STEPPER                                         -->
+  <!-- ============================================================ -->
+  <section class="py-20 px-5 sm:px-8 max-w-7xl mx-auto w-full">
+    <div class="max-w-2xl mx-auto text-center mb-16">
+      <span class="text-xs font-bold uppercase tracking-widest text-blue-600">Frictionless 4-Step Process</span>
+      <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight">
+        How EVENTRA Works
+      </h2>
+      <p class="mt-3 text-sm sm:text-base text-slate-600">
+        From discovery to venue arrival in under 2 minutes.
+      </p>
+    </div>
+
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 relative">
+      <!-- Step 1 -->
+      <div class="relative rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xs">
+        <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-xs font-black text-white shadow-md shadow-blue-600/30">
+          01
+        </span>
+        <h3 class="mt-5 text-base font-bold text-slate-900">Choose Event</h3>
+        <p class="mt-2 text-xs text-slate-500 leading-relaxed">
+          Explore upcoming concerts, sports games, and theatre productions with clear venue dates.
         </p>
       </div>
 
-      <div class="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <div class="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
-          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 font-bold text-white text-xs">1</span>
-          <h3 class="mt-4 font-bold text-slate-900">Discover Event</h3>
-          <p class="mt-2 text-xs text-slate-500">Find events by date, category, or venue location.</p>
-        </div>
+      <!-- Step 2 -->
+      <div class="relative rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xs">
+        <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-xs font-black text-white shadow-md shadow-indigo-600/30">
+          02
+        </span>
+        <h3 class="mt-5 text-base font-bold text-slate-900">Pick Exact Seats</h3>
+        <p class="mt-2 text-xs text-slate-500 leading-relaxed">
+          Select preferred seats on an interactive layout with tier pricing and live reservation locks.
+        </p>
+      </div>
 
-        <div class="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
-          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 font-bold text-white text-xs">2</span>
-          <h3 class="mt-4 font-bold text-slate-900">Choose Seats</h3>
-          <p class="mt-2 text-xs text-slate-500">Pick preferred seats from the interactive layout.</p>
-        </div>
+      <!-- Step 3 -->
+      <div class="relative rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xs">
+        <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600 text-xs font-black text-white shadow-md shadow-emerald-600/30">
+          03
+        </span>
+        <h3 class="mt-5 text-base font-bold text-slate-900">Add Parking Bay</h3>
+        <p class="mt-2 text-xs text-slate-500 leading-relaxed">
+          Optionally reserve a guaranteed vehicle bay at the venue to ensure stress-free parking.
+        </p>
+      </div>
 
-        <div class="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
-          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 font-bold text-white text-xs">3</span>
-          <h3 class="mt-4 font-bold text-slate-900">Add Parking</h3>
-          <p class="mt-2 text-xs text-slate-500">Optionally reserve a parking space at the venue.</p>
-        </div>
-
-        <div class="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
-          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 font-bold text-white text-xs">4</span>
-          <h3 class="mt-4 font-bold text-slate-900">Review Checkout</h3>
-          <p class="mt-2 text-xs text-slate-500">Verify your seats, parking pass, and itemized total.</p>
-        </div>
-
-        <div class="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
-          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 font-bold text-white text-xs">5</span>
-          <h3 class="mt-4 font-bold text-slate-900">Complete Payment</h3>
-          <p class="mt-2 text-xs text-slate-500">Pay securely with instant processing confirmation.</p>
-        </div>
-
-        <div class="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
-          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 font-bold text-white text-xs">6</span>
-          <h3 class="mt-4 font-bold text-slate-900">Receive Confirmation</h3>
-          <p class="mt-2 text-xs text-slate-500">Get your booking confirmation and live notifications.</p>
-        </div>
+      <!-- Step 4 -->
+      <div class="relative rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xs">
+        <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-600 text-xs font-black text-white shadow-md shadow-teal-600/30">
+          04
+        </span>
+        <h3 class="mt-5 text-base font-bold text-slate-900">Instant Access</h3>
+        <p class="mt-2 text-xs text-slate-500 leading-relaxed">
+          Checkout securely, receive instant digital receipts, and show your pass at the entrance gate.
+        </p>
       </div>
     </div>
   </section>
 
-  <!-- FEATURED EVENTS -->
-  <section class="px-6 py-20">
+
+  <!-- ============================================================ -->
+  <!-- FEATURED EVENTS SECTION                                      -->
+  <!-- ============================================================ -->
+  <section class="bg-slate-100/70 py-20 px-5 sm:px-8 border-y border-slate-200/60">
     <div class="mx-auto max-w-7xl">
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-10">
         <div>
-          <span class="text-xs font-semibold uppercase tracking-wider text-blue-600">Upcoming Experiences</span>
-          <h2 class="mt-1 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-            Featured Events
+          <span class="text-xs font-bold uppercase tracking-wider text-blue-600">Now Booking</span>
+          <h2 class="mt-1 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">
+            Featured Upcoming Events
           </h2>
+          <p class="mt-1 text-xs text-slate-500">
+            Hand-picked live performances with live seat & parking availability.
+          </p>
         </div>
 
         <button
           type="button"
           (click)="exploreEvents()"
-          class="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+          class="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 shadow-xs transition hover:bg-slate-50 cursor-pointer self-start sm:self-auto"
         >
           View All Events →
         </button>
@@ -196,7 +473,9 @@
 
       <!-- Loading State -->
       @if (isLoading()) {
-        <app-loading-spinner message="Loading featured events..."></app-loading-spinner>
+        <div class="py-12">
+          <app-loading-spinner message="Loading featured events..."></app-loading-spinner>
+        </div>
       }
 
       <!-- Error State -->
@@ -206,7 +485,7 @@
 
       <!-- Events List -->
       @else if (featuredEvents().length > 0) {
-        <div class="mt-10 grid gap-6 md:grid-cols-3">
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           @for (event of featuredEvents(); track event.eventId) {
             <app-event-card [event]="event" (selectEvent)="viewEvent($event)"></app-event-card>
           }
@@ -215,45 +494,145 @@
 
       <!-- Empty State -->
       @else {
-        <div class="mt-10">
-          <app-empty-state
-            title="No featured events available"
-            description="Check back soon for new concerts, sports, and live performances."
-            actionText="Browse All Events"
-            (action)="exploreEvents()"
-          ></app-empty-state>
+        <div class="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-xs">
+          <p class="text-3xl mb-3">🎪</p>
+          <h3 class="text-base font-bold text-slate-900">No featured events currently available</h3>
+          <p class="mt-1 text-xs text-slate-500">Check back shortly or explore our complete events directory.</p>
+          <button
+            type="button"
+            (click)="exploreEvents()"
+            class="mt-4 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-blue-700 cursor-pointer"
+          >
+            Browse All Events
+          </button>
         </div>
       }
     </div>
   </section>
 
-  <!-- FINAL CTA -->
-  <section class="bg-slate-950 px-6 py-20 text-center text-white">
-    <div class="mx-auto max-w-3xl">
-      <h2 class="text-3xl font-extrabold tracking-tight sm:text-4xl">
-        Ready to experience your next event?
+
+  <!-- ============================================================ -->
+  <!-- REAL ATTENDEE REVIEWS                                        -->
+  <!-- ============================================================ -->
+  <section class="py-20 px-5 sm:px-8 max-w-7xl mx-auto w-full">
+    <div class="max-w-2xl mx-auto text-center mb-14">
+      <span class="text-xs font-bold uppercase tracking-widest text-blue-600">Customer Testimonials</span>
+      <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight">
+        Loved by Thousands of Event Goers
       </h2>
-
-      <p class="mt-4 text-slate-300">
-        Join EVENTRA today to explore events, reserve premier seating, and secure parking in seconds.
+      <p class="mt-2 text-xs sm:text-sm text-slate-500">
+        Here is what attendees say about their experience with EVENTRA.
       </p>
+    </div>
 
-      <div class="mt-8 flex justify-center gap-4">
-        <button
-          type="button"
-          (click)="exploreEvents()"
-          class="rounded-xl bg-blue-600 px-7 py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-blue-700"
-        >
-          Explore Events
-        </button>
+    <div class="grid gap-6 md:grid-cols-3">
 
-        <button
-          type="button"
-          (click)="register()"
-          class="rounded-xl border border-slate-700 bg-white/5 px-7 py-3.5 text-sm font-bold text-white transition hover:bg-white/10"
-        >
-          Create Account
-        </button>
+      <!-- Review 1 -->
+      <div class="rounded-3xl border border-slate-200/90 bg-white p-7 shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="text-amber-400 font-bold text-sm mb-3">★★★★★</div>
+          <p class="text-xs sm:text-sm text-slate-700 leading-relaxed italic">
+            "Reserving our stadium tickets along with a reserved parking bay was a lifesaver. We bypassed all the pre-concert traffic chaos and walked straight to our seats!"
+          </p>
+        </div>
+        <div class="mt-6 pt-4 border-t border-slate-100 flex items-center gap-3">
+          <div class="h-9 w-9 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center">
+            SL
+          </div>
+          <div>
+            <div class="text-xs font-bold text-slate-900">Samantha Lowe</div>
+            <div class="text-[10px] text-slate-400">Rock Symphony Attendee</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Review 2 -->
+      <div class="rounded-3xl border border-slate-200/90 bg-white p-7 shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="text-amber-400 font-bold text-sm mb-3">★★★★★</div>
+          <p class="text-xs sm:text-sm text-slate-700 leading-relaxed italic">
+            "The interactive seat map is super responsive and locking parking at the exact same time gave my family huge peace of mind. Will never buy tickets anywhere else."
+          </p>
+        </div>
+        <div class="mt-6 pt-4 border-t border-slate-100 flex items-center gap-3">
+          <div class="h-9 w-9 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center">
+            DK
+          </div>
+          <div>
+            <div class="text-xs font-bold text-slate-900">Dilan Kariyawasam</div>
+            <div class="text-[10px] text-slate-400">T20 Cricket Finals Attendee</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Review 3 -->
+      <div class="rounded-3xl border border-slate-200/90 bg-white p-7 shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="text-amber-400 font-bold text-sm mb-3">★★★★★</div>
+          <p class="text-xs sm:text-sm text-slate-700 leading-relaxed italic">
+            "Instant notifications, clear PDF receipts, and hassle-free entry. EVENTRA sets a whole new standard for how live event bookings should work."
+          </p>
+        </div>
+        <div class="mt-6 pt-4 border-t border-slate-100 flex items-center gap-3">
+          <div class="h-9 w-9 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs flex items-center justify-center">
+            KP
+          </div>
+          <div>
+            <div class="text-xs font-bold text-slate-900">Kavindi Perera</div>
+            <div class="text-[10px] text-slate-400">Ballet & Arts Gala Attendee</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ============================================================ -->
+  <!-- HIGH-IMPACT FINAL CALL TO ACTION                             -->
+  <!-- ============================================================ -->
+  <section class="py-16 px-5 sm:px-8 max-w-7xl mx-auto w-full">
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-900 via-slate-900 to-indigo-950 px-8 py-16 text-center text-white shadow-2xl">
+      <!-- Glow effect -->
+      <div class="pointer-events-none absolute -top-24 -right-24 h-80 w-80 rounded-full bg-blue-500/20 blur-3xl"></div>
+      <div class="pointer-events-none absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-indigo-500/20 blur-3xl"></div>
+
+      <div class="relative mx-auto max-w-3xl space-y-6">
+        <span class="inline-block rounded-full bg-blue-500/20 border border-blue-400/30 px-3.5 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-300">
+          Get Started In Minutes
+        </span>
+
+        <h2 class="text-3xl sm:text-5xl font-black tracking-tight text-white">
+          Ready for Your Next Unforgettable Experience?
+        </h2>
+
+        <p class="text-sm sm:text-base text-slate-300 max-w-xl mx-auto">
+          Join EVENTRA today. Discover events, lock in your favourite seats, and secure your guaranteed parking spot in seconds.
+        </p>
+
+        <div class="pt-4 flex flex-col sm:flex-row justify-center gap-4">
+          <button
+            type="button"
+            (click)="exploreEvents()"
+            class="rounded-xl bg-blue-600 px-8 py-4 text-xs font-bold uppercase tracking-wider text-white shadow-xl shadow-blue-600/30 transition hover:bg-blue-500 active:scale-95 cursor-pointer"
+          >
+            Explore Events Now →
+          </button>
+
+          <button
+            type="button"
+            (click)="register()"
+            class="rounded-xl border border-white/20 bg-white/10 px-8 py-4 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-white/20 active:scale-95 cursor-pointer"
+          >
+            Create Free Account
+          </button>
+        </div>
+
+        <div class="pt-6 flex flex-wrap items-center justify-center gap-6 text-[11px] text-slate-400 font-medium">
+          <span class="flex items-center gap-1.5"><span class="text-emerald-400">✓</span> No Hidden Fees</span>
+          <span class="flex items-center gap-1.5"><span class="text-emerald-400">✓</span> Instant Confirmation</span>
+          <span class="flex items-center gap-1.5"><span class="text-emerald-400">✓</span> Guaranteed Parking</span>
+        </div>
       </div>
     </div>
   </section>

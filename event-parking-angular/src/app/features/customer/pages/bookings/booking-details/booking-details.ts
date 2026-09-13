@@ -162,17 +162,15 @@ export class BookingDetails implements OnInit, OnDestroy {
   payNow(): void {
     const current = this.booking();
     if (!current) return;
-    this.router.navigate(['/events/payment'], {
-      queryParams: { bookingId: current.bookingId }
-    });
+    this.router.navigate(['/bookings', current.bookingId, 'payment']);
   }
 
   viewReceipt(): void {
     const pid = this.paymentId();
     if (pid) {
-      this.router.navigate(['/payments/receipt', pid]);
+      this.router.navigate(['/payments', pid, 'receipt']);
     } else {
-      this.router.navigate(['/payments/history']);
+      this.router.navigate(['/payments']);
     }
   }
 

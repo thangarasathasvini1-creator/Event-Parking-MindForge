@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -27,89 +27,23 @@ export class Bookings implements OnInit {
   private readonly bookingService = inject(BookingService);
   private readonly eventService = inject(EventService, { optional: true });
 
-  events: Event[] = [];
-  bookings: Booking[] = [];
-  filteredBookings: Booking[] = [];
-  eventId: number | null = null;
-  searchTerm = '';
-  isLoading = false;
-  isLoadingEvents = false;
-  errorMessage = '';
+  readonly events = signal<Event[]>([]);
+  readonly bookings = signal<Booking[]>([]);
+  readonly eventId = signal<number | null>(null);
+  readonly searchTerm = signal('');
+  readonly isLoading = signal(false);
+  readonly isLoadingEvents = signal(false);
+  readonly errorMessage = signal('');
 
-  ngOnInit(): void {
-    this.loadEvents();
-    this.loadBookings();
-  }
-
-  // ==================== LOAD EVENTS ====================
-
-  loadEvents(): void {
-    if (!this.eventService) return;
-    this.isLoadingEvents = true;
-
-    this.eventService.getEvents().subscribe({
-      next: (events: Event[]) => {
-        this.events = events ?? [];
-        this.isLoadingEvents = false;
-      },
-      error: () => {
-        this.isLoadingEvents = false;
-      }
-    });
-  }
-
-  onEventSelect(selectedId: unknown): void {
-    const parsed = Number(selectedId);
-    if (parsed > 0) {
-      this.eventId = parsed;
-      this.loadBookings();
-    } else {
-      this.eventId = null;
-      this.bookings = [];
-      this.filteredBookings = [];
-    }
-  }
-
-  // ==================== LOAD BOOKINGS ====================
-
-  loadBookings(): void {
-    if (!this.eventId) {
-      this.bookings = [];
-      this.filteredBookings = [];
-      return;
-    }
-
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.bookingService
-      .getBookingsByEvent(this.eventId)
-      .subscribe({
-        next: (bookings: Booking[]) => {
-          this.bookings = bookings ?? [];
-          this.applyFilter();
-          this.isLoading = false;
-        },
-
-        error: (error: unknown) => {
-          console.error('Failed to load admin bookings:', error);
-          this.isLoading = false;
-          this.handleError(error);
-        }
-      });
-  }
-
-  // ==================== SEARCH ====================
-
-  applyFilter(): void {
-    const search = this.searchTerm.trim().toLowerCase();
+  readonly filteredBookings = computed(() => {
+    const list = this.bookings();
+    const search = this.searchTerm().trim().toLowerCase();
 
     if (!search) {
-      this.filteredBookings = [...this.bookings];
-      return;
+      return list;
     }
 
-    this.filteredBookings = this.bookings.filter(
+    return list.filter(
       (booking: Booking) =>
         booking.bookingNumber?.toLowerCase().includes(search) ||
         booking.status?.toLowerCase().includes(search) ||
@@ -117,27 +51,95 @@ export class Bookings implements OnInit {
         String(booking.bookingId).includes(search) ||
         String(booking.customerId).includes(search)
     );
+  });
+
+  ngOnInit(): void {
+    this.loadEvents();
+  }
+
+  // ==================== LOAD EVENTS ====================
+
+  loadEvents(): void {
+    if (!this.eventService) return;
+    this.isLoadingEvents.set(true);
+
+    this.eventService.getEvents().subscribe({
+      next: (events: Event[]) => {
+        this.events.set(events ?? []);
+        this.isLoadingEvents.set(false);
+      },
+      error: () => {
+        this.isLoadingEvents.set(false);
+      }
+    });
+  }
+
+  onEventSelect(selectedId: unknown): void {
+    const parsed = Number(selectedId);
+    if (parsed > 0) {
+      this.eventId.set(parsed);
+      this.loadBookings();
+    } else {
+      this.eventId.set(null);
+      this.bookings.set([]);
+    }
+  }
+
+  // ==================== LOAD BOOKINGS ====================
+
+  loadBookings(): void {
+    const evId = this.eventId();
+    if (!evId) {
+      this.bookings.set([]);
+      return;
+    }
+
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+
+    this.bookingService
+      .getBookingsByEvent(evId)
+      .subscribe({
+        next: (bookings: Booking[]) => {
+          this.bookings.set(bookings ?? []);
+          this.isLoading.set(false);
+        },
+
+        error: (error: unknown) => {
+          console.error('Failed to load admin bookings:', error);
+          this.isLoading.set(false);
+          this.handleError(error);
+        }
+      });
+  }
+
+  // ==================== SEARCH ====================
+
+  onSearchInput(event: EventTarget | null): void {
+    const input = event as HTMLInputElement;
+    if (input) {
+      this.searchTerm.set(input.value);
+    }
   }
 
   // ==================== EVENT ID ====================
 
   setEventId(value: string | number): void {
     const parsed = Number(value);
-    this.eventId = Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+    const validId = Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+    this.eventId.set(validId);
 
-    if (this.eventId) {
+    if (validId) {
       this.loadBookings();
     } else {
-      this.bookings = [];
-      this.filteredBookings = [];
+      this.bookings.set([]);
     }
   }
 
   // ==================== CLEAR SEARCH ====================
 
   clearSearch(): void {
-    this.searchTerm = '';
-    this.applyFilter();
+    this.searchTerm.set('');
   }
 
   // ==================== REFRESH ====================
@@ -203,25 +205,25 @@ export class Bookings implements OnInit {
     };
 
     if (httpError.status === 401) {
-      this.errorMessage = 'Your session has expired. Please log in again.';
+      this.errorMessage.set('Your session has expired. Please log in again.');
       return;
     }
 
     if (httpError.status === 403) {
-      this.errorMessage = 'You do not have permission to view bookings.';
+      this.errorMessage.set('You do not have permission to view bookings.');
       return;
     }
 
     if (httpError.status === 404) {
-      this.errorMessage = 'No bookings were found for this event.';
+      this.errorMessage.set('No bookings were found for this event.');
       return;
     }
 
     if (httpError.status !== undefined && httpError.status >= 500) {
-      this.errorMessage = 'The server is temporarily unavailable. Please try again later.';
+      this.errorMessage.set('The server is temporarily unavailable. Please try again later.');
       return;
     }
 
-    this.errorMessage = httpError.error?.message ?? 'Unable to load bookings. Please try again.';
+    this.errorMessage.set(httpError.error?.message ?? 'Unable to load bookings. Please try again.');
   }
 }

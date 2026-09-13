@@ -39,6 +39,16 @@ export class Navbar implements OnInit {
     return user?.name || user?.email || 'Account';
   }
 
+  get userInitial(): string {
+    const name = this.userName?.trim();
+    return name ? name.charAt(0).toUpperCase() : 'U';
+  }
+
+  goToRegister(): void {
+    this.closeMobileMenu();
+    this.router.navigate(['/register']);
+  }
+
   getNotificationType(type: string): string {
     return type?.trim() || 'Notification';
   }

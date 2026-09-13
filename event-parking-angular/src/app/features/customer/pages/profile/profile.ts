@@ -11,6 +11,7 @@ import {
   UpdateCustomerProfileRequest,
 } from '../../../../services/customer.service';
 import { AuthStateService } from '../../../../core/auth/auth-state';
+import { AuthStorageService } from '../../../../core/auth/auth-storage';
 import { AuthService } from '../../../../core/auth/auth';
 import { DashboardService } from '../../../../services/dashboard.service';
 import { Dashboard as DashboardModel } from '../../../../models/dashboard.model';
@@ -26,6 +27,7 @@ export class Profile implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly customerService = inject(CustomerService);
   private readonly authState = inject(AuthStateService);
+  private readonly authStorage = inject(AuthStorageService);
   private readonly authService = inject(AuthService);
   private readonly dashboardService = inject(DashboardService);
   private readonly router = inject(Router);
@@ -52,6 +54,16 @@ export class Profile implements OnInit {
   });
 
   ngOnInit(): void {
+    // Immediately prefill email from auth state or token so the text box is never empty
+    const initialEmail = this.resolveEmail();
+    const currentUser = this.authState.user();
+    if (initialEmail) {
+      this.profileForm.patchValue({
+        email: initialEmail,
+        name: currentUser?.name ?? '',
+      });
+    }
+
     this.loadProfile();
     this.loadDashboard();
   }
@@ -73,6 +85,34 @@ export class Profile implements OnInit {
     this.router.navigate(['/login']);
   }
 
+  private resolveEmail(): string {
+    const fromAuth = this.authState.user()?.email?.trim();
+    if (fromAuth) return fromAuth;
+
+    const fromForm = this.profileForm.controls.email.value?.trim();
+    if (fromForm) return fromForm;
+
+    return this.getEmailFromToken();
+  }
+
+  private getEmailFromToken(): string {
+    const token = this.authStorage.getToken();
+    if (!token) return '';
+    try {
+      const parts = token.split('.');
+      if (parts.length < 2) return '';
+      const payload = JSON.parse(atob(parts[1]));
+      return (
+        payload.email ||
+        payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] ||
+        payload.sub ||
+        ''
+      );
+    } catch {
+      return '';
+    }
+  }
+
   private loadDashboard(): void {
     this.dashboardService.getCustomerDashboard().subscribe({
       next: (data) => this.dashboard.set(data),
@@ -88,21 +128,40 @@ export class Profile implements OnInit {
       return;
     }
 
+    const fallbackEmail = this.resolveEmail();
+
     this.isLoading.set(true);
     this.errorMessage.set('');
 
     this.customerService.getProfile(user.customerId).subscribe({
       next: (profile) => {
+        const resolvedEmail = profile.email?.trim() || fallbackEmail;
+
         this.profileForm.patchValue({
-          name: profile.name,
-          email: profile.email,
-          phone: profile.phone,
+          name: profile.name || user.name || '',
+          email: resolvedEmail,
+          phone: profile.phone || '',
         });
+
+        if (resolvedEmail) {
+          this.authState.setUser({
+            ...user,
+            name: profile.name || user.name,
+            email: resolvedEmail,
+          });
+        }
 
         this.isLoading.set(false);
       },
       error: (error) => {
         this.isLoading.set(false);
+
+        // Ensure email remains in the text box even if network error occurs
+        if (fallbackEmail) {
+          this.profileForm.patchValue({
+            email: fallbackEmail,
+          });
+        }
 
         this.errorMessage.set(
           error?.error?.message ??
@@ -131,29 +190,36 @@ export class Profile implements OnInit {
     this.isSaving.set(true);
 
     const formValue = this.profileForm.getRawValue();
+    const emailToKeep = this.resolveEmail();
 
     const request: UpdateCustomerProfileRequest = {
       name: formValue.name.trim(),
-      email: formValue.email.trim(),
+      email: emailToKeep,
       phone: formValue.phone.trim(),
     };
 
     this.customerService
       .updateProfile(user.customerId, request)
       .subscribe({
-        next: (profile) => {
+        next: (response: any) => {
           this.isSaving.set(false);
 
+          // Backend returns { message: "Customer updated successfully." }, NOT the full CustomerProfile
+          // If response.name / response.email are undefined, do NOT overwrite with undefined!
+          const finalName = response?.name || request.name;
+          const finalEmail = response?.email || emailToKeep;
+          const finalPhone = response?.phone || request.phone;
+
           this.profileForm.patchValue({
-            name: profile.name,
-            email: profile.email,
-            phone: profile.phone,
+            name: finalName,
+            email: finalEmail,
+            phone: finalPhone,
           });
 
           this.authState.setUser({
             ...user,
-            name: profile.name,
-            email: profile.email,
+            name: finalName,
+            email: finalEmail,
           });
 
           this.successMessage.set(
@@ -163,6 +229,11 @@ export class Profile implements OnInit {
 
         error: (error) => {
           this.isSaving.set(false);
+
+          // Always ensure email remains populated even if save failed
+          this.profileForm.patchValue({
+            email: emailToKeep,
+          });
 
           this.errorMessage.set(
             error?.error?.message ??

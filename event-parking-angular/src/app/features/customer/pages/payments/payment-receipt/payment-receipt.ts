@@ -1,9 +1,11 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { Payment } from '../../../../../models/payment.model';
 import { PaymentService } from '../../../../../services/payment';
+import { Booking } from '../../../../../models/booking.model';
+import { BookingService } from '../../../../../services/booking';
 import { StatusBadge } from '../../../../../shared/components/status-badge/status-badge';
 
 @Component({
@@ -18,43 +20,56 @@ import { StatusBadge } from '../../../../../shared/components/status-badge/statu
 })
 export class PaymentReceipt implements OnInit {
   private readonly paymentService = inject(PaymentService);
+  private readonly bookingService = inject(BookingService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
-  payment: Payment | null = null;
-
-  isLoading = false;
-  isDownloading = false;
-
-  errorMessage = '';
-  paymentId = 0;
+  readonly payment = signal<Payment | null>(null);
+  readonly booking = signal<Booking | null>(null);
+  readonly isLoading = signal(false);
+  readonly isDownloading = signal(false);
+  readonly errorMessage = signal('');
+  readonly paymentId = signal<number>(0);
 
   ngOnInit(): void {
-    const id = Number(
-      this.route.snapshot.paramMap.get('paymentId')
-    );
-
-    if (!id) {
-      this.errorMessage = 'Invalid payment ID.';
-      return;
-    }
-
-    this.paymentId = id;
-    this.loadPayment();
+    this.route.paramMap.subscribe((params) => {
+      const id = Number(params.get('paymentId'));
+      if (!id) {
+        this.errorMessage.set('Invalid payment ID.');
+        this.isLoading.set(false);
+        return;
+      }
+      this.paymentId.set(id);
+      this.loadPayment();
+    });
   }
 
   // ==================== LOAD PAYMENT ====================
 
   loadPayment(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
+    const id = this.paymentId();
+    if (!id) return;
+
+    this.isLoading.set(true);
+    this.errorMessage.set('');
 
     this.paymentService
-      .getPaymentReceipt(this.paymentId)
+      .getPaymentReceipt(id)
       .subscribe({
         next: (payment: Payment) => {
-          this.payment = payment;
-          this.isLoading = false;
+          this.payment.set(payment);
+          this.isLoading.set(false);
+
+          if (payment.bookingId) {
+            this.bookingService.getBookingById(payment.bookingId).subscribe({
+              next: (booking: Booking) => {
+                this.booking.set(booking);
+              },
+              error: (err) => {
+                console.warn('Unable to load associated booking details for receipt:', err);
+              }
+            });
+          }
         },
 
         error: (error: unknown) => {
@@ -63,7 +78,7 @@ export class PaymentReceipt implements OnInit {
             error
           );
 
-          this.isLoading = false;
+          this.isLoading.set(false);
           this.handleError(error);
         }
       });
@@ -72,21 +87,31 @@ export class PaymentReceipt implements OnInit {
   // ==================== DOWNLOAD RECEIPT ====================
 
   downloadReceipt(): void {
-    if (!this.payment || this.isDownloading) {
+    const p = this.payment();
+    const b = this.booking();
+    if (!p || this.isDownloading()) {
       return;
     }
 
-    this.isDownloading = true;
+    this.isDownloading.set(true);
 
     try {
-      const p = this.payment;
+      const seatsStr = b?.seatIds && b.seatIds.length > 0
+        ? b.seatIds.map(s => '#' + s).join(', ')
+        : (b?.seatCount ? `${b.seatCount} seats` : 'N/A');
+      const parkingStr = b?.parkingSlotId ? `Slot #${b.parkingSlotId}` : 'None';
+
       const receiptContent = `================================================
            EVENTRA OFFICIAL PAYMENT RECEIPT
 ================================================
-Payment / Receipt ID:  #${p.paymentId}
-Booking Reference ID:  #${p.bookingId}
-Transaction Ref:       ${p.transactionReference || 'N/A'}
+Receipt / Payment ID:  #${p.paymentId}
+Booking Reference:     ${b?.bookingNumber || ('#' + p.bookingId)}
+Booking ID:            #${p.bookingId}
+Event Name:            ${b?.eventName || 'Event Reservation'}
+Seats Reserved:        ${seatsStr}
+Parking Reserved:      ${parkingStr}
 Payment Method:        ${p.paymentMethod || 'Credit / Debit Card'}
+Transaction Ref:       ${p.transactionReference || 'N/A'}
 Payment Status:        ${p.status}
 Settlement Date:       ${new Date(p.paidAt || p.createdAt).toLocaleString()}
 
@@ -107,7 +132,7 @@ For questions, visit your dashboard at /bookings
     } catch (err) {
       console.error('Failed to generate downloadable receipt:', err);
     } finally {
-      this.isDownloading = false;
+      this.isDownloading.set(false);
     }
   }
 
@@ -124,11 +149,12 @@ For questions, visit your dashboard at /bookings
   }
 
   goToBooking(): void {
-    if (!this.payment?.bookingId) {
+    const bId = this.payment()?.bookingId;
+    if (!bId) {
       return;
     }
 
-    this.router.navigate(['/bookings', this.payment.bookingId]);
+    this.router.navigate(['/bookings', bId]);
   }
 
   goToEvents(): void {
@@ -138,23 +164,24 @@ For questions, visit your dashboard at /bookings
   // ==================== HELPERS ====================
 
   getPaymentStatus(): string {
-    return this.payment?.status ?? 'Unknown';
+    return this.payment()?.status ?? 'Unknown';
   }
 
   getPaymentMethod(): string {
-    return this.payment?.paymentMethod ?? 'Card';
+    return this.payment()?.paymentMethod ?? 'Card';
   }
 
   getAmount(): number {
-    return this.payment?.amount ?? 0;
+    return this.payment()?.amount ?? 0;
   }
 
   getTransactionReference(): string {
-    return this.payment?.transactionReference ?? 'N/A';
+    return this.payment()?.transactionReference ?? 'N/A';
   }
 
   getPaidDate(): string | null {
-    return this.payment?.paidAt ?? this.payment?.createdAt ?? null;
+    const p = this.payment();
+    return p?.paidAt ?? p?.createdAt ?? null;
   }
 
   // ==================== ERROR HANDLING ====================
@@ -168,25 +195,25 @@ For questions, visit your dashboard at /bookings
     };
 
     if (httpError.status === 401) {
-      this.errorMessage = 'Your session has expired. Please log in again.';
+      this.errorMessage.set('Your session has expired. Please log in again.');
       return;
     }
 
     if (httpError.status === 403) {
-      this.errorMessage = 'You do not have permission to view this receipt.';
+      this.errorMessage.set('You do not have permission to view this receipt.');
       return;
     }
 
     if (httpError.status === 404) {
-      this.errorMessage = 'Payment receipt was not found.';
+      this.errorMessage.set('Payment receipt was not found.');
       return;
     }
 
     if (httpError.status !== undefined && httpError.status >= 500) {
-      this.errorMessage = 'The server is temporarily unavailable. Please try again later.';
+      this.errorMessage.set('The server is temporarily unavailable. Please try again later.');
       return;
     }
 
-    this.errorMessage = httpError.error?.message ?? 'Unable to load the payment receipt. Please try again.';
+    this.errorMessage.set(httpError.error?.message ?? 'Unable to load the payment receipt. Please try again.');
   }
 }
