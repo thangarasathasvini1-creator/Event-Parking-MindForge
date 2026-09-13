@@ -1,3 +1,5 @@
+using Event_And_Parking_Manage_system.Helpers;
+using Event_And_Parking_Manage_system.Data;
 using Event_And_Parking_Manage_system.DTOs.Customers;
 using Event_And_Parking_Manage_system.Models.Entities;
 using Event_And_Parking_Manage_system.Repositories.Interfaces;
@@ -7,15 +9,19 @@ namespace Event_And_Parking_Manage_system.Services
 {
     public class CustomerService : ICustomerService
     {
+        private readonly ApplicationDbContext _context;
         private readonly ICustomerRepository _customerRepository;
         private readonly IEmailService _emailService;
+        private readonly IConfiguration _configuration;
 
-        public CustomerService(
+        public CustomerService(ApplicationDbContext context, 
             ICustomerRepository customerRepository,
-            IEmailService emailService)
+            IEmailService emailService, IConfiguration configuration)
         {
+            _context = context;
             _customerRepository = customerRepository;
             _emailService = emailService;
+            _configuration = configuration;
         }
 
         public async Task<CustomerDto?> GetByIdAsync(int customerId)
@@ -25,7 +31,10 @@ namespace Event_And_Parking_Manage_system.Services
             if (customer == null)
                 return null;
 
-            return MapToDto(customer);
+            var result = MapToDto(customer);
+            result.TotalBookings = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(_context.Bookings.Where(b => b.CustomerId == customerId));
+            result.UpcomingBookings = await _customerRepository.GetUpcomingBookingsCountAsync(customerId);
+            return result;
         }
 
         public async Task<IEnumerable<CustomerDto>> GetAllAsync(string? search = null)
@@ -48,10 +57,9 @@ namespace Event_And_Parking_Manage_system.Services
 
             // Generate a 6-digit email verification OTP
             var verificationOtp =
-                Random.Shared
-                    .Next(100000, 1000000)
-                    .ToString();
+                AccountSecurity.NewOtp();
 
+            var verificationToken = AccountSecurity.NewToken();
             var customer = new Customer
             {
                 Name = dto.Name,
@@ -63,6 +71,8 @@ namespace Event_And_Parking_Manage_system.Services
                         dto.Password),
 
                 EmailVerified = false,
+                EmailVerificationTokenHash = BCrypt.Net.BCrypt.HashPassword(verificationToken),
+                EmailVerificationTokenExpiresAt = DateTime.UtcNow.AddMinutes(AccountSecurity.Minutes(_configuration, "Token")),
 
                 // Store only the hashed OTP
                 EmailVerificationOtpHash =
@@ -71,7 +81,7 @@ namespace Event_And_Parking_Manage_system.Services
 
                 // OTP expires after 10 minutes
                 EmailVerificationOtpExpiresAt =
-                    DateTime.UtcNow.AddMinutes(10),
+                    DateTime.UtcNow.AddMinutes(AccountSecurity.Minutes(_configuration, "Token")),
 
                 EmailVerificationOtpAttempts = 0,
 
@@ -84,7 +94,7 @@ namespace Event_And_Parking_Manage_system.Services
             await _emailService.SendVerificationOtpEmailAsync(
                 customer.Email,
                 customer.Name,
-                verificationOtp);
+                verificationOtp, verificationToken);
 
             return MapToDto(customer);
         }
@@ -125,17 +135,20 @@ namespace Event_And_Parking_Manage_system.Services
                 customer.EmailVerified = false;
 
                 var verificationOtp =
-                    Random.Shared
-                        .Next(100000, 1000000)
-                        .ToString();
+                    AccountSecurity.NewOtp();
 
                 customer.EmailVerificationOtpHash =
                     BCrypt.Net.BCrypt.HashPassword(
                         verificationOtp);
 
                 customer.EmailVerificationOtpExpiresAt =
-                    DateTime.UtcNow.AddMinutes(10);
+                    DateTime.UtcNow.AddMinutes(AccountSecurity.Minutes(_configuration, "Token"));
 
+                var verificationToken = AccountSecurity.NewToken();
+                customer.EmailVerificationTokenHash = BCrypt.Net.BCrypt.HashPassword(verificationToken);
+                customer.EmailVerificationTokenExpiresAt = DateTime.UtcNow.AddMinutes(AccountSecurity.Minutes(_configuration, "Token"));
+                customer.PasswordResetAuthorizationTokenHash = null;
+                customer.PasswordResetOtpHash = null;
                 customer.EmailVerificationOtpAttempts = 0;
 
                 await _customerRepository.UpdateAsync(customer);
@@ -143,7 +156,7 @@ namespace Event_And_Parking_Manage_system.Services
                 await _emailService.SendVerificationOtpEmailAsync(
                     customer.Email,
                     customer.Name,
-                    verificationOtp);
+                    verificationOtp, verificationToken);
             }
             else
             {
@@ -155,6 +168,7 @@ namespace Event_And_Parking_Manage_system.Services
 
         public async Task<bool> DeleteAsync(int customerId)
         {
+            await using var transaction = await _context.BeginReservationTransactionAsync();
             var customer = await _customerRepository.GetByIdAsync(customerId);
 
             if (customer == null)
@@ -173,6 +187,7 @@ namespace Event_And_Parking_Manage_system.Services
             customer.UpdatedAt = DateTime.UtcNow;
 
             await _customerRepository.UpdateAsync(customer);
+            await transaction.CommitAsync();
 
             return true;
         }

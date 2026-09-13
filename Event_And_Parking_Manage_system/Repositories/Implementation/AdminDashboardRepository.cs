@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.Data;
+using Event_And_Parking_Manage_system.Data;
 using Event_And_Parking_Manage_system.Models.Enums;
 using Event_And_Parking_Manage_system.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +14,9 @@ namespace Event_And_Parking_Manage_system.Repositories.Implementation
         {
             _context = context;
         }
+
+        public Task<int> GetTotalEventsAsync() => _context.Events.CountAsync();
+        public Task<int> GetTotalCustomersAsync() => _context.Customers.CountAsync(c => c.Role == UserRole.Customer);
 
         public async Task<int> GetTotalBookingsAsync()
         {
@@ -114,7 +117,7 @@ namespace Event_And_Parking_Manage_system.Repositories.Implementation
                         .Count(b =>
                             b.ParkingReservation != null);
 
-                    var revenue = confirmedBookings
+                    var revenue = e.Bookings
                         .SelectMany(b =>
                             b.Payment != null
                                 ? new[] { b.Payment }

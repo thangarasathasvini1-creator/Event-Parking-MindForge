@@ -66,7 +66,7 @@ namespace Event_And_Parking_Manage_system.Migrations
 
                     b.HasIndex("EventId");
 
-                    b.ToTable("Bookings");
+                    b.ToTable("Bookings", (string)null);
                 });
 
             modelBuilder.Entity("Event_And_Parking_Manage_system.Models.Entities.BookingSeat", b =>
@@ -93,7 +93,7 @@ namespace Event_And_Parking_Manage_system.Migrations
                     b.HasIndex("BookingId", "SeatId")
                         .IsUnique();
 
-                    b.ToTable("BookingSeats");
+                    b.ToTable("BookingSeats", (string)null);
                 });
 
             modelBuilder.Entity("Event_And_Parking_Manage_system.Models.Entities.Customer", b =>
@@ -184,7 +184,7 @@ namespace Event_And_Parking_Manage_system.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("Customers");
+                    b.ToTable("Customers", (string)null);
                 });
 
             modelBuilder.Entity("Event_And_Parking_Manage_system.Models.Entities.Event", b =>
@@ -240,7 +240,7 @@ namespace Event_And_Parking_Manage_system.Migrations
 
                     b.HasIndex("VenueId");
 
-                    b.ToTable("Events");
+                    b.ToTable("Events", (string)null);
                 });
 
             modelBuilder.Entity("Event_And_Parking_Manage_system.Models.Entities.EventCategory", b =>
@@ -271,7 +271,7 @@ namespace Event_And_Parking_Manage_system.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("EventCategories");
+                    b.ToTable("EventCategories", (string)null);
                 });
 
             modelBuilder.Entity("Event_And_Parking_Manage_system.Models.Entities.Notification", b =>
@@ -310,7 +310,7 @@ namespace Event_And_Parking_Manage_system.Migrations
 
                     b.HasIndex("CustomerId", "IsRead");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("Event_And_Parking_Manage_system.Models.Entities.ParkingReservation", b =>
@@ -341,7 +341,7 @@ namespace Event_And_Parking_Manage_system.Migrations
 
                     b.HasIndex("ParkingSlotId");
 
-                    b.ToTable("ParkingReservations");
+                    b.ToTable("ParkingReservations", (string)null);
                 });
 
             modelBuilder.Entity("Event_And_Parking_Manage_system.Models.Entities.ParkingSlot", b =>
@@ -391,7 +391,7 @@ namespace Event_And_Parking_Manage_system.Migrations
                     b.HasIndex("EventId", "SlotNumber")
                         .IsUnique();
 
-                    b.ToTable("ParkingSlots");
+                    b.ToTable("ParkingSlots", (string)null);
                 });
 
             modelBuilder.Entity("Event_And_Parking_Manage_system.Models.Entities.Payment", b =>
@@ -435,7 +435,7 @@ namespace Event_And_Parking_Manage_system.Migrations
                         .IsUnique()
                         .HasFilter("[TransactionReference] IS NOT NULL");
 
-                    b.ToTable("Payments");
+                    b.ToTable("Payments", (string)null);
                 });
 
             modelBuilder.Entity("Event_And_Parking_Manage_system.Models.Entities.Seat", b =>
@@ -482,7 +482,7 @@ namespace Event_And_Parking_Manage_system.Migrations
                     b.HasIndex("EventId", "SeatNumber")
                         .IsUnique();
 
-                    b.ToTable("Seats");
+                    b.ToTable("Seats", (string)null);
                 });
 
             modelBuilder.Entity("Event_And_Parking_Manage_system.Models.Entities.Venue", b =>
@@ -539,7 +539,7 @@ namespace Event_And_Parking_Manage_system.Migrations
 
                     b.HasKey("VenueId");
 
-                    b.ToTable("Venues");
+                    b.ToTable("Venues", (string)null);
                 });
 
             modelBuilder.Entity("Event_And_Parking_Manage_system.Models.Entities.Booking", b =>

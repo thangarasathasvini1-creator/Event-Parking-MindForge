@@ -1,3 +1,4 @@
+using Event_And_Parking_Manage_system.Data;
 using Event_And_Parking_Manage_system.DTOs.Categories;
 using Event_And_Parking_Manage_system.Models.Entities;
 using Event_And_Parking_Manage_system.Repositories.Interfaces;
@@ -8,13 +9,15 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 {
     public class CategoryService : ICategoryService
     {
+        private readonly ApplicationDbContext _context;
         private readonly ICategoryRepository _categoryRepository;
         private readonly IEventRepository _eventRepository;
 
-        public CategoryService(
+        public CategoryService(ApplicationDbContext context, 
             ICategoryRepository categoryRepository,
             IEventRepository eventRepository)
         {
+            _context = context;
             _categoryRepository = categoryRepository;
             _eventRepository = eventRepository;
         }
@@ -48,6 +51,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
         public async Task<CategoryDto> CreateAsync(CreateCategoryDto dto)
         {
+            await using var transaction = await _context.BeginReservationTransactionAsync();
             var validationError = CategoryValidator.Validate(dto);
 
             if (validationError != null)
@@ -70,6 +74,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
             await _categoryRepository.AddAsync(category);
             await _categoryRepository.SaveChangesAsync();
+                await transaction.CommitAsync();
 
             return new CategoryDto
             {
@@ -83,6 +88,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             int id,
             UpdateCategoryDto dto)
         {
+            await using var transaction = await _context.BeginReservationTransactionAsync();
             var validationError = CategoryValidator.Validate(dto);
 
             if (validationError != null)
@@ -110,11 +116,14 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
             _categoryRepository.Update(category);
 
-            return await _categoryRepository.SaveChangesAsync();
+            var saved = await _categoryRepository.SaveChangesAsync();
+            await transaction.CommitAsync();
+            return saved;
         }
 
         public async Task<bool> DeleteAsync(int id)
         {
+            await using var transaction = await _context.BeginReservationTransactionAsync();
             var category =
                 await _categoryRepository.GetByIdAsync(id);
 
@@ -130,7 +139,9 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
             _categoryRepository.Delete(category);
 
-            return await _categoryRepository.SaveChangesAsync();
+            var saved = await _categoryRepository.SaveChangesAsync();
+            await transaction.CommitAsync();
+            return saved;
         }
     }
 }

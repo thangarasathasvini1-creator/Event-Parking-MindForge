@@ -41,7 +41,7 @@
         </div>
       }
 
-      <form (ngSubmit)="saveEvent()" #eventCreateForm="ngForm" class="space-y-8">
+      <form (ngSubmit)="saveEvent()" [formGroup]="form" class="space-y-8">
 
         <!-- SECTION 1: EVENT INFORMATION -->
         <fieldset class="space-y-4">
@@ -58,7 +58,7 @@
               id="create-event-name"
               type="text"
               name="name"
-              [(ngModel)]="event.name"
+              formControlName="name"
               required
               placeholder="e.g. Summer Symphony Gala 2026"
               class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -74,7 +74,7 @@
               <select
                 id="create-event-category"
                 name="categoryId"
-                [(ngModel)]="event.categoryId"
+                formControlName="categoryId"
                 required
                 class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 cursor-pointer"
               >
@@ -95,8 +95,8 @@
               <select
                 id="create-event-venue"
                 name="venueId"
-                [(ngModel)]="event.venueId"
-                (ngModelChange)="onVenueChange()"
+                formControlName="venueId"
+                (change)="onVenueChange()"
                 required
                 class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 cursor-pointer"
               >
@@ -128,7 +128,7 @@
                 type="date"
                 name="eventDate"
                 [min]="minDate"
-                [(ngModel)]="event.eventDate"
+                formControlName="eventDate"
                 required
                 class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
@@ -143,7 +143,7 @@
                 id="create-start-time"
                 type="time"
                 name="startTime"
-                [(ngModel)]="event.startTime"
+                formControlName="startTime"
                 required
                 class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
@@ -158,7 +158,7 @@
                 id="create-end-time"
                 type="time"
                 name="endTime"
-                [(ngModel)]="event.endTime"
+                formControlName="endTime"
                 required
                 class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
@@ -184,7 +184,7 @@
                 name="ticketPrice"
                 min="0"
                 step="0.01"
-                [(ngModel)]="event.ticketPrice"
+                formControlName="ticketPrice"
                 required
                 placeholder="0.00"
                 class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -202,7 +202,7 @@
                 name="parkingFee"
                 min="0"
                 step="0.01"
-                [(ngModel)]="event.parkingFee"
+                formControlName="parkingFee"
                 required
                 placeholder="0.00"
                 class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -235,7 +235,7 @@
               type="number"
               name="capacity"
               min="1"
-              [(ngModel)]="event.capacity"
+              formControlName="capacity"
               [class.border-rose-400]="isCapacityExceeded"
               [class.bg-rose-50]="isCapacityExceeded"
               required
@@ -249,6 +249,179 @@
                 <span>⚠️</span>
                 <span>Event capacity ({{ event.capacity }}) cannot exceed venue capacity ({{ selectedVenueCapacity() }}).</span>
               </p>
+            }
+          </div>
+        </fieldset>
+
+        <!-- SECTION 5: INITIAL SEAT MAP SETUP -->
+        <fieldset class="space-y-4 pt-2">
+          <legend class="text-xs font-bold uppercase tracking-wider text-blue-600 border-b border-slate-100 pb-2 w-full flex items-center gap-2">
+            <span>05</span> SEAT MAP INITIALIZATION
+          </legend>
+
+          <div class="rounded-2xl border border-slate-200/90 bg-slate-50/50 p-5 space-y-4">
+            <label class="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                [(ngModel)]="autoGenerateSeats"
+                [ngModelOptions]="{standalone: true}"
+                class="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+              />
+              <div>
+                <span class="text-xs font-bold text-slate-900 block">
+                  Automatically generate seat map on creation
+                </span>
+                <span class="text-[11px] text-slate-500 block">
+                  Creates structured seat rows and columns matching the event's seating capacity ({{ event.capacity || 0 }} seats).
+                </span>
+              </div>
+            </label>
+
+            @if (autoGenerateSeats) {
+              <div class="pl-7 pt-2 border-t border-slate-200/60 grid grid-cols-1 sm:grid-cols-2 gap-4 items-start animate-in fade-in duration-150">
+                <!-- Columns -->
+                <div>
+                  <label for="create-seat-columns" class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-600">
+                    Seats Per Row (Columns)
+                  </label>
+                  <input
+                    id="create-seat-columns"
+                    type="number"
+                    min="1"
+                    [max]="event.capacity || 100"
+                    [(ngModel)]="seatColumns"
+                    [ngModelOptions]="{standalone: true}"
+                    class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-800 shadow-2xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                  <p class="text-[11px] text-slate-400 mt-1">
+                    Generates approx {{ Math.ceil((event.capacity || 0) / (seatColumns || 1)) }} rows of {{ seatColumns }} seats each.
+                  </p>
+                </div>
+
+                <!-- VIP Seats (Reserved / Not Bookable) -->
+                <div>
+                  <label for="create-vip-seats" class="mb-1 block text-xs font-bold uppercase tracking-wider text-purple-700 flex items-center justify-between">
+                    <span>👑 VIP Seats (Not Bookable)</span>
+                    <span class="text-[10px] font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200/60">Reserved</span>
+                  </label>
+                  <input
+                    id="create-vip-seats"
+                    type="number"
+                    min="0"
+                    [max]="event.capacity || 0"
+                    [(ngModel)]="vipSeatsCount"
+                    [ngModelOptions]="{standalone: true}"
+                    placeholder="0 (None)"
+                    class="w-full rounded-xl border border-purple-200 bg-purple-50/20 px-3.5 py-2.5 text-xs font-bold text-slate-800 shadow-2xs outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                  />
+                  <p class="text-[11px] text-purple-600 font-medium mt-1">
+                    @if (vipSeatsCount > 0) {
+                      Front {{ vipSeatsCount }} seats (VIP-1 to VIP-{{ vipSeatsCount }}) reserved & blocked from customer booking.
+                    } @else {
+                      Enter count to reserve VIP seats blocked from public booking.
+                    }
+                  </p>
+                </div>
+              </div>
+
+              <!-- Seating Summary Pill -->
+              <div class="pl-7">
+                <div class="rounded-xl bg-slate-100/90 border border-slate-200/80 p-3 text-xs flex flex-wrap items-center justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-slate-800">Seat Allocation Preview:</span>
+                    <span class="inline-flex items-center gap-1 rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800">
+                      🟢 {{ Math.max(0, (event.capacity || 0) - (vipSeatsCount || 0)) }} Standard (Bookable)
+                    </span>
+                    @if (vipSeatsCount > 0) {
+                      <span class="inline-flex items-center gap-1 rounded-md bg-purple-100 px-2 py-0.5 text-[11px] font-bold text-purple-800">
+                        👑 {{ vipSeatsCount }} VIP (Reserved / Locked)
+                      </span>
+                    }
+                  </div>
+                  <span class="text-[11px] font-bold text-slate-500">
+                    Total: {{ event.capacity || 0 }} seats
+                  </span>
+                </div>
+              </div>
+            }
+          </div>
+        </fieldset>
+
+        <!-- SECTION 6: INITIAL PARKING ZONE SETUP -->
+        <fieldset class="space-y-4 pt-2">
+          <legend class="text-xs font-bold uppercase tracking-wider text-blue-600 border-b border-slate-100 pb-2 w-full flex items-center gap-2">
+            <span>06</span> PARKING BAYS SETUP
+          </legend>
+
+          <div class="rounded-2xl border border-slate-200/90 bg-slate-50/50 p-5 space-y-4">
+            <label class="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                [(ngModel)]="setupParking"
+                [ngModelOptions]="{standalone: true}"
+                class="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+              />
+              <div>
+                <span class="text-xs font-bold text-slate-900 block">
+                  Initialize parking zone for this event
+                </span>
+                <span class="text-[11px] text-slate-500 block">
+                  Generates dedicated parking bays so customers can book vehicle parking alongside tickets.
+                </span>
+              </div>
+            </label>
+
+            @if (setupParking) {
+              <div class="pl-7 pt-2 border-t border-slate-200/60 grid grid-cols-1 sm:grid-cols-3 gap-3 animate-in fade-in duration-150">
+                <!-- Zone Name -->
+                <div>
+                  <label for="create-parking-zone" class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-600">
+                    Zone Name
+                  </label>
+                  <input
+                    id="create-parking-zone"
+                    type="text"
+                    maxlength="20"
+                    [(ngModel)]="parkingZone"
+                    [ngModelOptions]="{standalone: true}"
+                    placeholder="e.g. Zone A"
+                    class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-800 shadow-2xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+
+                <!-- Number of Bays -->
+                <div>
+                  <label for="create-parking-slots" class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-600">
+                    Number of Bays
+                  </label>
+                  <input
+                    id="create-parking-slots"
+                    type="number"
+                    min="1"
+                    max="500"
+                    [(ngModel)]="parkingSlotCount"
+                    [ngModelOptions]="{standalone: true}"
+                    class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-800 shadow-2xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+
+                <!-- Vehicle Type -->
+                <div>
+                  <label for="create-parking-vehicle" class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-600">
+                    Vehicle Type
+                  </label>
+                  <select
+                    id="create-parking-vehicle"
+                    [(ngModel)]="parkingVehicleType"
+                    [ngModelOptions]="{standalone: true}"
+                    class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-800 shadow-2xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 cursor-pointer"
+                  >
+                    @for (v of vehicleTypes; track v) {
+                      <option [value]="v">{{ v }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
             }
           </div>
         </fieldset>
@@ -271,15 +444,105 @@
           >
             @if (isSaving()) {
               <span class="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
-              <span>Creating Event...</span>
+              <span>Creating Event & Initializing Allocations...</span>
             } @else {
               <span>Create Event</span>
             }
           </button>
         </div>
 
+        <p class="text-sm text-rose-700" role="status">@if (form.invalid && form.touched) { Check required fields and numeric limits before saving. }</p>
       </form>
     </div>
+
+    <!-- Event Creation Success & Initial Configuration Modal -->
+    @if (createdEventData(); as data) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+        <div class="relative w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-slate-100 overflow-hidden p-6 sm:p-8 space-y-6">
+          
+          <div class="text-center space-y-2">
+            <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 text-3xl">
+              🎉
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-950">
+              Event Successfully Created!
+            </h2>
+            <p class="text-xs text-slate-500">
+              "{{ data.name }}" has been scheduled and its initial allocations are prepared.
+            </p>
+          </div>
+
+          <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4 space-y-3 text-xs">
+            <!-- Seat Allocation Status -->
+            <div class="flex items-center justify-between">
+              <span class="flex items-center gap-2 font-semibold text-slate-700">
+                <span>🗺️</span> Seat Allocation:
+              </span>
+              @if (data.seatsGenerated) {
+                <span class="rounded-lg bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-800">
+                  ✓ {{ data.capacity }} Seats Ready
+                  @if (data.vipSeatsCount > 0) {
+                    ({{ data.vipSeatsCount }} VIP Reserved)
+                  }
+                </span>
+              } @else {
+                <span class="rounded-lg bg-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                  Manual Setup
+                </span>
+              }
+            </div>
+
+            <!-- Parking Bays Status -->
+            <div class="flex items-center justify-between">
+              <span class="flex items-center gap-2 font-semibold text-slate-700">
+                <span>🅿️</span> Parking Allocation:
+              </span>
+              @if (data.parkingGenerated) {
+                <span class="rounded-lg bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-800">
+                  ✓ {{ data.parkingCount }} Bays in {{ parkingZone }}
+                </span>
+              } @else {
+                <span class="rounded-lg bg-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                  Manual Setup
+                </span>
+              }
+            </div>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div class="space-y-2 pt-2">
+            <div class="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                (click)="goToSeats(data.eventId)"
+                class="rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 py-3 px-4 text-xs font-bold transition cursor-pointer flex items-center justify-center gap-2 shadow-2xs"
+              >
+                <span>🗺️</span>
+                <span>View Seat Map</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="goToParking(data.eventId)"
+                class="rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-3 px-4 text-xs font-bold transition cursor-pointer flex items-center justify-center gap-2 shadow-2xs"
+              >
+                <span>🅿️</span>
+                <span>View Parking Bays</span>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              (click)="dismissSuccessModal()"
+              class="w-full rounded-xl bg-slate-900 hover:bg-slate-800 text-white py-3 px-4 text-xs font-bold transition cursor-pointer shadow-xs"
+            >
+              Done & Return to Events List
+            </button>
+          </div>
+
+        </div>
+      </div>
+    }
 
   </div>
 </div>

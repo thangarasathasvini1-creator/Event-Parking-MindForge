@@ -69,6 +69,8 @@
       <!-- Primary Key Performance Indicators (KPIs) -->
       <section aria-label="System Metrics" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
+        <app-stat-card title="Total Events" [value]="d.totalEvents" description="Events in the catalogue" colorScheme="blue" />
+        <app-stat-card title="Total Customers" [value]="d.totalCustomers" description="Registered customer accounts" colorScheme="blue" />
         <!-- Revenue KPI -->
         <app-stat-card
           title="Total Gross Revenue"

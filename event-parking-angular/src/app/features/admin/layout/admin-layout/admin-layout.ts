@@ -7,6 +7,7 @@ import { AuthService } from '../../../../core/auth/auth';
 import { AuthStateService } from '../../../../core/auth/auth-state';
 
 export type AdminNavTab =
+  | 'customers'
   | 'dashboard'
   | 'events'
   | 'bookings'
@@ -50,6 +51,7 @@ export class AdminLayout implements OnInit {
 
   readonly activeTab = computed<AdminNavTab>(() => {
     const url = this.currentUrl();
+    if (url.includes('/admin/customers')) return 'customers';
     if (url.includes('/admin/events')) return 'events';
     if (url.includes('/admin/bookings')) return 'bookings';
     if (url.includes('/admin/payments')) return 'payments';
@@ -62,6 +64,7 @@ export class AdminLayout implements OnInit {
 
   readonly pageTitle = computed(() => {
     switch (this.activeTab()) {
+      case 'customers': return 'Customer Management';
       case 'events':
         return 'Events Management';
       case 'bookings':
@@ -113,6 +116,7 @@ export class AdminLayout implements OnInit {
     this.mobileMenuOpen.set(false);
     this.profileMenuOpen.set(false);
     switch (tab) {
+      case 'customers': this.router.navigate(['/admin/customers']); break;
       case 'dashboard':
         this.router.navigate(['/admin/dashboard']);
         break;

@@ -9,6 +9,9 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class SeatService {
+  generateMap(eventId: number, count: number, columns: number, vipSeatsCount: number = 0): Observable<Seat[]> {
+    return this.http.post<Seat[]>(`${environment.apiUrl}/events/${eventId}/seats/generate`, { count, columns, vipSeatsCount });
+  }
 
   private readonly http = inject(HttpClient);
 
@@ -57,4 +60,4 @@ export class SeatService {
       }
     );
   }
-}
+}

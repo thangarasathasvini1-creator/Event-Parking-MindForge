@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -10,6 +11,13 @@ import { LoadingSpinner } from '../../../../shared/components/loading-spinner/lo
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { ConfirmationDialog } from '../../../../shared/components/confirmation-dialog/confirmation-dialog';
 import { StatusBadge } from '../../../../shared/components/status-badge/status-badge';
+
+export interface ZoneGroup {
+  zoneName: string;
+  slots: ParkingSlot[];
+  availableCount: number;
+  totalCount: number;
+}
 
 @Component({
   selector: 'app-parking',
@@ -25,19 +33,24 @@ import { StatusBadge } from '../../../../shared/components/status-badge/status-b
   templateUrl: './parking.html',
   styleUrl: './parking.css',
 })
-
 export class Parking implements OnInit {
+  readonly Math = Math;
   private readonly parkingService = inject(ParkingService);
   private readonly eventService = inject(EventService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly events = signal<Event[]>([]);
   readonly selectedEventId = signal<number | null>(null);
   readonly slots = signal<ParkingSlot[]>([]);
 
+  readonly viewMode = signal<'grid' | 'table'>('grid');
+
   readonly isLoadingEvents = signal(false);
   readonly isLoadingSlots = signal(false);
   readonly isSubmitting = signal(false);
   readonly isDeleting = signal(false);
+  readonly generating = signal(false);
 
   readonly errorMessage = signal('');
   readonly modalErrorMessage = signal('');
@@ -48,6 +61,13 @@ export class Parking implements OnInit {
   readonly statusFilter = signal('ALL');
 
   readonly vehicleTypes = ['Car', 'Bike', 'Bus', 'Van'];
+
+  // Bulk Zone Generator State
+  readonly isBulkModalOpen = signal(false);
+  generateCount = 10;
+  generateZone = 'Zone A';
+  generateFee = 500;
+  generateVehicle = 'Car';
 
   // Modal State
   readonly isFormModalOpen = signal(false);
@@ -64,6 +84,140 @@ export class Parking implements OnInit {
   // Delete Confirmation State
   readonly isDeleteDialogOpen = signal(false);
   readonly deletingSlot = signal<ParkingSlot | null>(null);
+
+  // Selected Event computed
+  readonly currentEvent = computed(() => {
+    const id = this.selectedEventId();
+    return this.events().find((e) => e.eventId === id) || null;
+  });
+
+  // Slot Stats computed
+  readonly totalSlotsCount = computed(() => this.slots().length);
+  readonly availableSlotsCount = computed(
+    () => this.slots().filter((s) => (s.status || '').toLowerCase() === 'available').length
+  );
+  readonly heldSlotsCount = computed(
+    () => this.slots().filter((s) => (s.status || '').toLowerCase() === 'held').length
+  );
+  readonly occupiedSlotsCount = computed(
+    () => this.slots().filter((s) => (s.status || '').toLowerCase() === 'occupied').length
+  );
+  readonly potentialRevenue = computed(
+    () => this.slots().reduce((sum, s) => sum + (Number(s.fee) || 0), 0)
+  );
+
+  // Grouped by Zone for Visual Parking Map Layout
+  readonly slotsByZone = computed<ZoneGroup[]>(() => {
+    const allSlots = [...this.slots()];
+    if (allSlots.length === 0) return [];
+
+    const map = new Map<string, ParkingSlot[]>();
+    for (const s of allSlots) {
+      const z = s.zone ? s.zone.trim() : 'General';
+      if (!map.has(z)) {
+        map.set(z, []);
+      }
+      map.get(z)!.push(s);
+    }
+
+    const result: ZoneGroup[] = [];
+    for (const [zoneName, zoneSlots] of map.entries()) {
+      zoneSlots.sort((a, b) => {
+        return a.slotNumber.localeCompare(b.slotNumber, undefined, { numeric: true });
+      });
+      const available = zoneSlots.filter((s) => (s.status || '').toLowerCase() === 'available').length;
+      result.push({
+        zoneName,
+        slots: zoneSlots,
+        availableCount: available,
+        totalCount: zoneSlots.length,
+      });
+    }
+
+    result.sort((a, b) => a.zoneName.localeCompare(b.zoneName, undefined, { numeric: true }));
+    return result;
+  });
+
+  openBulkModal(): void {
+    const existingZones = new Set(this.slots().map((s) => (s.zone || '').trim()));
+    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'VIP', 'East', 'West'];
+    let suggested = 'Zone A';
+    for (const l of letters) {
+      const candidate = l.length === 1 ? `Zone ${l}` : l;
+      if (!existingZones.has(candidate)) {
+        suggested = candidate;
+        break;
+      }
+    }
+    this.generateZone = suggested;
+    this.generateCount = 10;
+    this.generateFee = 500;
+    this.generateVehicle = 'Car';
+    this.modalErrorMessage.set('');
+    this.isBulkModalOpen.set(true);
+  }
+
+  closeBulkModal(): void {
+    this.isBulkModalOpen.set(false);
+  }
+
+  generate(): void {
+    const id = this.selectedEventId();
+    if (!id || this.generating()) return;
+
+    if (!this.generateZone.trim()) {
+      this.errorMessage.set('Zone name is required (e.g. Zone A).');
+      return;
+    }
+
+    if (this.generateCount < 1 || this.generateCount > 1000) {
+      this.errorMessage.set('Number of slots must be between 1 and 1000.');
+      return;
+    }
+
+    if (this.generateFee < 0) {
+      this.errorMessage.set('Parking fee cannot be negative.');
+      return;
+    }
+
+    this.generating.set(true);
+    this.errorMessage.set('');
+
+    this.parkingService
+      .generateLayout(
+        id,
+        Number(this.generateCount),
+        this.generateZone.trim(),
+        this.generateVehicle,
+        Number(this.generateFee)
+      )
+      .subscribe({
+        next: () => {
+          this.generating.set(false);
+          this.closeBulkModal();
+          this.showSuccess(`Generated ${this.generateCount} parking slots for "${this.generateZone.trim()}"!`);
+          this.loadSlots();
+        },
+        error: (e) => {
+          this.generating.set(false);
+          this.errorMessage.set(e.error?.message || 'Unable to generate parking layout.');
+        },
+      });
+  }
+
+  getVehicleIcon(vehicleType: string | undefined): string {
+    switch ((vehicleType || '').toLowerCase()) {
+      case 'bike':
+      case 'motorcycle':
+        return '🏍️';
+      case 'bus':
+        return '🚌';
+      case 'van':
+        return '🚐';
+      default:
+        return '🚗';
+    }
+  }
 
   // Filtered Slots computed property
   readonly filteredSlots = computed(() => {
@@ -109,7 +263,11 @@ export class Parking implements OnInit {
         this.isLoadingEvents.set(false);
 
         if (eventList.length > 0) {
-          this.selectedEventId.set(eventList[0].eventId);
+          const queryId = Number(this.route.snapshot.queryParams['eventId']);
+          const targetId = queryId && eventList.some((e) => e.eventId === queryId)
+            ? queryId
+            : eventList[0].eventId;
+          this.selectedEventId.set(targetId);
           this.loadSlots();
         }
       },
@@ -125,6 +283,11 @@ export class Parking implements OnInit {
     const eventId = Number(eventIdStr);
     if (eventId) {
       this.selectedEventId.set(eventId);
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { eventId },
+        queryParamsHandling: 'merge',
+      });
       this.loadSlots();
     }
   }

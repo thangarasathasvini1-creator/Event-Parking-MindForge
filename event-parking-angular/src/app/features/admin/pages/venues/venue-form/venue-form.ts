@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormControl, FormRecord, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { VenueService } from '../../../../../services/venue';
@@ -10,7 +10,7 @@ import { ErrorMessage } from '../../../../../shared/components/error-message/err
 @Component({
   selector: 'app-venue-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, ErrorMessage],
+  imports: [CommonModule, ReactiveFormsModule, ErrorMessage],
   templateUrl: './venue-form.html',
   styleUrl: './venue-form.css',
 })
@@ -33,6 +33,17 @@ export class VenueForm {
     busCapacity: 0,
     vanCapacity: 0,
   };
+  readonly form = new FormRecord<FormControl<any>>({
+    name: new FormControl(this.venue.name ?? '', { nonNullable: true, validators: [Validators.required] }),
+    address: new FormControl(this.venue.address ?? '', { nonNullable: true, validators: [Validators.required] }),
+    totalCapacity: new FormControl(this.venue.totalCapacity ?? 0, { nonNullable: true, validators: [Validators.required, Validators.min(1)] }),
+    carCapacity: new FormControl(this.venue.carCapacity ?? 0, { nonNullable: true, validators: [Validators.min(0)] }),
+    bikeCapacity: new FormControl(this.venue.bikeCapacity ?? 0, { nonNullable: true, validators: [Validators.min(0)] }),
+    busCapacity: new FormControl(this.venue.busCapacity ?? 0, { nonNullable: true, validators: [Validators.min(0)] }),
+    vanCapacity: new FormControl(this.venue.vanCapacity ?? 0, { nonNullable: true, validators: [Validators.min(0)] }),
+  });
+  constructor() { this.form.valueChanges.subscribe(value => Object.assign(this.venue, value)); }
+
 
   get computedTotalParkingSlots(): number {
     return (

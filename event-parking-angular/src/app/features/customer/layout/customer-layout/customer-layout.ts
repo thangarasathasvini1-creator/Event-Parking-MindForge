@@ -64,6 +64,13 @@ export class CustomerLayout implements OnInit {
   });
 
   ngOnInit(): void {
+    const user = this.authState.getUser();
+    const role = user?.role?.toLowerCase();
+    if (role === 'admin' || role === 'administrator') {
+      this.router.navigate(['/admin/dashboard']);
+      return;
+    }
+
     this.currentUrl.set(this.router.url);
 
     this.router.events

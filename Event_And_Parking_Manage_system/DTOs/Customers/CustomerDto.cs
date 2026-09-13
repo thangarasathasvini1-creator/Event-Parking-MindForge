@@ -1,7 +1,9 @@
-﻿namespace Event_And_Parking_Manage_system.DTOs.Customers
+namespace Event_And_Parking_Manage_system.DTOs.Customers
 {
     public class CustomerDto
     {
+        public int TotalBookings { get; set; }
+        public int UpcomingBookings { get; set; }
         public int CustomerId { get; set; }
 
         public string Name { get; set; } = string.Empty;

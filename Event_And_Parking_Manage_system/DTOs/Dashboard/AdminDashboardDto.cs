@@ -1,7 +1,9 @@
-﻿namespace Event_And_Parking_Manage_system.DTOs.Dashboard
+namespace Event_And_Parking_Manage_system.DTOs.Dashboard
 {
     public class AdminDashboardDto
     {
+        public int TotalEvents { get; set; }
+        public int TotalCustomers { get; set; }
         public int TotalBookings { get; set; }
 
         public decimal TotalRevenue { get; set; }

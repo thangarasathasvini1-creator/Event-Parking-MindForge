@@ -41,7 +41,7 @@
         </div>
       }
 
-      <form (ngSubmit)="saveVenue()" #venueForm="ngForm" class="space-y-6">
+      <form (ngSubmit)="saveVenue()" [formGroup]="form" class="space-y-6">
 
         <!-- 1. Venue Name -->
         <div>
@@ -52,7 +52,7 @@
             id="venue-name-input"
             type="text"
             name="name"
-            [(ngModel)]="venue.name"
+            formControlName="name"
             required
             placeholder="e.g. Royal Hall Exhibition Center"
             class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -67,7 +67,7 @@
           <textarea
             id="venue-address-input"
             name="address"
-            [(ngModel)]="venue.address"
+            formControlName="address"
             required
             rows="3"
             placeholder="e.g. 100 Waterfront Boulevard, Colombo 03"
@@ -84,7 +84,7 @@
             id="venue-capacity-input"
             type="number"
             name="totalCapacity"
-            [(ngModel)]="venue.totalCapacity"
+            formControlName="totalCapacity"
             required
             min="1"
             placeholder="e.g. 500"
@@ -107,8 +107,8 @@
                 type="number"
                 min="0"
                 name="carCapacity"
-                [(ngModel)]="venue.carCapacity"
-                (ngModelChange)="updateTotalSlots()"
+                formControlName="carCapacity"
+                (change)="updateTotalSlots()"
                 class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
             </div>
@@ -120,8 +120,8 @@
                 type="number"
                 min="0"
                 name="bikeCapacity"
-                [(ngModel)]="venue.bikeCapacity"
-                (ngModelChange)="updateTotalSlots()"
+                formControlName="bikeCapacity"
+                (change)="updateTotalSlots()"
                 class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
             </div>
@@ -133,8 +133,8 @@
                 type="number"
                 min="0"
                 name="busCapacity"
-                [(ngModel)]="venue.busCapacity"
-                (ngModelChange)="updateTotalSlots()"
+                formControlName="busCapacity"
+                (change)="updateTotalSlots()"
                 class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
             </div>
@@ -146,8 +146,8 @@
                 type="number"
                 min="0"
                 name="vanCapacity"
-                [(ngModel)]="venue.vanCapacity"
-                (ngModelChange)="updateTotalSlots()"
+                formControlName="vanCapacity"
+                (change)="updateTotalSlots()"
                 class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
             </div>
@@ -184,7 +184,7 @@
           </button>
         </div>
 
-      </form>
+      <p class="text-sm text-rose-700" role="status">@if (form.invalid && form.touched) { Check required fields and numeric limits before saving. }</p></form>
     </div>
 
   </div>

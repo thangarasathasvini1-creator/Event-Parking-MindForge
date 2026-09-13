@@ -5,7 +5,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormControl, FormRecord, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { CategoryService } from '../../../../../services/category';
@@ -16,7 +16,7 @@ import { ErrorMessage } from '../../../../../shared/components/error-message/err
 @Component({
   selector: 'app-category-edit',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingSpinner, ErrorMessage],
+  imports: [CommonModule, ReactiveFormsModule, LoadingSpinner, ErrorMessage],
   templateUrl: './category-edit.html',
   styleUrl: './category-edit.css',
 })
@@ -35,6 +35,12 @@ export class CategoryEdit implements OnInit {
     name: '',
     description: '',
   };
+  readonly form = new FormRecord<FormControl<any>>({
+    name: new FormControl(this.category.name ?? '', { nonNullable: true, validators: [Validators.required] }),
+    description: new FormControl(this.category.description ?? '', { nonNullable: true, validators: [] }),
+  });
+  constructor() { this.form.valueChanges.subscribe(value => Object.assign(this.category, value)); }
+
 
   private categoryId = 0;
 
@@ -66,6 +72,7 @@ export class CategoryEdit implements OnInit {
             name: response.name,
             description: response.description ?? '',
           };
+        this.form.patchValue(this.category, { emitEvent: false });
           this.isLoading.set(false);
         },
         error: (error) => {

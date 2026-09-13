@@ -6,7 +6,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormControl, FormRecord, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { EventService } from '../../../../../services/event';
@@ -22,7 +22,7 @@ import { ErrorMessage } from '../../../../../shared/components/error-message/err
 @Component({
   selector: 'app-event-edit',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingSpinner, ErrorMessage],
+  imports: [CommonModule, ReactiveFormsModule, LoadingSpinner, ErrorMessage],
   templateUrl: './event-edit.html',
   styleUrl: './event-edit.css',
 })
@@ -54,17 +54,30 @@ export class EventEdit implements OnInit {
     parkingFee: 0,
     capacity: 0,
   };
+  readonly form = new FormRecord<FormControl<any>>({
+    name: new FormControl(this.event.name ?? '', { nonNullable: true, validators: [Validators.required] }),
+    categoryId: new FormControl(this.event.categoryId ?? 0, { nonNullable: true, validators: [Validators.required, Validators.min(1)] }),
+    venueId: new FormControl(this.event.venueId ?? 0, { nonNullable: true, validators: [Validators.required, Validators.min(1)] }),
+    eventDate: new FormControl(this.event.eventDate ?? '', { nonNullable: true, validators: [Validators.required] }),
+    startTime: new FormControl(this.event.startTime ?? '', { nonNullable: true, validators: [Validators.required] }),
+    endTime: new FormControl(this.event.endTime ?? '', { nonNullable: true, validators: [Validators.required] }),
+    ticketPrice: new FormControl(this.event.ticketPrice ?? 0, { nonNullable: true, validators: [Validators.min(0)] }),
+    parkingFee: new FormControl(this.event.parkingFee ?? 0, { nonNullable: true, validators: [Validators.min(0)] }),
+    capacity: new FormControl(this.event.capacity ?? 0, { nonNullable: true, validators: [Validators.required, Validators.min(1)] }),
+  });
+  constructor() { this.form.valueChanges.subscribe(value => Object.assign(this.event, value)); }
+
 
   /** Selected venue computed based on current event.venueId */
-  readonly selectedVenue = computed(() => {
+  readonly selectedVenue = () => {
     const venueId = Number(this.event.venueId);
     return this.venues().find((v) => v.venueId === venueId) ?? null;
-  });
+  };
 
   /** Max venue capacity for immediate validation */
-  readonly selectedVenueCapacity = computed(() => {
+  readonly selectedVenueCapacity = () => {
     return this.selectedVenue()?.totalCapacity ?? 0;
-  });
+  };
 
   /** Immediate capacity validation warning */
   get isCapacityExceeded(): boolean {
@@ -108,6 +121,7 @@ export class EventEdit implements OnInit {
           parkingFee: response.parkingFee,
           capacity: response.capacity,
         };
+        this.form.patchValue(this.event, { emitEvent: false });
 
         this.isLoading.set(false);
       },
@@ -158,6 +172,7 @@ export class EventEdit implements OnInit {
     const max = this.selectedVenueCapacity();
     if (max > 0 && (!this.event.capacity || this.event.capacity > max)) {
       this.event.capacity = max;
+      this.form.controls['capacity'].setValue(max);
     }
   }
 

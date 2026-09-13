@@ -1,3 +1,4 @@
+import { ConfirmationDialog } from '../../../../../shared/components/confirmation-dialog/confirmation-dialog';
 import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -17,7 +18,7 @@ import { StatusBadge } from '../../../../../shared/components/status-badge/statu
 @Component({
   selector: 'app-payment',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, StatusBadge],
+  imports: [CommonModule, ReactiveFormsModule, StatusBadge, ConfirmationDialog],
   templateUrl: './payment.html',
   styleUrl: './payment.css',
 })
@@ -27,6 +28,10 @@ export class Payment implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly bookingService = inject(BookingService);
 
+  readonly showPaymentConfirmation = signal(false);
+  private serverOffset = 0;
+  private holdSyncTimer: ReturnType<typeof setInterval> | null = null;
+  readonly simulateSuccess = this.fb.nonNullable.control(true);
   readonly booking = signal<Booking | null>(null);
   readonly payment = signal<PaymentModel | null>(null);
 
@@ -92,9 +97,12 @@ export class Payment implements OnInit, OnDestroy {
 
     this.bookingId = id;
     this.loadBooking();
+    this.syncHold();
+    this.holdSyncTimer = setInterval(() => this.syncHold(), 15000);
   }
 
   ngOnDestroy(): void {
+    if (this.holdSyncTimer) clearInterval(this.holdSyncTimer);
     if (this.holdTimerInterval) {
       clearInterval(this.holdTimerInterval);
       this.holdTimerInterval = null;
@@ -178,7 +186,7 @@ export class Payment implements OnInit, OnDestroy {
     const expiryTime = this.parseUtcDate(holdExpiresAt);
 
     const updateCountdown = () => {
-      const diff = expiryTime - Date.now();
+      const diff = expiryTime - (Date.now() + this.serverOffset);
       if (diff <= 0) {
         this.remainingHoldTime.set('00:00');
         this.isHoldExpired.set(true);
@@ -241,7 +249,20 @@ export class Payment implements OnInit, OnDestroy {
   // SUBMIT PAYMENT
   // ============================================================
 
+  syncHold(): void {
+    this.bookingService.getHoldStatus(this.bookingId).subscribe({ next: hold => {
+      this.serverOffset = this.parseUtcDate(hold.serverTimeUtc) - Date.now();
+      this.isHoldExpired.set(!hold.canPay);
+      if (hold.canPay) this.initHoldTimer(hold.holdExpiresAt);
+    }, error: () => { /* Payment endpoint still validates expiry atomically. */ } });
+  }
+  requestPayment(): void {
+    if (this.paymentForm.invalid) { this.paymentForm.markAllAsTouched(); return; }
+    this.showPaymentConfirmation.set(true);
+  }
   submitPayment(): void {
+    if (this.isSubmitting()) return;
+    this.showPaymentConfirmation.set(false);
     this.errorMessage.set('');
     this.successMessage.set('');
 
@@ -280,11 +301,12 @@ export class Payment implements OnInit, OnDestroy {
     this.bookingService
       .makePayment(this.bookingId, {
         paymentMethod: 'Card',
+        simulateSuccess: this.simulateSuccess.value,
       })
       .subscribe({
         next: (payment: PaymentModel) => {
           this.payment.set(payment);
-
+          if (payment.status !== 'Completed') { this.isSubmitting.set(false); this.errorMessage.set('The simulated payment failed. Your booking remains on hold; retry before it expires.'); return; }
           this.successMessage.set(
             'Payment completed successfully.'
           );

@@ -63,6 +63,7 @@ export interface ResetPasswordRequest {
   providedIn: 'root',
 })
 export class AuthService {
+  verifyEmailToken(token: string) { return this.http.get<{message: string}>(`${environment.apiUrl}/auth/verify-email`, { params: { token } }); }
   private readonly http = inject(HttpClient);
   private readonly authState = inject(AuthStateService);
   private readonly authStorage = inject(AuthStorageService);

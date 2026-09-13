@@ -41,7 +41,7 @@
         </div>
       }
 
-      <form (ngSubmit)="saveCategory()" #categoryForm="ngForm" class="space-y-6">
+      <form (ngSubmit)="saveCategory()" [formGroup]="form" class="space-y-6">
 
         <!-- 1. Category Name -->
         <div>
@@ -52,7 +52,7 @@
             id="cat-name-input"
             type="text"
             name="name"
-            [(ngModel)]="category.name"
+            formControlName="name"
             required
             placeholder="e.g. Music Concerts, Tech Conferences"
             class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -67,7 +67,7 @@
           <textarea
             id="cat-desc-input"
             name="description"
-            [(ngModel)]="category.description"
+            formControlName="description"
             rows="3"
             placeholder="Brief explanation of the events belonging to this category..."
             class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -99,7 +99,7 @@
           </button>
         </div>
 
-      </form>
+      <p class="text-sm text-rose-700" role="status">@if (form.invalid && form.touched) { Check required fields and numeric limits before saving. }</p></form>
     </div>
 
   </div>
