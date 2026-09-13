@@ -1,1 +1,72 @@
-<p>footer works!</p>
+<footer class="border-t border-slate-200 bg-slate-950 text-slate-400">
+  <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+      <!-- Brand -->
+      <div class="space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 font-black text-white text-lg shadow-md">
+            E
+          </div>
+          <span class="text-xl font-bold text-white tracking-tight">EVENTRA</span>
+        </div>
+        <p class="text-xs leading-5 text-slate-400">
+          Events. Seats. Parking. Simplified. Your complete event reservation experience.
+        </p>
+      </div>
+
+      <!-- Quick Navigation -->
+      <div>
+        <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-200">
+          Explore
+        </h3>
+        <ul class="mt-4 space-y-2 text-sm">
+          <li>
+            <button (click)="goToEvents()" type="button" class="hover:text-white transition">
+              Browse Events
+            </button>
+          </li>
+          <li>
+            <button (click)="goToRegister()" type="button" class="hover:text-white transition">
+              Create Account
+            </button>
+          </li>
+          <li>
+            <button (click)="goToLogin()" type="button" class="hover:text-white transition">
+              Sign In
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Key Features -->
+      <div>
+        <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-200">
+          Features
+        </h3>
+        <ul class="mt-4 space-y-2 text-sm">
+          <li>Smart Seat Selection</li>
+          <li>Optional Parking Reservation</li>
+          <li>Secure Payment Flow</li>
+          <li>Real-time Notifications</li>
+        </ul>
+      </div>
+
+      <!-- System Info -->
+      <div>
+        <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-200">
+          Platform
+        </h3>
+        <p class="mt-4 text-xs leading-5 text-slate-400">
+          EVENTRA is a unified Event & Parking Management System designed for seamless reservations.
+        </p>
+      </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="mt-12 border-t border-slate-800 pt-6 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p>© 2026 EVENTRA. All rights reserved.</p>
+      <p class="text-slate-400">Event & Parking Reservation System</p>
+    </div>
+  </div>
+</footer>
+
