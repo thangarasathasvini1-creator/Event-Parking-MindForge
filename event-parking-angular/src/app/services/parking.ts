@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { ParkingSlot } from '../models/parking.model';
+import { ParkingSlot, CreateParkingSlotDto, UpdateParkingSlotDto } from '../models/parking.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -17,6 +17,39 @@ export class ParkingService {
   getParkingSlotsByEvent(eventId: number): Observable<ParkingSlot[]> {
     return this.http.get<ParkingSlot[]>(
       `${this.apiUrl}/${eventId}/parking-slots`
+    );
+  }
+
+  getAvailableParkingSlots(eventId: number, vehicleType: string): Observable<ParkingSlot[]> {
+    return this.http.get<ParkingSlot[]>(
+      `${this.apiUrl}/${eventId}/parking-slots/available`,
+      { params: { vehicleType } }
+    );
+  }
+
+  getParkingSlot(eventId: number, slotId: number): Observable<ParkingSlot> {
+    return this.http.get<ParkingSlot>(
+      `${this.apiUrl}/${eventId}/parking-slots/${slotId}`
+    );
+  }
+
+  createParkingSlot(eventId: number, dto: CreateParkingSlotDto): Observable<ParkingSlot> {
+    return this.http.post<ParkingSlot>(
+      `${this.apiUrl}/${eventId}/parking-slots`,
+      dto
+    );
+  }
+
+  updateParkingSlot(eventId: number, slotId: number, dto: UpdateParkingSlotDto): Observable<ParkingSlot> {
+    return this.http.put<ParkingSlot>(
+      `${this.apiUrl}/${eventId}/parking-slots/${slotId}`,
+      dto
+    );
+  }
+
+  deleteParkingSlot(eventId: number, slotId: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(
+      `${this.apiUrl}/${eventId}/parking-slots/${slotId}`
     );
   }
 
@@ -37,4 +70,4 @@ export class ParkingService {
       `${environment.apiUrl}/bookings/${bookingId}/parking`
     );
   }
-}
+}

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { Seat } from '../models/seat.model';
+import { Seat, CreateSeatDto, UpdateSeatDto } from '../models/seat.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -20,6 +20,32 @@ export class SeatService {
     );
   }
 
+  getSeat(eventId: number, seatId: number): Observable<Seat> {
+    return this.http.get<Seat>(
+      `${this.apiUrl}/${eventId}/seats/${seatId}`
+    );
+  }
+
+  createSeat(eventId: number, dto: CreateSeatDto): Observable<Seat> {
+    return this.http.post<Seat>(
+      `${this.apiUrl}/${eventId}/seats`,
+      dto
+    );
+  }
+
+  updateSeat(eventId: number, seatId: number, dto: UpdateSeatDto): Observable<Seat> {
+    return this.http.put<Seat>(
+      `${this.apiUrl}/${eventId}/seats/${seatId}`,
+      dto
+    );
+  }
+
+  deleteSeat(eventId: number, seatId: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(
+      `${this.apiUrl}/${eventId}/seats/${seatId}`
+    );
+  }
+
   assignSeats(
     bookingId: number,
     seatIds: number[]
@@ -31,4 +57,4 @@ export class SeatService {
       }
     );
   }
-}
+}
