@@ -4,15 +4,12 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { EventService } from '../../../../../services/event';
 import { Event } from '../../../../../models/event.model';
-
-import { Navbar } from '../../../../../shared/components/navbar/navbar';
-import { Footer } from '../../../../../shared/components/footer/footer';
 import { ErrorMessage } from '../../../../../shared/components/error-message/error-message';
 
 @Component({
   selector: 'app-event-details',
   standalone: true,
-  imports: [CommonModule, RouterLink, Navbar, Footer],
+  imports: [CommonModule, RouterLink],
   templateUrl: './event-details.html',
   styleUrl: './event-details.css',
 })

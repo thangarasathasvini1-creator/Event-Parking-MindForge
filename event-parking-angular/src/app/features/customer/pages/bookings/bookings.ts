@@ -1,7 +1,7 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, Input, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 
 import { Booking } from '../../../../models/booking.model';
 import { BookingService } from '../../../../services/booking';
@@ -28,7 +28,11 @@ import { EmptyState } from '../../../../shared/components/empty-state/empty-stat
 export class Bookings implements OnInit {
   private readonly bookingService = inject(BookingService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly authState = inject(AuthStateService);
+
+  @Input() isEmbedded = false;
+  @Input() showOnlyParking = false;
 
   // ==================== STATE ====================
 
@@ -42,6 +46,7 @@ export class Bookings implements OnInit {
   // Search & Filter
   readonly searchQuery = signal('');
   readonly selectedStatus = signal<string>('ALL');
+  readonly filterWithParking = signal<boolean>(false);
 
   // Confirmation Modal
   readonly showCancelDialog = signal(false);
@@ -53,8 +58,14 @@ export class Bookings implements OnInit {
     const list = this.bookings();
     const query = this.searchQuery().trim().toLowerCase();
     const status = this.selectedStatus().toUpperCase();
+    const onlyParking = this.showOnlyParking || this.filterWithParking();
 
     return list.filter((b) => {
+      // Filter by Parking if showOnlyParking or filterWithParking is enabled
+      if (onlyParking && !b.parkingSlotId && !(b.parkingFee && b.parkingFee > 0)) {
+        return false;
+      }
+
       // Filter by Status
       if (status !== 'ALL') {
         const bStatus = (b.status ?? '').toUpperCase();
@@ -85,13 +96,39 @@ export class Bookings implements OnInit {
       pending: list.filter((b) => (b.status ?? '').toLowerCase() === 'pending').length,
       cancelled: list.filter((b) => (b.status ?? '').toLowerCase() === 'cancelled').length,
       expired: list.filter((b) => (b.status ?? '').toLowerCase() === 'expired').length,
+      withParking: list.filter((b) => !!b.parkingSlotId || ((b.parkingFee ?? 0) > 0)).length,
     };
   });
 
   // ==================== INITIALIZATION ====================
 
   ngOnInit(): void {
+    this.route.queryParamMap.subscribe((params) => {
+      const isParking = params.get('filter') === 'parking' || params.get('tab') === 'parking';
+      if (isParking) {
+        this.filterWithParking.set(true);
+      }
+    });
+
+    if (this.router.url.includes('parking')) {
+      this.filterWithParking.set(true);
+    }
+
+    const isSuccess = this.route.snapshot.queryParamMap.get('paymentSuccess');
+    const bookingId = this.route.snapshot.queryParamMap.get('bookingId');
+    if (isSuccess === 'true') {
+      this.successMessage.set(
+        bookingId
+          ? `Payment completed successfully! Booking #${bookingId} is confirmed and recorded below.`
+          : 'Payment completed successfully! Your booking is confirmed and recorded below.'
+      );
+    }
+
     this.loadBookings();
+  }
+
+  toggleParkingFilter(): void {
+    this.filterWithParking.update((prev) => !prev);
   }
 
   // ==================== LOAD BOOKINGS ====================
@@ -138,6 +175,12 @@ export class Bookings implements OnInit {
     this.searchQuery.set('');
   }
 
+  onEmptyStateAction(): void {
+    this.filterWithParking.set(false);
+    this.clearSearch();
+    this.setStatusFilter('ALL');
+  }
+
   // ==================== VIEW BOOKING ====================
 
   viewBooking(bookingId: number): void {
@@ -150,9 +193,7 @@ export class Bookings implements OnInit {
 
   payNow(bookingId: number): void {
     if (!bookingId) return;
-    this.router.navigate(['/events/payment'], {
-      queryParams: { bookingId }
-    });
+    this.router.navigate(['/bookings', bookingId, 'payment']);
   }
 
   // ==================== CANCEL BOOKING WITH DIALOG ====================
@@ -218,7 +259,13 @@ export class Bookings implements OnInit {
   // ==================== NAVIGATION ====================
 
   goToEvents(): void {
-    this.router.navigate(['/events']);
+    if (this.isEmbedded) {
+      this.router.navigate(['/customer/dashboard'], {
+        queryParams: { tab: 'events' },
+      });
+    } else {
+      this.router.navigate(['/events']);
+    }
   }
 
   // ==================== STATUS UTILITIES ====================

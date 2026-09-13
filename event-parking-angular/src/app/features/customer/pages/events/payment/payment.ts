@@ -155,6 +155,14 @@ export class Payment implements OnInit, OnDestroy {
   // HOLD TIMER COUNTDOWN
   // ============================================================
 
+  private parseUtcDate(dateStr: string): number {
+    let s = dateStr.trim();
+    if (!s.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(s)) {
+      s += 'Z';
+    }
+    return new Date(s).getTime();
+  }
+
   private initHoldTimer(holdExpiresAt: string | null | undefined): void {
     if (this.holdTimerInterval) {
       clearInterval(this.holdTimerInterval);
@@ -167,7 +175,7 @@ export class Payment implements OnInit, OnDestroy {
       return;
     }
 
-    const expiryTime = new Date(holdExpiresAt).getTime();
+    const expiryTime = this.parseUtcDate(holdExpiresAt);
 
     const updateCountdown = () => {
       const diff = expiryTime - Date.now();
@@ -306,36 +314,12 @@ export class Payment implements OnInit, OnDestroy {
   // ============================================================
 
   private reloadBookingAfterPayment(): void {
-    this.bookingService
-      .getBookingById(this.bookingId)
-      .subscribe({
-        next: (booking: Booking) => {
-          this.booking.set(booking);
-
-          /*
-           * Payment is completed.
-           * Move customer to booking confirmation page.
-           */
-          this.router.navigate([
-            '/bookings',
-            this.bookingId,
-            'confirmation',
-          ]);
-        },
-
-        error: (error: unknown) => {
-          console.error(
-            'Failed to refresh booking:',
-            error
-          );
-
-          this.isSubmitting.set(false);
-
-          this.errorMessage.set(
-            'Payment was successful, but we could not load the confirmation. Please try again.'
-          );
-        },
-      });
+    this.router.navigate(['/bookings'], {
+      queryParams: {
+        paymentSuccess: 'true',
+        bookingId: this.bookingId,
+      },
+    });
   }
 
   // ============================================================
@@ -362,9 +346,19 @@ export class Payment implements OnInit, OnDestroy {
   }
 
   goToEvent(): void {
-    const evId = this.booking()?.eventId;
+    const b = this.booking();
+    const evId = b?.eventId;
+
+    // If booking was still pending on backend, cancel it to release held seats immediately
+    if (this.bookingId && b?.status?.toLowerCase() === 'pending') {
+      this.bookingService.cancelBooking(this.bookingId).subscribe({
+        next: () => {},
+        error: () => {},
+      });
+    }
+
     if (evId) {
-      this.router.navigate(['/events', evId]);
+      this.router.navigate(['/events', evId, 'seats']);
     } else {
       this.router.navigate(['/events']);
     }

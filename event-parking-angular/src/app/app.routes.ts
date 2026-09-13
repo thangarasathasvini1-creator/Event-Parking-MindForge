@@ -82,152 +82,171 @@ export const routes: Routes = [
 
 
   // ============================================================
-  // CUSTOMER - PROTECTED
+  // ============================================================
+  // CUSTOMER - PROTECTED (WITH PERSISTENT SIDEBAR & TOPBAR SHELL)
   // ============================================================
 
   {
-    path: 'customer/dashboard',
+    path: '',
     canActivate: [authGuard],
     loadComponent: () =>
       import(
-        './features/customer/pages/dashboard/dashboard'
-      ).then((m) => m.Dashboard),
+        './features/customer/layout/customer-layout/customer-layout'
+      ).then((m) => m.CustomerLayout),
+    children: [
+      {
+        path: 'customer/dashboard',
+        loadComponent: () =>
+          import(
+            './features/customer/pages/dashboard/dashboard'
+          ).then((m) => m.Dashboard),
+      },
+
+      {
+        path: 'customer/profile',
+        loadComponent: () =>
+          import(
+            './features/customer/pages/profile/profile'
+          ).then((m) => m.Profile),
+      },
+
+      {
+        path: 'customer/parking',
+        redirectTo: 'bookings',
+      },
+
+      {
+        path: 'events',
+        loadComponent: () =>
+          import(
+            './features/customer/pages/events/event-list/event-list'
+          ).then((m) => m.EventList),
+      },
+
+      {
+        path: 'events/:eventId',
+        loadComponent: () =>
+          import(
+            './features/customer/pages/events/event-details/event-details'
+          ).then((m) => m.EventDetails),
+      },
+
+      {
+        path: 'events/:eventId/seats',
+        loadComponent: () =>
+          import(
+            './features/customer/pages/events/seat-selection/seat-selection'
+          ).then((m) => m.SeatSelection),
+      },
+
+      {
+        path: 'events/:eventId/parking-selection',
+        loadComponent: () =>
+          import(
+            './features/customer/pages/events/parking-selection/parking-selection'
+          ).then((m) => m.ParkingSelection),
+      },
+
+      {
+        path: 'events/:eventId/checkout',
+        canActivate: [checkoutGuard],
+        loadComponent: () =>
+          import(
+            './features/customer/pages/events/checkout/checkout'
+          ).then((m) => m.Checkout),
+      },
+
+      {
+        path: 'bookings',
+        loadComponent: () =>
+          import(
+            './features/customer/pages/bookings/bookings'
+          ).then((m) => m.Bookings),
+      },
+
+      {
+        path: 'bookings/:bookingId/payment',
+        loadComponent: () =>
+          import(
+            './features/customer/pages/events/payment/payment'
+          ).then((m) => m.Payment),
+      },
+
+      {
+        path: 'bookings/:bookingId/confirmation',
+        loadComponent: () =>
+          import(
+            './features/customer/pages/bookings/booking-confirmation/booking-confirmation'
+          ).then((m) => m.BookingConfirmation),
+      },
+
+      {
+        path: 'bookings/:bookingId',
+        loadComponent: () =>
+          import(
+            './features/customer/pages/bookings/booking-details/booking-details'
+          ).then((m) => m.BookingDetails),
+      },
+
+      {
+        path: 'payments',
+        loadComponent: () =>
+          import(
+            './features/customer/pages/payments/payment-history/payment-history'
+          ).then((m) => m.PaymentHistory),
+      },
+
+      {
+        path: 'payments/:paymentId/receipt',
+        loadComponent: () =>
+          import(
+            './features/customer/pages/payments/payment-receipt/payment-receipt'
+          ).then((m) => m.PaymentReceipt),
+      },
+
+      {
+        path: 'notifications',
+        loadComponent: () =>
+          import(
+            './features/customer/pages/notifications/notifications'
+          ).then((m) => m.Notifications),
+      },
+    ],
   },
 
   {
-    path: 'customer/profile',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import(
-        './features/customer/pages/dashboard/dashboard'
-      ).then((m) => m.Dashboard),
-  },
-
-
-  // ============================================================
-  // CUSTOMER EVENTS
-  // ============================================================
-
-  {
-    path: 'events',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import(
-        './features/customer/pages/events/event-list/event-list'
-      ).then((m) => m.EventList),
+    path: 'customer/events',
+    redirectTo: 'events',
   },
 
   {
-    path: 'events/:eventId',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import(
-        './features/customer/pages/events/event-details/event-details'
-      ).then((m) => m.EventDetails),
+    path: 'customer/bookings',
+    redirectTo: 'bookings',
   },
 
   {
-    path: 'events/:eventId/seats',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import(
-        './features/customer/pages/events/seat-selection/seat-selection'
-      ).then((m) => m.SeatSelection),
+    path: 'customer/payments',
+    redirectTo: 'payments',
   },
 
   {
-    path: 'events/:eventId/parking-selection',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import(
-        './features/customer/pages/events/parking-selection/parking-selection'
-      ).then((m) => m.ParkingSelection),
+    path: 'customer/notifications',
+    redirectTo: 'notifications',
   },
 
   {
-    path: 'events/:eventId/checkout',
-    canActivate: [authGuard, checkoutGuard],
-    loadComponent: () =>
-      import(
-        './features/customer/pages/events/checkout/checkout'
-      ).then((m) => m.Checkout),
-  },
-
-
-  // ============================================================
-  // CUSTOMER BOOKINGS
-  // ============================================================
-
-  {
-    path: 'bookings',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import(
-        './features/customer/pages/bookings/bookings'
-      ).then((m) => m.Bookings),
+    path: 'payments/receipt/:paymentId',
+    redirectTo: 'payments/:paymentId/receipt',
   },
 
   {
-    path: 'bookings/:bookingId/payment',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import(
-        './features/customer/pages/events/payment/payment'
-      ).then((m) => m.Payment),
+    path: 'payments/history',
+    redirectTo: 'payments',
   },
 
   {
-    path: 'bookings/:bookingId/confirmation',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import(
-        './features/customer/pages/bookings/booking-confirmation/booking-confirmation'
-      ).then((m) => m.BookingConfirmation),
-  },
-
-  {
-    path: 'bookings/:bookingId',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import(
-        './features/customer/pages/bookings/booking-details/booking-details'
-      ).then((m) => m.BookingDetails),
-  },
-
-
-  // ============================================================
-  // CUSTOMER PAYMENT HISTORY
-  // ============================================================
-
-  {
-    path: 'payments',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import(
-        './features/customer/pages/payments/payment-history/payment-history'
-      ).then((m) => m.PaymentHistory),
-  },
-
-  {
-    path: 'payments/:paymentId/receipt',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import(
-        './features/customer/pages/payments/payment-receipt/payment-receipt'
-      ).then((m) => m.PaymentReceipt),
-  },
-
-    // ============================================================
-  // CUSTOMER NOTIFICATIONS
-  // ============================================================
-
-  {
-    path: 'notifications',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import(
-        './features/customer/pages/notifications/notifications'
-      ).then((m) => m.Notifications),
+    path: 'events/payment',
+    redirectTo: 'bookings',
   },
 
 
