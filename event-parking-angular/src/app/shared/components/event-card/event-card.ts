@@ -24,8 +24,31 @@ export class EventCard {
     }
   }
 
+  onKeyDown(keyboardEvent: KeyboardEvent): void {
+    if (keyboardEvent.key === 'Enter' || keyboardEvent.key === ' ') {
+      keyboardEvent.preventDefault();
+      this.onSelect();
+    }
+  }
+
   get eventDate(): Date | null {
     return this.event?.eventDate ? new Date(this.event.eventDate) : null;
+  }
+
+  get formattedTime(): string {
+    if (!this.event?.startTime) {
+      return '';
+    }
+    const start = this.event.startTime.substring(0, 5);
+    const end = this.event.endTime ? this.event.endTime.substring(0, 5) : '';
+    return end ? `${start} - ${end}` : start;
+  }
+
+  get hasParking(): boolean {
+    return (
+      (this.event?.parkingFee !== undefined && this.event.parkingFee > 0) ||
+      Boolean(this.event?.parkingAvailable)
+    );
   }
 }
 

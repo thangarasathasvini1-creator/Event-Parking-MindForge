@@ -1,186 +1,171 @@
-<div class="min-h-screen bg-slate-50 px-6 py-8">
+<div class="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
   <div class="mx-auto max-w-5xl">
 
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-slate-900">
+    <!-- Header -->
+    <header class="mb-8">
+      <button
+        type="button"
+        (click)="goBack()"
+        class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-blue-600 transition mb-3 cursor-pointer"
+      >
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+        <span>Back to Venues</span>
+      </button>
+
+      <p class="text-xs font-bold uppercase tracking-widest text-blue-600">
+        EVENTRA · ADMIN
+      </p>
+      <h1 class="mt-1 text-3xl font-extrabold text-slate-950 tracking-tight">
         Check Venue Availability
       </h1>
-
-      <p class="mt-2 text-slate-600">
-        Find available venues for a specific date and time.
+      <p class="mt-1 text-sm text-slate-500">
+        Query real-time venue schedules for a specific date and time interval before scheduling events.
       </p>
-    </div>
+    </header>
 
-    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
-      <form (ngSubmit)="checkAvailability()">
+    <!-- Query Form Card -->
+    <div class="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs">
+      <form (ngSubmit)="checkAvailability()" class="space-y-6">
 
         <div class="grid gap-5 md:grid-cols-3">
-
-          <!-- Event Date -->
+          <!-- 1. Event Date -->
           <div>
-            <label
-              for="event-date"
-              class="mb-2 block text-sm font-semibold text-slate-700">
-              Event Date
+            <label for="avail-event-date" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700">
+              Event Date <span class="text-rose-600">*</span>
             </label>
-
             <input
-              id="event-date"
+              id="avail-event-date"
               type="date"
               name="eventDate"
               [(ngModel)]="eventDate"
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              required
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </div>
 
-          <!-- Start Time -->
+          <!-- 2. Start Time -->
           <div>
-            <label
-              for="start-time"
-              class="mb-2 block text-sm font-semibold text-slate-700">
-              Start Time
+            <label for="avail-start-time" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700">
+              Start Time <span class="text-rose-600">*</span>
             </label>
-
             <input
-              id="start-time"
+              id="avail-start-time"
               type="time"
               name="startTime"
               [(ngModel)]="startTime"
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              required
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </div>
 
-          <!-- End Time -->
+          <!-- 3. End Time -->
           <div>
-            <label
-              for="end-time"
-              class="mb-2 block text-sm font-semibold text-slate-700">
-              End Time
+            <label for="avail-end-time" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700">
+              End Time <span class="text-rose-600">*</span>
             </label>
-
             <input
-              id="end-time"
+              id="avail-end-time"
               type="time"
               name="endTime"
               [(ngModel)]="endTime"
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              required
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </div>
-
         </div>
 
         @if (errorMessage()) {
-          <div
-            class="mt-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
-            {{ errorMessage() }}
+          <div>
+            <app-error-message [message]="errorMessage()"></app-error-message>
           </div>
         }
 
         <button
           type="submit"
           [disabled]="isLoading()"
-          class="mt-6 w-full rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60">
-
+          class="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-5 py-3 text-xs font-bold text-white shadow-xs transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2"
+        >
           @if (isLoading()) {
-            Checking Availability...
+            <span class="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+            <span>Checking Availability...</span>
           } @else {
-            Check Availability
+            <span>Check Availability</span>
           }
-
         </button>
 
       </form>
-
     </div>
 
+    <!-- Results Section -->
     @if (isLoading()) {
-
-      <div class="flex justify-center py-12">
-        <div
-          class="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600">
-        </div>
+      <div class="py-16 flex justify-center">
+        <app-loading-spinner message="Checking venue reservations..."></app-loading-spinner>
       </div>
-
     } @else if (hasSearched()) {
-
-      <div class="mt-8">
-
-        <h2 class="mb-5 text-xl font-bold text-slate-900">
-          Available Venues
-        </h2>
+      <section class="mt-8 space-y-6">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-bold text-slate-900">
+            Available Venues ({{ venues().length }})
+          </h2>
+          <span class="text-xs text-slate-500">
+            {{ eventDate }} · {{ startTime }} - {{ endTime }}
+          </span>
+        </div>
 
         @if (venues().length > 0) {
-
           <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-
             @for (venue of venues(); track venue.venueId) {
-
-              <article
-                class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
-                <p class="text-xs font-semibold uppercase text-slate-400">
-                  Venue #{{ venue.venueId }}
-                </p>
-
-                <h3 class="mt-2 text-xl font-bold text-slate-900">
-                  {{ venue.name }}
-                </h3>
-
-                <div class="mt-5 space-y-3">
-
-                  <div>
-                    <p class="text-xs font-semibold uppercase text-slate-400">
-                      Address
-                    </p>
-
-                    <p class="mt-1 text-sm text-slate-700">
-                      {{ venue.address }}
-                    </p>
+              <article class="flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs">
+                <div>
+                  <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                    <span class="font-mono uppercase font-bold">Venue #{{ venue.venueId }}</span>
+                    <span class="rounded-md bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700">
+                      ✓ Available
+                    </span>
                   </div>
 
-                  <div>
-                    <p class="text-xs font-semibold uppercase text-slate-400">
-                      Capacity
-                    </p>
+                  <h3 class="text-lg font-bold text-slate-900">
+                    {{ venue.name }}
+                  </h3>
 
-                    <p class="mt-1 text-lg font-bold text-indigo-600">
-                      {{ venue.totalCapacity }}
-                    </p>
+                  <p class="mt-2 text-xs text-slate-600">
+                    {{ venue.address }}
+                  </p>
+
+                  <div class="mt-4 border-t border-slate-100 pt-3 flex items-center justify-between text-xs">
+                    <span class="text-slate-500">Capacity:</span>
+                    <span class="font-bold text-blue-600">{{ venue.totalCapacity }} seats</span>
                   </div>
 
+                  <div class="mt-1 flex items-center justify-between text-xs">
+                    <span class="text-slate-500">Parking Slots:</span>
+                    <span class="font-bold text-emerald-600">{{ venue.totalParkingSlots ?? 0 }} slots</span>
+                  </div>
                 </div>
 
-                <div
-                  class="mt-5 rounded-lg bg-emerald-50 px-3 py-2 text-center text-sm font-semibold text-emerald-700">
-                  Available
+                <div class="mt-5 pt-3 border-t border-slate-100">
+                  <a
+                    routerLink="/admin/events/new"
+                    [queryParams]="{ venueId: venue.venueId, eventDate: eventDate, startTime: startTime, endTime: endTime }"
+                    class="block w-full text-center rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 py-2 text-xs font-bold transition"
+                  >
+                    Schedule Event Here →
+                  </a>
                 </div>
-
               </article>
-
             }
-
           </div>
-
         } @else {
-
-          <div
-            class="rounded-2xl border border-slate-200 bg-white p-10 text-center">
-
-            <h3 class="text-lg font-semibold text-slate-800">
-              No Available Venues
-            </h3>
-
-            <p class="mt-2 text-sm text-slate-500">
-              No venues are available for the selected date and time.
-            </p>
-
+          <div class="max-w-md mx-auto my-6">
+            <app-empty-state
+              title="No Available Venues"
+              description="All venues are currently booked or unavailable during this specific time window. Please try an earlier or later time slot."
+            ></app-empty-state>
           </div>
-
         }
-
-      </div>
-
+      </section>
     }
 
   </div>

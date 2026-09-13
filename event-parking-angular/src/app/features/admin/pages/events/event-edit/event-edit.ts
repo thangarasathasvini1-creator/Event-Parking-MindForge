@@ -1,6 +1,7 @@
 import {
   Component,
   OnInit,
+  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -15,11 +16,13 @@ import { CategoryService } from '../../../../../services/category';
 import { Event } from '../../../../../models/event.model';
 import { Venue } from '../../../../../models/venue.model';
 import { Category } from '../../../../../models/category.model';
+import { LoadingSpinner } from '../../../../../shared/components/loading-spinner/loading-spinner';
+import { ErrorMessage } from '../../../../../shared/components/error-message/error-message';
 
 @Component({
   selector: 'app-event-edit',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LoadingSpinner, ErrorMessage],
   templateUrl: './event-edit.html',
   styleUrl: './event-edit.css',
 })
@@ -51,6 +54,23 @@ export class EventEdit implements OnInit {
     parkingFee: 0,
     capacity: 0,
   };
+
+  /** Selected venue computed based on current event.venueId */
+  readonly selectedVenue = computed(() => {
+    const venueId = Number(this.event.venueId);
+    return this.venues().find((v) => v.venueId === venueId) ?? null;
+  });
+
+  /** Max venue capacity for immediate validation */
+  readonly selectedVenueCapacity = computed(() => {
+    return this.selectedVenue()?.totalCapacity ?? 0;
+  });
+
+  /** Immediate capacity validation warning */
+  get isCapacityExceeded(): boolean {
+    const max = this.selectedVenueCapacity();
+    return max > 0 && Number(this.event.capacity) > max;
+  }
 
   ngOnInit(): void {
     const eventId = Number(
@@ -92,14 +112,12 @@ export class EventEdit implements OnInit {
         this.isLoading.set(false);
       },
       error: (error) => {
-        console.error(
-          'Failed to load event:',
-          error
-        );
+        console.error('Failed to load event:', error);
 
         this.errorMessage.set(
-          error?.error?.message ??
-            'Unable to load event. Please try again.'
+          error?.status === 404
+            ? 'Event not found. It may have been deleted.'
+            : (error?.error?.message ?? 'Unable to load event. Please try again.')
         );
 
         this.isLoading.set(false);
@@ -110,17 +128,10 @@ export class EventEdit implements OnInit {
   private loadVenues(): void {
     this.venueService.getVenues().subscribe({
       next: (response) => {
-        this.venues.set(response);
+        this.venues.set(response ?? []);
       },
       error: (error) => {
-        console.error(
-          'Failed to load venues:',
-          error
-        );
-
-        this.errorMessage.set(
-          'Unable to load venues. Please try again.'
-        );
+        console.error('Failed to load venues:', error);
       },
     });
   }
@@ -128,17 +139,10 @@ export class EventEdit implements OnInit {
   private loadCategories(): void {
     this.categoryService.getCategories().subscribe({
       next: (response) => {
-        this.categories.set(response);
+        this.categories.set(response ?? []);
       },
       error: (error) => {
-        console.error(
-          'Failed to load categories:',
-          error
-        );
-
-        this.errorMessage.set(
-          'Unable to load categories. Please try again.'
-        );
+        console.error('Failed to load categories:', error);
       },
     });
   }
@@ -147,84 +151,82 @@ export class EventEdit implements OnInit {
     if (!time) {
       return '';
     }
-
     return time.substring(0, 5);
+  }
+
+  onVenueChange(): void {
+    const max = this.selectedVenueCapacity();
+    if (max > 0 && (!this.event.capacity || this.event.capacity > max)) {
+      this.event.capacity = max;
+    }
   }
 
   updateEvent(): void {
     this.successMessage.set('');
     this.errorMessage.set('');
 
-    if (!this.event.name.trim()) {
-      this.errorMessage.set(
-        'Event name is required.'
-      );
+    if (!this.event.name || !this.event.name.trim()) {
+      this.errorMessage.set('Event name is required.');
       return;
     }
 
-    if (!this.event.venueId) {
-      this.errorMessage.set(
-        'Please select a venue.'
-      );
+    if (!this.event.venueId || Number(this.event.venueId) <= 0) {
+      this.errorMessage.set('Please select a venue.');
       return;
     }
 
-    if (!this.event.categoryId) {
-      this.errorMessage.set(
-        'Please select a category.'
-      );
+    if (!this.event.categoryId || Number(this.event.categoryId) <= 0) {
+      this.errorMessage.set('Please select a category.');
       return;
     }
 
     if (!this.event.eventDate) {
+      this.errorMessage.set('Event date is required.');
+      return;
+    }
+
+    if (!this.event.startTime || !this.event.endTime) {
+      this.errorMessage.set('Start time and end time are required.');
+      return;
+    }
+
+    if (this.event.startTime >= this.event.endTime) {
+      this.errorMessage.set('Start time must be earlier than end time.');
+      return;
+    }
+
+    if (this.isCapacityExceeded) {
       this.errorMessage.set(
-        'Event date is required.'
+        `Event capacity (${this.event.capacity}) cannot exceed venue total capacity (${this.selectedVenueCapacity()}).`
       );
       return;
     }
 
-    if (
-      !this.event.startTime ||
-      !this.event.endTime
-    ) {
-      this.errorMessage.set(
-        'Start time and end time are required.'
-      );
+    if (!this.event.capacity || Number(this.event.capacity) <= 0) {
+      this.errorMessage.set('Capacity must be greater than 0.');
       return;
     }
 
-    if (
-      this.event.startTime >=
-      this.event.endTime
-    ) {
-      this.errorMessage.set(
-        'End time must be later than start time.'
-      );
+    if (Number(this.event.ticketPrice) < 0) {
+      this.errorMessage.set('Ticket price cannot be negative.');
       return;
     }
 
-    if (this.event.ticketPrice < 0) {
-      this.errorMessage.set(
-        'Ticket price cannot be negative.'
-      );
-      return;
-    }
-
-    if (this.event.parkingFee < 0) {
-      this.errorMessage.set(
-        'Parking fee cannot be negative.'
-      );
-      return;
-    }
-
-    if (this.event.capacity <= 0) {
-      this.errorMessage.set(
-        'Capacity must be greater than 0.'
-      );
+    if (Number(this.event.parkingFee) < 0) {
+      this.errorMessage.set('Parking fee cannot be negative.');
       return;
     }
 
     this.isSaving.set(true);
+
+    const formattedStart =
+      this.event.startTime.length === 5
+        ? `${this.event.startTime}:00`
+        : this.event.startTime;
+    const formattedEnd =
+      this.event.endTime.length === 5
+        ? `${this.event.endTime}:00`
+        : this.event.endTime;
 
     const eventData: Event = {
       eventId: this.event.eventId,
@@ -232,37 +234,39 @@ export class EventEdit implements OnInit {
       venueId: Number(this.event.venueId),
       categoryId: Number(this.event.categoryId),
       eventDate: this.event.eventDate,
-      startTime: `${this.event.startTime}:00`,
-      endTime: `${this.event.endTime}:00`,
+      startTime: formattedStart,
+      endTime: formattedEnd,
       ticketPrice: Number(this.event.ticketPrice),
       parkingFee: Number(this.event.parkingFee),
       capacity: Number(this.event.capacity),
     };
 
     this.eventService
-      .updateEvent(
-        this.event.eventId,
-        eventData
-      )
+      .updateEvent(this.event.eventId, eventData)
       .subscribe({
         next: () => {
           this.successMessage.set(
-            'Event updated successfully.'
+            `Event "${eventData.name}" was updated successfully. Redirecting to events...`
           );
-
           this.isSaving.set(false);
+
+          setTimeout(() => {
+            this.backToEvents();
+          }, 1200);
         },
-
         error: (error) => {
-          console.error(
-            'Failed to update event:',
-            error
-          );
+          console.error('Failed to update event:', error);
 
-          this.errorMessage.set(
-            error?.error?.message ??
-              'Unable to update event. Please try again.'
-          );
+          if (error?.status === 409) {
+            this.errorMessage.set(
+              'Unable to complete this operation because the venue or event schedule conflicts with an existing reservation, or active bookings restrict these modifications.'
+            );
+          } else {
+            this.errorMessage.set(
+              error?.error?.message ??
+                'Unable to update event. Please verify all inputs and try again.'
+            );
+          }
 
           this.isSaving.set(false);
         },

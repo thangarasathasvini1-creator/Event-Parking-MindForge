@@ -10,11 +10,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import { VenueService } from '../../../../../services/venue';
 import { Venue } from '../../../../../models/venue.model';
+import { LoadingSpinner } from '../../../../../shared/components/loading-spinner/loading-spinner';
+import { ErrorMessage } from '../../../../../shared/components/error-message/error-message';
 
 @Component({
   selector: 'app-venue-edit',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LoadingSpinner, ErrorMessage],
   templateUrl: './venue-edit.html',
   styleUrl: './venue-edit.css',
 })
@@ -70,22 +72,28 @@ export class VenueEdit implements OnInit {
     this.loadVenue();
   }
 
-  private loadVenue(): void {
+  loadVenue(): void {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
     this.venueService.getVenueById(this.venueId).subscribe({
       next: (response) => {
-        this.venue = response;
+        this.venue = {
+          ...response,
+          carCapacity: response.carCapacity ?? 0,
+          bikeCapacity: response.bikeCapacity ?? 0,
+          busCapacity: response.busCapacity ?? 0,
+          vanCapacity: response.vanCapacity ?? 0,
+        };
         this.isLoading.set(false);
       },
-
       error: (error) => {
         console.error('Failed to load venue:', error);
 
         this.errorMessage.set(
-          error?.error?.message ??
-            'Unable to load venue. Please try again.'
+          error?.status === 404
+            ? 'Venue not found. It may have been deleted.'
+            : (error?.error?.message ?? 'Unable to load venue details.')
         );
 
         this.isLoading.set(false);
@@ -97,20 +105,18 @@ export class VenueEdit implements OnInit {
     this.successMessage.set('');
     this.errorMessage.set('');
 
-    if (!this.venue.name.trim()) {
+    if (!this.venue.name || !this.venue.name.trim()) {
       this.errorMessage.set('Venue name is required.');
       return;
     }
 
-    if (!this.venue.address.trim()) {
+    if (!this.venue.address || !this.venue.address.trim()) {
       this.errorMessage.set('Venue address is required.');
       return;
     }
 
-    if (this.venue.totalCapacity <= 0) {
-      this.errorMessage.set(
-        'Total capacity must be greater than 0.'
-      );
+    if (!this.venue.totalCapacity || this.venue.totalCapacity <= 0) {
+      this.errorMessage.set('Total capacity must be greater than 0.');
       return;
     }
 
@@ -120,9 +126,7 @@ export class VenueEdit implements OnInit {
       (this.venue.busCapacity ?? 0) < 0 ||
       (this.venue.vanCapacity ?? 0) < 0
     ) {
-      this.errorMessage.set(
-        'Vehicle parking capacities cannot be negative.'
-      );
+      this.errorMessage.set('Vehicle parking capacities cannot be negative.');
       return;
     }
 
@@ -134,7 +138,7 @@ export class VenueEdit implements OnInit {
       venueId: this.venueId,
       name: this.venue.name.trim(),
       address: this.venue.address.trim(),
-      totalCapacity: this.venue.totalCapacity,
+      totalCapacity: Number(this.venue.totalCapacity),
       totalParkingSlots: totalSlots > 0 ? totalSlots : (this.venue.totalParkingSlots ?? 0),
       carCapacity: Number(this.venue.carCapacity) || 0,
       bikeCapacity: Number(this.venue.bikeCapacity) || 0,
@@ -142,28 +146,27 @@ export class VenueEdit implements OnInit {
       vanCapacity: Number(this.venue.vanCapacity) || 0,
     };
 
-    this.venueService
-      .updateVenue(this.venueId, venueData)
-      .subscribe({
-        next: () => {
-          this.successMessage.set(
-            'Venue updated successfully.'
-          );
+    this.venueService.updateVenue(this.venueId, venueData).subscribe({
+      next: () => {
+        this.successMessage.set(
+          `Venue "${venueData.name}" was updated successfully. Redirecting to venue list...`
+        );
+        this.isSaving.set(false);
 
-          this.isSaving.set(false);
-        },
-
-        error: (error) => {
-          console.error('Failed to update venue:', error);
-
-          this.errorMessage.set(
-            error?.error?.message ??
-              'Unable to update venue. Please try again.'
-          );
-
-          this.isSaving.set(false);
-        },
-      });
+        setTimeout(() => {
+          this.goBack();
+        }, 1200);
+      },
+      error: (error) => {
+        console.error('Failed to update venue:', error);
+        this.errorMessage.set(
+          error?.status === 409
+            ? 'Cannot modify venue capacity below current active event reservations.'
+            : (error?.error?.message ?? 'Unable to update venue. Please try again.')
+        );
+        this.isSaving.set(false);
+      },
+    });
   }
 
   goBack(): void {

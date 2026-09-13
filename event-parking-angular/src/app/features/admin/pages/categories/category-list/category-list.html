@@ -1,126 +1,125 @@
-<div class="min-h-screen bg-slate-50 px-6 py-8">
+<div class="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
   <div class="mx-auto max-w-6xl">
 
     <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-slate-900">
-        Category Management
-      </h1>
-
-      <p class="mt-2 text-slate-600">
-        Manage event categories for EVENTRA.
-      </p>
+    <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-widest text-blue-600">
+          EVENTRA · ADMIN
+        </p>
+        <h1 class="mt-1 text-3xl font-extrabold text-slate-950 tracking-tight">
+          Category Management
+        </h1>
+        <p class="mt-1 text-sm text-slate-500">
+          Organize event categories, classification taxonomies, and discovery filters.
+        </p>
+      </div>
 
       <button
         type="button"
         (click)="createCategory()"
-        class="mt-5 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700">
-        + Create Category
+        class="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-5 py-2.5 text-xs font-bold text-white shadow-xs transition active:scale-[0.98] cursor-pointer"
+      >
+        <span>+ Add Category</span>
       </button>
-    </div>
+    </header>
 
-    <!-- Loading -->
+    <!-- Success Message Banner -->
+    @if (successMessage()) {
+      <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-semibold text-emerald-800 flex items-center justify-between">
+        <span>✓ {{ successMessage() }}</span>
+        <button type="button" (click)="successMessage.set('')" class="text-emerald-600 hover:text-emerald-800">✕</button>
+      </div>
+    }
+
+    <!-- Error Message Banner -->
+    @if (errorMessage()) {
+      <div class="mb-6">
+        <app-error-message
+          [message]="errorMessage()"
+          [showRetry]="true"
+          (retry)="retry()"
+        ></app-error-message>
+      </div>
+    }
+
+    <!-- Loading State -->
     @if (isLoading()) {
-
-      <div class="flex justify-center py-16">
-        <div
-          class="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600">
-        </div>
+      <div class="py-16 flex justify-center">
+        <app-loading-spinner message="Loading categories..."></app-loading-spinner>
       </div>
+    }
 
-    } @else if (errorMessage()) {
-
-      <!-- Error -->
-      <div class="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
-
-        <p class="font-medium text-red-700">
-          {{ errorMessage() }}
-        </p>
-
-        <button
-          type="button"
-          (click)="retry()"
-          class="mt-4 rounded-lg bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700">
-          Try Again
-        </button>
-
-      </div>
-
-    } @else {
-
+    <!-- Categories Grid -->
+    @if (!isLoading() && !errorMessage()) {
       @if (categories().length > 0) {
-
-        <!-- Category Grid -->
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-
           @for (category of categories(); track category.categoryId) {
+            <article class="flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs transition hover:-translate-y-0.5 hover:shadow-lg">
+              <div>
+                <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                  <span class="font-mono font-bold uppercase">Category #{{ category.categoryId }}</span>
+                  <span class="rounded-md bg-blue-50 px-2 py-0.5 font-semibold text-blue-700">Active</span>
+                </div>
 
-            <article
-              class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-
-              <div class="mb-5">
-                <p class="text-xs font-semibold uppercase text-slate-400">
-                  Category #{{ category.categoryId }}
-                </p>
-
-                <h2 class="mt-2 text-xl font-bold text-slate-900">
+                <h2 class="text-xl font-bold text-slate-900 leading-snug">
                   {{ category.name }}
                 </h2>
-              </div>
 
-              <div class="min-h-16">
-                <p class="text-xs font-semibold uppercase text-slate-400">
-                  Description
-                </p>
-
-                <p class="mt-1 text-sm leading-6 text-slate-600">
-                  {{ category.description || 'No description available.' }}
-                </p>
+                <div class="mt-4 min-h-14">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                    Description
+                  </span>
+                  <p class="text-xs text-slate-600 leading-relaxed">
+                    {{ category.description || 'No descriptive summary provided for this classification.' }}
+                  </p>
+                </div>
               </div>
 
               <!-- Actions -->
-              <div class="mt-6 flex gap-3">
-
+              <div class="mt-6 border-t border-slate-100 pt-4 flex items-center gap-2">
                 <button
                   type="button"
                   (click)="editCategory(category.categoryId)"
-                  class="flex-1 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700">
+                  class="flex-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 py-2 px-3 text-xs font-bold transition cursor-pointer text-center"
+                >
                   Edit
                 </button>
 
                 <button
                   type="button"
-                  class="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700">
+                  (click)="initiateDelete(category)"
+                  class="rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 py-2 px-3 text-xs font-bold transition cursor-pointer"
+                >
                   Delete
                 </button>
-
               </div>
-
             </article>
-
           }
-
         </div>
-
       } @else {
-
-        <!-- Empty State -->
-        <div
-          class="rounded-2xl border border-slate-200 bg-white p-12 text-center">
-
-          <h2 class="text-xl font-semibold text-slate-800">
-            No categories found
-          </h2>
-
-          <p class="mt-2 text-slate-500">
-            There are currently no event categories available.
-          </p>
-
+        <div class="max-w-md mx-auto my-12">
+          <app-empty-state
+            title="No categories found"
+            description="There are currently no event categories available. Create your first category to organize events."
+            actionText="+ Create Category"
+            (action)="createCategory()"
+          ></app-empty-state>
         </div>
-
       }
-
     }
 
   </div>
 </div>
+
+<!-- Shared Delete Confirmation Dialog -->
+@if (showDeleteModal()) {
+  <app-confirmation-dialog
+    title="Delete Category"
+    [message]="'Are you sure you want to delete category \'' + (pendingCategoryToDelete()?.name || '') + '\'? If events currently reference this category, the deletion will be rejected.'"
+    confirmLabel="Delete Category"
+    [busy]="isDeleting()"
+    (confirmed)="confirmDelete()"
+    (cancelled)="cancelDelete()"
+  ></app-confirmation-dialog>
+}
