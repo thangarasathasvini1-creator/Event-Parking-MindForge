@@ -5,19 +5,22 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 import { CategoryService } from '../../../../../services/category';
 import { Category } from '../../../../../models/category.model';
+import { ErrorMessage } from '../../../../../shared/components/error-message/error-message';
 
 @Component({
   selector: 'app-category-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ErrorMessage],
   templateUrl: './category-form.html',
   styleUrl: './category-form.css',
 })
 export class CategoryForm {
   private readonly categoryService = inject(CategoryService);
+  private readonly router = inject(Router);
 
   readonly isSaving = signal(false);
   readonly successMessage = signal('');
@@ -29,11 +32,15 @@ export class CategoryForm {
     description: '',
   };
 
+  goBack(): void {
+    this.router.navigate(['/admin/categories']);
+  }
+
   saveCategory(): void {
     this.successMessage.set('');
     this.errorMessage.set('');
 
-    if (!this.category.name.trim()) {
+    if (!this.category.name || !this.category.name.trim()) {
       this.errorMessage.set('Category name is required.');
       return;
     }
@@ -49,29 +56,21 @@ export class CategoryForm {
     this.categoryService.createCategory(categoryData).subscribe({
       next: () => {
         this.successMessage.set(
-          'Category created successfully.'
+          `Category "${categoryData.name}" was created successfully. Redirecting to categories...`
         );
-
-        this.category = {
-          categoryId: 0,
-          name: '',
-          description: '',
-        };
-
         this.isSaving.set(false);
+
+        setTimeout(() => {
+          this.goBack();
+        }, 1200);
       },
-
       error: (error) => {
-        console.error(
-          'Failed to create category:',
-          error
-        );
-
+        console.error('Failed to create category:', error);
         this.errorMessage.set(
-          error?.error?.message ??
-            'Unable to create category. Please try again.'
+          error?.status === 409
+            ? 'A category with this name already exists.'
+            : (error?.error?.message ?? 'Unable to create category. Please check your data and try again.')
         );
-
         this.isSaving.set(false);
       },
     });

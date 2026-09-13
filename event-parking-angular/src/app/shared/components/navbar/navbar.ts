@@ -21,10 +21,34 @@ export class Navbar implements OnInit {
 
   notifications: Notification[] = [];
   isNotificationOpen = false;
+  isMobileMenuOpen = false;
   isLoadingNotifications = false;
 
   ngOnInit(): void {
-    this.loadNotifications();
+    if (this.isLoggedIn) {
+      this.loadNotifications();
+    }
+  }
+
+  get isLoggedIn(): boolean {
+    return this.authState.isAuthenticated();
+  }
+
+  get userName(): string {
+    const user = this.authState.getUser();
+    return user?.name || user?.email || 'Account';
+  }
+
+  getNotificationType(type: string): string {
+    return type?.trim() || 'Notification';
+  }
+
+  toggleMobileMenu(): void {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+  }
+
+  closeMobileMenu(): void {
+    this.isMobileMenuOpen = false;
   }
 
   loadNotifications(): void {
@@ -72,6 +96,7 @@ export class Navbar implements OnInit {
 
   openNotifications(): void {
     this.isNotificationOpen = false;
+    this.closeMobileMenu();
     this.router.navigate(['/notifications']);
   }
 
@@ -104,14 +129,41 @@ export class Navbar implements OnInit {
   }
 
   goToHome(): void {
-    this.router.navigate(['/customer/dashboard']);
+    this.closeMobileMenu();
+    if (this.isLoggedIn) {
+      this.router.navigate(['/customer/dashboard']);
+    } else {
+      this.router.navigate(['/']);
+    }
+  }
+
+  goToEvents(): void {
+    this.closeMobileMenu();
+    this.router.navigate(['/events']);
   }
 
   goToBookings(): void {
+    this.closeMobileMenu();
     this.router.navigate(['/bookings']);
   }
 
+  goToPayments(): void {
+    this.closeMobileMenu();
+    this.router.navigate(['/payments']);
+  }
+
+  goToProfile(): void {
+    this.closeMobileMenu();
+    this.router.navigate(['/customer/profile']);
+  }
+
+  goToLogin(): void {
+    this.closeMobileMenu();
+    this.router.navigate(['/login']);
+  }
+
   logout(): void {
+    this.closeMobileMenu();
     this.authState.clearUser();
     this.router.navigate(['/login']);
   }

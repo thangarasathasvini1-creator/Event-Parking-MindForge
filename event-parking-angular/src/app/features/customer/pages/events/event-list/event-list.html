@@ -1,282 +1,236 @@
-<div class="min-h-screen bg-slate-50 px-6 py-8">
-  <div class="mx-auto max-w-7xl">
+@if (!isEmbedded) {
+  <app-navbar></app-navbar>
+}
 
-    <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-slate-900">
-        Discover Events
-      </h1>
-
-      <p class="mt-2 text-slate-600">
-        Find and explore upcoming events.
-      </p>
-    </div>
-
-    <!-- Filters -->
-    <div class="mb-8 grid gap-4 md:grid-cols-2">
-
-      <!-- Search -->
-      <div>
-        <label
-          for="event-search"
-          class="mb-2 block text-sm font-semibold text-slate-700">
-          Search Events
-        </label>
-
-        <input
-          id="event-search"
-          type="text"
-          [value]="searchTerm()"
-          (input)="onSearch($event)"
-          placeholder="Search by event name..."
-          class="w-full rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm text-slate-800 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-        />
-      </div>
-
-      <!-- Category -->
-      <div>
-        <label
-          for="category-filter"
-          class="mb-2 block text-sm font-semibold text-slate-700">
-          Category
-        </label>
-
-        <select
-          id="category-filter"
-          [value]="selectedCategoryId() ?? ''"
-          (change)="onCategoryChange($event)"
-          class="w-full rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm text-slate-800 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
-
-          <option value="">
-            All Categories
-          </option>
-
-          @for (category of categories(); track category.categoryId) {
-            <option [value]="category.categoryId">
-              {{ category.name }}
-            </option>
-          }
-
-        </select>
-      </div>
-
-    </div>
-
-    <!-- Clear Filters -->
-    @if (searchTerm() || selectedCategoryId() !== null) {
-      <div class="mb-8">
-        <button
-          type="button"
-          (click)="clearFilters()"
-          class="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
-          Clear Filters
-        </button>
-      </div>
-    }
-
-    <!-- Loading -->
-    @if (isLoading()) {
-
-      <div class="flex justify-center py-16">
-        <div
-          class="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600">
-        </div>
-      </div>
-
-    }
-
-    <!-- Error -->
-    @if (!isLoading() && errorMessage()) {
-
-      <div class="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
-
-        <p class="font-medium text-red-700">
-          {{ errorMessage() }}
+<main class="min-h-screen bg-slate-50 font-sans text-slate-900 pb-16">
+  <!-- Discovery Hero Header -->
+  <header class="border-b border-slate-200/80 bg-white pt-8 pb-10 px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-7xl">
+      <div class="max-w-3xl">
+        <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 uppercase tracking-widest mb-3 border border-blue-100">
+          <span class="h-2 w-2 rounded-full bg-blue-600 animate-pulse"></span>
+          EVENTRA · Discovery
+        </span>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight">
+          Explore Live Events
+        </h1>
+        <p class="mt-2 text-sm sm:text-base text-slate-600 leading-relaxed">
+          Find upcoming concerts, tech summits, sports, and live shows. Choose your seats and reserve parking in one seamless flow.
         </p>
-
-        <button
-          type="button"
-          (click)="retry()"
-          class="mt-4 rounded-lg bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700">
-          Try Again
-        </button>
-
       </div>
 
-    }
+      <!-- Search & Filters Container -->
+      <section class="mt-8 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-6 shadow-2xs" aria-label="Event Search and Filters">
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-    <!-- Events -->
-    @if (!isLoading() && !errorMessage()) {
-
-      @if (filteredEvents().length > 0) {
-
-        <!-- Result Count -->
-        @if (searchTerm() || selectedCategoryId() !== null) {
-          <p class="mb-6 text-sm text-slate-600">
-            Showing
-            <span class="font-semibold text-indigo-600">
-              {{ filteredEvents().length }}
-            </span>
-            result(s)
-          </p>
-        }
-
-        <!-- Event Grid -->
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-
-          @for (event of filteredEvents(); track event.eventId) {
-
-            <article
-              class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-
-              <!-- Event Header -->
-              <div
-                class="bg-gradient-to-r from-indigo-600 to-violet-600 p-6 text-white">
-
-                <p class="text-sm font-medium text-indigo-100">
-                  {{ getCategoryName(event.categoryId) }}
-                </p>
-
-                <h2 class="mt-2 text-xl font-bold">
-                  {{ event.name }}
-                </h2>
-
-              </div>
-
-              <!-- Event Details -->
-              <div class="space-y-4 p-6">
-
-                <!-- Date -->
-                <div>
-                  <p class="text-xs font-semibold uppercase text-slate-400">
-                    Date
-                  </p>
-
-                  <p class="mt-1 text-sm font-medium text-slate-700">
-                    {{ event.eventDate | date:'mediumDate' }}
-                  </p>
-                </div>
-
-                <!-- Time -->
-                <div>
-                  <p class="text-xs font-semibold uppercase text-slate-400">
-                    Time
-                  </p>
-
-                  <p class="mt-1 text-sm font-medium text-slate-700">
-                    {{ event.startTime }} - {{ event.endTime }}
-                  </p>
-                </div>
-
-                <!-- Venue -->
-                <div>
-                  <p class="text-xs font-semibold uppercase text-slate-400">
-                    Venue
-                  </p>
-
-                  <p class="mt-1 text-sm font-medium text-slate-700">
-                    {{ getVenueName(event.venueId) }}
-                  </p>
-                </div>
-
-                <!-- Price + Capacity -->
-                <div
-                  class="flex items-center justify-between border-t border-slate-100 pt-4">
-
-                  <div>
-                    <p class="text-xs text-slate-400">
-                      Ticket Price
-                    </p>
-
-                    <p class="text-lg font-bold text-indigo-600">
-                      {{ event.ticketPrice | currency }}
-                    </p>
-                  </div>
-
-                  <div class="text-right">
-                    <p class="text-xs text-slate-400">
-                      Capacity
-                    </p>
-
-                    <p class="text-sm font-semibold text-slate-700">
-                      {{ event.capacity }}
-                    </p>
-                  </div>
-
-                </div>
-
-                <!-- Parking -->
-                @if (event.parkingFee > 0) {
-
-                  <div
-                    class="rounded-lg bg-emerald-50 px-3 py-2 text-center text-sm font-medium text-emerald-700">
-
-                    Parking Available · Fee:
-                    {{ event.parkingFee | currency }}
-
-                  </div>
-
-                } @else {
-
-                  <div
-                    class="rounded-lg bg-slate-100 px-3 py-2 text-center text-sm font-medium text-slate-500">
-
-                    Parking Not Available
-
-                  </div>
-
-                }
-
-                <!-- View Details -->
+          <!-- 1. Search by name -->
+          <div>
+            <label for="event-search-input" class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
+              Search Event
+            </label>
+            <div class="relative">
+              <input
+                id="event-search-input"
+                type="text"
+                [value]="searchTerm()"
+                (input)="onSearchInput($event)"
+                placeholder="Search events by name..."
+                class="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-8 text-xs sm:text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+              <svg class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.3-4.3"/>
+              </svg>
+              @if (searchTerm()) {
                 <button
                   type="button"
-                  (click)="viewEvent(event.eventId)"
-                  class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700">
-
-                  View Details
-
+                  (click)="clearSearch()"
+                  aria-label="Clear search text"
+                  class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
+                >
+                  ✕
                 </button>
+              }
+            </div>
+          </div>
 
-              </div>
+          <!-- 2. Category Filter -->
+          <div>
+            <label for="category-filter-select" class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
+              Category
+            </label>
+            <select
+              id="category-filter-select"
+              [value]="selectedCategoryId() ?? ''"
+              (change)="onCategoryChange($event)"
+              class="w-full rounded-xl border border-slate-300 bg-white py-2.5 px-3.5 text-xs sm:text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 cursor-pointer"
+            >
+              <option value="">All Categories</option>
+              @for (category of categories(); track category.categoryId) {
+                <option [value]="category.categoryId">
+                  {{ category.name }}
+                </option>
+              }
+            </select>
+          </div>
 
-            </article>
+          <!-- 3. Venue Filter -->
+          <div>
+            <label for="venue-filter-select" class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
+              Venue
+            </label>
+            <select
+              id="venue-filter-select"
+              [value]="selectedVenueId() ?? ''"
+              (change)="onVenueChange($event)"
+              class="w-full rounded-xl border border-slate-300 bg-white py-2.5 px-3.5 text-xs sm:text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 cursor-pointer"
+            >
+              <option value="">All Venues</option>
+              @for (venue of venues(); track venue.venueId) {
+                <option [value]="venue.venueId">
+                  {{ venue.name }}
+                </option>
+              }
+            </select>
+          </div>
 
-          }
+          <!-- 4. Date Filter -->
+          <div>
+            <label for="event-date-input" class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
+              Event Date
+            </label>
+            <input
+              id="event-date-input"
+              type="date"
+              [value]="selectedDate()"
+              (change)="onDateChange($event)"
+              class="w-full rounded-xl border border-slate-300 bg-white py-2.5 px-3.5 text-xs sm:text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 cursor-pointer"
+            />
+          </div>
 
         </div>
 
-      } @else {
-
-        <!-- No Events -->
-        <div
-          class="rounded-2xl border border-slate-200 bg-white p-12 text-center">
-
-          <h2 class="text-xl font-semibold text-slate-800">
-            No events found
-          </h2>
-
-          <p class="mt-2 text-slate-500">
-            Try changing your search or category filter.
-          </p>
-
-          @if (searchTerm() || selectedCategoryId() !== null) {
+        <!-- Active Filter Badges & Clear Action -->
+        @if (hasActiveFilters()) {
+          <div class="mt-4 pt-4 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs font-semibold text-slate-500">Active Filters:</span>
+              @if (searchTerm()) {
+                <span class="inline-flex items-center gap-1 rounded-lg bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-800">
+                  Search: "{{ searchTerm() }}"
+                </span>
+              }
+              @if (selectedCategoryId() !== null) {
+                <span class="inline-flex items-center gap-1 rounded-lg bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-800">
+                  Category filtered
+                </span>
+              }
+              @if (selectedVenueId() !== null) {
+                <span class="inline-flex items-center gap-1 rounded-lg bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-800">
+                  Venue filtered
+                </span>
+              }
+              @if (selectedDate()) {
+                <span class="inline-flex items-center gap-1 rounded-lg bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-800">
+                  Date: {{ selectedDate() }}
+                </span>
+              }
+            </div>
 
             <button
               type="button"
               (click)="clearFilters()"
-              class="mt-5 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700">
-
-              Clear Filters
-
+              class="rounded-lg border border-slate-300 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-700 shadow-2xs transition hover:bg-slate-100 cursor-pointer"
+            >
+              Clear All Filters
             </button>
+          </div>
+        }
+      </section>
+    </div>
+  </header>
 
-          }
+  <!-- Events Content Section -->
+  <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-8">
 
-        </div>
-
-      }
-
+    <!-- Loading Skeleton State -->
+    @if (isLoading()) {
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        @for (skeleton of [1, 2, 3, 4, 5, 6]; track skeleton) {
+          <div class="animate-pulse overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xs flex flex-col h-96">
+            <div class="h-44 w-full bg-slate-200"></div>
+            <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+              <div class="space-y-2.5">
+                <div class="h-4 w-3/4 rounded bg-slate-200"></div>
+                <div class="h-3 w-1/2 rounded bg-slate-200"></div>
+              </div>
+              <div class="h-10 w-full rounded-xl bg-slate-200"></div>
+            </div>
+          </div>
+        }
+      </div>
     }
 
-  </div>
-</div>
+    <!-- Error State -->
+    @if (!isLoading() && errorMessage()) {
+      <div class="max-w-xl mx-auto my-8">
+        <app-error-message
+          [message]="errorMessage()"
+          [showRetry]="true"
+          (retry)="retry()"
+        ></app-error-message>
+      </div>
+    }
+
+    <!-- Loaded Events State -->
+    @if (!isLoading() && !errorMessage()) {
+      @if (events().length > 0) {
+        <!-- Results count bar -->
+        <div class="mb-6 flex items-center justify-between text-xs text-slate-600">
+          <span>
+            Found <strong class="font-bold text-slate-900">{{ events().length }}</strong> event(s)
+          </span>
+          <span class="text-slate-400">
+            Page {{ currentPage() }} of {{ paginatedEvents().length ? Math.ceil(events().length / pageSize()) : 1 }}
+          </span>
+        </div>
+
+        <!-- Event Cards Grid Reusing Shared EventCard -->
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          @for (event of paginatedEvents(); track event.eventId) {
+            <app-event-card
+              [event]="event"
+              (selectEvent)="viewEvent($event)"
+            ></app-event-card>
+          }
+        </div>
+
+        <!-- Shared Pagination Component -->
+        <div class="mt-8 border-t border-slate-200 pt-6">
+          <app-pagination
+            [currentPage]="currentPage()"
+            [pageSize]="pageSize()"
+            [totalItems]="events().length"
+            (pageChange)="onPageChange($event)"
+          ></app-pagination>
+        </div>
+
+      } @else {
+        <!-- Empty State Component -->
+        <div class="max-w-md mx-auto my-12">
+          <app-empty-state
+            title="No events found"
+            description="We could not find any events matching your search criteria. Try modifying your filters or clearing them to see all events."
+            [actionText]="hasActiveFilters() ? 'Clear Filters' : 'Browse All Events'"
+            (action)="clearFilters()"
+          ></app-empty-state>
+        </div>
+      }
+    }
+
+  </section>
+</main>
+
+@if (!isEmbedded) {
+  <app-footer></app-footer>
+}

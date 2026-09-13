@@ -1,9 +1,22 @@
-import { Component } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
-  imports: [],
   selector: 'app-empty-state',
-  styleUrl: './empty-state.css',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './empty-state.html',
+  styleUrl: './empty-state.css',
 })
-export class EmptyState {}
+export class EmptyState {
+  @Input() title = 'No data available';
+  @Input() description = 'There are no items to display at this time.';
+  @Input() actionText = '';
+
+  @Output() action = new EventEmitter<void>();
+
+  onAction(): void {
+    this.action.emit();
+  }
+}
+

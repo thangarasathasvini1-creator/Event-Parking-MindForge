@@ -10,11 +10,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import { CategoryService } from '../../../../../services/category';
 import { Category } from '../../../../../models/category.model';
+import { LoadingSpinner } from '../../../../../shared/components/loading-spinner/loading-spinner';
+import { ErrorMessage } from '../../../../../shared/components/error-message/error-message';
 
 @Component({
   selector: 'app-category-edit',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LoadingSpinner, ErrorMessage],
   templateUrl: './category-edit.html',
   styleUrl: './category-edit.css',
 })
@@ -51,7 +53,7 @@ export class CategoryEdit implements OnInit {
     this.loadCategory();
   }
 
-  private loadCategory(): void {
+  loadCategory(): void {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
@@ -59,21 +61,20 @@ export class CategoryEdit implements OnInit {
       .getCategoryById(this.categoryId)
       .subscribe({
         next: (response) => {
-          this.category = response;
+          this.category = {
+            categoryId: response.categoryId,
+            name: response.name,
+            description: response.description ?? '',
+          };
           this.isLoading.set(false);
         },
-
         error: (error) => {
-          console.error(
-            'Failed to load category:',
-            error
-          );
-
+          console.error('Failed to load category:', error);
           this.errorMessage.set(
-            error?.error?.message ??
-              'Unable to load category. Please try again.'
+            error?.status === 404
+              ? 'Category not found. It may have been deleted.'
+              : (error?.error?.message ?? 'Unable to load category details.')
           );
-
           this.isLoading.set(false);
         },
       });
@@ -83,10 +84,8 @@ export class CategoryEdit implements OnInit {
     this.successMessage.set('');
     this.errorMessage.set('');
 
-    if (!this.category.name.trim()) {
-      this.errorMessage.set(
-        'Category name is required.'
-      );
+    if (!this.category.name || !this.category.name.trim()) {
+      this.errorMessage.set('Category name is required.');
       return;
     }
 
@@ -95,8 +94,7 @@ export class CategoryEdit implements OnInit {
     const categoryData: Category = {
       categoryId: this.categoryId,
       name: this.category.name.trim(),
-      description:
-        this.category.description?.trim() || '',
+      description: this.category.description?.trim() || '',
     };
 
     this.categoryService
@@ -104,23 +102,20 @@ export class CategoryEdit implements OnInit {
       .subscribe({
         next: () => {
           this.successMessage.set(
-            'Category updated successfully.'
+            `Category "${categoryData.name}" was updated successfully. Redirecting to categories...`
           );
-
           this.isSaving.set(false);
+
+          setTimeout(() => {
+            this.goBack();
+          }, 1200);
         },
-
         error: (error) => {
-          console.error(
-            'Failed to update category:',
-            error
-          );
-
+          console.error('Failed to update category:', error);
           this.errorMessage.set(
             error?.error?.message ??
-              'Unable to update category. Please try again.'
+              'Unable to update category. Please check your data and try again.'
           );
-
           this.isSaving.set(false);
         },
       });
