@@ -170,6 +170,30 @@
         }
       </button>
 
+      <!-- 5. Customers Management -->
+      <button
+        type="button"
+        (click)="navigateTab('customers')"
+        class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition cursor-pointer"
+        [class.bg-blue-50]="activeTab() === 'customers'"
+        [class.text-blue-700]="activeTab() === 'customers'"
+        [class.font-bold]="activeTab() === 'customers'"
+        [class.text-slate-600]="activeTab() !== 'customers'"
+        [class.hover:bg-slate-50]="activeTab() !== 'customers'"
+        [class.justify-center]="sidebarCollapsed() && !mobileMenuOpen()"
+        title="Customer Management"
+      >
+        <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        @if (!sidebarCollapsed() || mobileMenuOpen()) {
+          <span class="truncate">Customers & Accounts</span>
+        }
+      </button>
+
       @if (!sidebarCollapsed() || mobileMenuOpen()) {
         <p class="mt-5 mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
           Venue & Inventory

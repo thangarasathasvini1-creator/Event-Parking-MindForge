@@ -85,6 +85,9 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             int eventId,
             CreateParkingSlotDto dto)
         {
+            await using var transaction = await _context.BeginReservationTransactionAsync();
+            if (!await _context.Events.AnyAsync(e => e.EventId == eventId))
+                throw new KeyNotFoundException("Event not found.");
             if (string.IsNullOrWhiteSpace(dto.SlotNumber))
             {
                 throw new ArgumentException(
@@ -136,6 +139,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
             await _parkingRepository.AddAsync(slot);
             await _parkingRepository.SaveChangesAsync();
+                await transaction.CommitAsync();
 
             return MapToDto(slot);
         }
@@ -149,12 +153,15 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             int parkingSlotId,
             UpdateParkingSlotDto dto)
         {
+            await using var transaction = await _context.BeginReservationTransactionAsync();
             var slot = await _parkingRepository
                 .GetByIdAsync(parkingSlotId);
 
             if (slot == null || slot.EventId != eventId)
                 return null;
 
+            if (!await _context.Events.AnyAsync(e => e.EventId == eventId))
+                throw new KeyNotFoundException("Event not found.");
             if (string.IsNullOrWhiteSpace(dto.SlotNumber))
             {
                 throw new ArgumentException(
@@ -183,6 +190,8 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                     "Parking fee cannot be negative.");
             }
 
+            if (dto.Status != slot.Status)
+                throw new InvalidOperationException("Slot status is managed by the booking lifecycle.");
             var slotNumber = dto.SlotNumber.Trim();
 
             var duplicate = await _parkingRepository
@@ -244,6 +253,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             try
             {
                 await _parkingRepository.SaveChangesAsync();
+                await transaction.CommitAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -262,6 +272,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             int eventId,
             int parkingSlotId)
         {
+            await using var transaction = await _context.BeginReservationTransactionAsync();
             var slot = await _parkingRepository
                 .GetByIdAsync(parkingSlotId);
 
@@ -280,6 +291,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             try
             {
                 await _parkingRepository.SaveChangesAsync();
+                await transaction.CommitAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -307,8 +319,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             }
 
             await using var transaction =
-                await _context.Database.BeginTransactionAsync(
-                    IsolationLevel.Serializable);
+                await _context.BeginReservationTransactionAsync();
 
             try
             {
@@ -339,7 +350,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 // Booking must be Pending
                 // -----------------------------------------
 
-                if (booking.Status != BookingStatus.Pending)
+                if (booking.Status != BookingStatus.Pending || !booking.HoldExpiresAt.HasValue || booking.HoldExpiresAt <= DateTime.UtcNow)
                 {
                     throw new InvalidOperationException(
                         "Parking can only be assigned to a pending booking.");
@@ -382,7 +393,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 // Check Availability
                 // -----------------------------------------
 
-                if (parkingSlot.Status != ParkingSlotStatus.Available)
+                if (parkingSlot.Status != ParkingSlotStatus.Available || await _bookingRepository.HasActiveParkingReservationAsync(parkingSlot.ParkingSlotId, booking.EventId))
                 {
                     throw new InvalidOperationException(
                         $"Parking slot {parkingSlot.SlotNumber} is not available.");
@@ -466,8 +477,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             int customerId)
         {
             await using var transaction =
-                await _context.Database.BeginTransactionAsync(
-                    IsolationLevel.Serializable);
+                await _context.BeginReservationTransactionAsync();
 
             try
             {
@@ -508,7 +518,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 // Booking must be Pending
                 // -----------------------------------------
 
-                if (booking.Status != BookingStatus.Pending)
+                if (booking.Status != BookingStatus.Pending || !booking.HoldExpiresAt.HasValue || booking.HoldExpiresAt <= DateTime.UtcNow)
                 {
                     throw new InvalidOperationException(
                         "Parking can only be removed from a pending booking.");

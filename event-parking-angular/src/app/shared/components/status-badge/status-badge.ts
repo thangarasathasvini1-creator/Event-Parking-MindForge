@@ -31,6 +31,8 @@ export class StatusBadge {
       case 'expired':
       case 'inactive':
         return 'bg-rose-50 text-rose-700 border-rose-200';
+      case 'vip':
+        return 'bg-purple-50 text-purple-700 border-purple-200 font-bold';
       default:
         return 'bg-slate-100 text-slate-700 border-slate-200';
     }

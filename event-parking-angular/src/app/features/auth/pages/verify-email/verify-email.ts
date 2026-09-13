@@ -46,6 +46,11 @@ export class VerifyEmail {
   });
 
   constructor() {
+    const token = this.route.snapshot.queryParamMap.get('token');
+    if (token) {
+      this.isLoading.set(true);
+      this.authService.verifyEmailToken(token).subscribe({ next: () => { this.isVerified.set(true); this.isLoading.set(false); this.successMessage.set('Email verified. You can now log in.'); }, error: e => { this.errorMessage.set(e.error?.message || 'Verification link is invalid or expired.'); this.isLoading.set(false); } });
+    }
     const emailFromRoute =
       this.route.snapshot.queryParamMap.get('email');
 

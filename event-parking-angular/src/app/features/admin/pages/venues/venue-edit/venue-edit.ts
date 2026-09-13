@@ -5,7 +5,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormControl, FormRecord, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { VenueService } from '../../../../../services/venue';
@@ -16,7 +16,7 @@ import { ErrorMessage } from '../../../../../shared/components/error-message/err
 @Component({
   selector: 'app-venue-edit',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingSpinner, ErrorMessage],
+  imports: [CommonModule, ReactiveFormsModule, LoadingSpinner, ErrorMessage],
   templateUrl: './venue-edit.html',
   styleUrl: './venue-edit.css',
 })
@@ -41,6 +41,17 @@ export class VenueEdit implements OnInit {
     busCapacity: 0,
     vanCapacity: 0,
   };
+  readonly form = new FormRecord<FormControl<any>>({
+    name: new FormControl(this.venue.name ?? '', { nonNullable: true, validators: [Validators.required] }),
+    address: new FormControl(this.venue.address ?? '', { nonNullable: true, validators: [Validators.required] }),
+    totalCapacity: new FormControl(this.venue.totalCapacity ?? 0, { nonNullable: true, validators: [Validators.required, Validators.min(1)] }),
+    carCapacity: new FormControl(this.venue.carCapacity ?? 0, { nonNullable: true, validators: [Validators.min(0)] }),
+    bikeCapacity: new FormControl(this.venue.bikeCapacity ?? 0, { nonNullable: true, validators: [Validators.min(0)] }),
+    busCapacity: new FormControl(this.venue.busCapacity ?? 0, { nonNullable: true, validators: [Validators.min(0)] }),
+    vanCapacity: new FormControl(this.venue.vanCapacity ?? 0, { nonNullable: true, validators: [Validators.min(0)] }),
+  });
+  constructor() { this.form.valueChanges.subscribe(value => Object.assign(this.venue, value)); }
+
 
   get computedTotalParkingSlots(): number {
     return (
@@ -85,6 +96,7 @@ export class VenueEdit implements OnInit {
           busCapacity: response.busCapacity ?? 0,
           vanCapacity: response.vanCapacity ?? 0,
         };
+        this.form.patchValue(this.venue, { emitEvent: false });
         this.isLoading.set(false);
       },
       error: (error) => {

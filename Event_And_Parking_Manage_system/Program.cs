@@ -136,6 +136,7 @@ namespace Event_And_Parking_Manage_system
                 ParkingService>();
 
             // Member 4 - Booking
+            builder.Services.AddScoped<ReservationManagementService>();
             builder.Services.AddScoped<
                 IBookingService,
                 BookingService>();
@@ -324,6 +325,7 @@ namespace Event_And_Parking_Manage_system
             // ==========================================
 
             var app = builder.Build();
+            app.UseMiddleware<ApiExceptionMiddleware>();
 
             // ==========================================
             // Database Migration & Seed

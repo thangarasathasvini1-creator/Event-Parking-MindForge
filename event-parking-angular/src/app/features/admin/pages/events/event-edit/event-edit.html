@@ -48,7 +48,7 @@
           </div>
         }
 
-        <form (ngSubmit)="updateEvent()" #eventEditForm="ngForm" class="space-y-8">
+        <form (ngSubmit)="updateEvent()" [formGroup]="form" class="space-y-8">
 
           <!-- SECTION 1: EVENT INFORMATION -->
           <fieldset class="space-y-4">
@@ -65,7 +65,7 @@
                 id="edit-event-name"
                 type="text"
                 name="name"
-                [(ngModel)]="event.name"
+                formControlName="name"
                 required
                 class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
@@ -80,7 +80,7 @@
                 <select
                   id="edit-event-category"
                   name="categoryId"
-                  [(ngModel)]="event.categoryId"
+                  formControlName="categoryId"
                   required
                   class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 cursor-pointer"
                 >
@@ -100,8 +100,8 @@
                 <select
                   id="edit-event-venue"
                   name="venueId"
-                  [(ngModel)]="event.venueId"
-                  (ngModelChange)="onVenueChange()"
+                  formControlName="venueId"
+                  (change)="onVenueChange()"
                   required
                   class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 cursor-pointer"
                 >
@@ -131,7 +131,7 @@
                   id="edit-event-date"
                   type="date"
                   name="eventDate"
-                  [(ngModel)]="event.eventDate"
+                  formControlName="eventDate"
                   required
                   class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
@@ -146,7 +146,7 @@
                   id="edit-start-time"
                   type="time"
                   name="startTime"
-                  [(ngModel)]="event.startTime"
+                  formControlName="startTime"
                   required
                   class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
@@ -161,7 +161,7 @@
                   id="edit-end-time"
                   type="time"
                   name="endTime"
-                  [(ngModel)]="event.endTime"
+                  formControlName="endTime"
                   required
                   class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
@@ -187,7 +187,7 @@
                   name="ticketPrice"
                   min="0"
                   step="0.01"
-                  [(ngModel)]="event.ticketPrice"
+                  formControlName="ticketPrice"
                   required
                   class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
@@ -204,7 +204,7 @@
                   name="parkingFee"
                   min="0"
                   step="0.01"
-                  [(ngModel)]="event.parkingFee"
+                  formControlName="parkingFee"
                   required
                   class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
@@ -235,7 +235,7 @@
                 type="number"
                 name="capacity"
                 min="1"
-                [(ngModel)]="event.capacity"
+                formControlName="capacity"
                 [class.border-rose-400]="isCapacityExceeded"
                 [class.bg-rose-50]="isCapacityExceeded"
                 required
@@ -277,7 +277,7 @@
             </button>
           </div>
 
-        </form>
+        <p class="text-sm text-rose-700" role="status">@if (form.invalid && form.touched) { Check required fields and numeric limits before saving. }</p></form>
       </div>
     }
 

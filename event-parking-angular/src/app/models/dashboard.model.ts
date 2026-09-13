@@ -19,6 +19,8 @@ export interface EventBookingSummary {
 }
 
 export interface AdminDashboard {
+  totalEvents: number;
+  totalCustomers: number;
   totalBookings: number;
   totalRevenue: number;
   totalSeatsBooked: number;

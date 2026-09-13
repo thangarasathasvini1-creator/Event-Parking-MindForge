@@ -124,6 +124,14 @@ export class EventList implements OnInit {
     this.router.navigate(['/events', eventId]);
   }
 
+  manageSeats(eventId: number): void {
+    this.router.navigate(['/admin/seats'], { queryParams: { eventId } });
+  }
+
+  manageParking(eventId: number): void {
+    this.router.navigate(['/admin/parking'], { queryParams: { eventId } });
+  }
+
   initiateDelete(event: Event): void {
     this.errorMessage.set('');
     this.successMessage.set('');

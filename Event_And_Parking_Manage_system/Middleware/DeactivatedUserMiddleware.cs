@@ -26,7 +26,7 @@ namespace Event_And_Parking_Manage_system.Middleware
                     var customerRepository = context.RequestServices.GetRequiredService<ICustomerRepository>();
                     var customer = await customerRepository.GetByIdAsync(customerId);
 
-                    if (customer != null && customer.Status == CustomerStatus.Deactivated)
+                    if (customer == null || customer.Status == CustomerStatus.Deactivated)
                     {
                         context.Response.StatusCode = StatusCodes.Status403Forbidden;
                         context.Response.ContentType = "application/json";
@@ -38,6 +38,17 @@ namespace Event_And_Parking_Manage_system.Middleware
                 }
             }
 
+            if (context.User.Identity?.IsAuthenticated == true && context.Request.Path.StartsWithSegments("/api/bookings"))
+            {
+                var id = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var repository = context.RequestServices.GetRequiredService<ICustomerRepository>();
+                if (!int.TryParse(id, out var customerId) || (await repository.GetByIdAsync(customerId))?.EmailVerified != true)
+                {
+                    context.Response.StatusCode = 403;
+                    await context.Response.WriteAsJsonAsync(new { message = "Verify your email before booking or payment.", code = "email_unverified" });
+                    return;
+                }
+            }
             await _next(context);
         }
     }

@@ -10,7 +10,7 @@
         Task SendVerificationOtpEmailAsync(
             string email,
             string name,
-            string otp);
+            string otp, string? token = null);
 
         Task SendPasswordResetEmailAsync(
             string email,
@@ -20,6 +20,6 @@
         Task SendPasswordResetOtpEmailAsync(
         string email,
         string name,
-        string otp);
+        string otp, string? token = null);
     }
 }

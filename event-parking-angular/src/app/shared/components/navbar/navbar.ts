@@ -34,6 +34,11 @@ export class Navbar implements OnInit {
     return this.authState.isAuthenticated();
   }
 
+  get isAdmin(): boolean {
+    const role = this.authState.getUser()?.role?.toLowerCase();
+    return role === 'admin' || role === 'administrator';
+  }
+
   get userName(): string {
     const user = this.authState.getUser();
     return user?.name || user?.email || 'Account';
@@ -141,7 +146,11 @@ export class Navbar implements OnInit {
   goToHome(): void {
     this.closeMobileMenu();
     if (this.isLoggedIn) {
-      this.router.navigate(['/customer/dashboard']);
+      if (this.isAdmin) {
+        this.router.navigate(['/admin/dashboard']);
+      } else {
+        this.router.navigate(['/customer/dashboard']);
+      }
     } else {
       this.router.navigate(['/']);
     }
@@ -149,22 +158,43 @@ export class Navbar implements OnInit {
 
   goToEvents(): void {
     this.closeMobileMenu();
-    this.router.navigate(['/events']);
+    if (this.isAdmin) {
+      this.router.navigate(['/admin/events']);
+    } else {
+      this.router.navigate(['/events']);
+    }
   }
 
   goToBookings(): void {
     this.closeMobileMenu();
-    this.router.navigate(['/bookings']);
+    if (this.isAdmin) {
+      this.router.navigate(['/admin/bookings']);
+    } else {
+      this.router.navigate(['/bookings']);
+    }
   }
 
   goToPayments(): void {
     this.closeMobileMenu();
-    this.router.navigate(['/payments']);
+    if (this.isAdmin) {
+      this.router.navigate(['/admin/payments']);
+    } else {
+      this.router.navigate(['/payments']);
+    }
   }
 
   goToProfile(): void {
     this.closeMobileMenu();
-    this.router.navigate(['/customer/profile']);
+    if (this.isAdmin) {
+      this.router.navigate(['/admin/dashboard']);
+    } else {
+      this.router.navigate(['/customer/profile']);
+    }
+  }
+
+  goToAdminDashboard(): void {
+    this.closeMobileMenu();
+    this.router.navigate(['/admin/dashboard']);
   }
 
   goToLogin(): void {

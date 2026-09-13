@@ -1,3 +1,4 @@
+using Event_And_Parking_Manage_system.Data;
 using Event_And_Parking_Manage_system.DTOs.Venues;
 using Event_And_Parking_Manage_system.Models.Entities;
 using Event_And_Parking_Manage_system.Repositories.Interfaces;
@@ -8,13 +9,15 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 {
     public class VenueService : IVenueService
     {
+        private readonly ApplicationDbContext _context;
         private readonly IVenueRepository _venueRepository;
         private readonly IEventRepository _eventRepository;
 
-        public VenueService(
+        public VenueService(ApplicationDbContext context, 
             IVenueRepository venueRepository,
             IEventRepository eventRepository)
         {
+            _context = context;
             _venueRepository = venueRepository;
             _eventRepository = eventRepository;
         }
@@ -84,6 +87,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
         public async Task<VenueDto> CreateAsync(CreateVenueDto dto)
         {
+            await using var transaction = await _context.BeginReservationTransactionAsync();
             var validationError = VenueValidator.Validate(dto);
 
             if (validationError != null)
@@ -111,6 +115,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
             await _venueRepository.AddAsync(venue);
             await _venueRepository.SaveChangesAsync();
+                await transaction.CommitAsync();
 
             return new VenueDto
             {
@@ -128,6 +133,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
         public async Task<bool> UpdateAsync(int id, UpdateVenueDto dto)
         {
+            await using var transaction = await _context.BeginReservationTransactionAsync();
             var validationError = VenueValidator.Validate(dto);
 
             if (validationError != null)
@@ -167,11 +173,14 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
 
             _venueRepository.Update(venue);
 
-            return await _venueRepository.SaveChangesAsync();
+            var saved = await _venueRepository.SaveChangesAsync();
+            await transaction.CommitAsync();
+            return saved;
         }
 
         public async Task<bool> DeleteAsync(int id)
         {
+            await using var transaction = await _context.BeginReservationTransactionAsync();
             var venue = await _venueRepository.GetByIdAsync(id);
 
             if (venue == null)
@@ -182,15 +191,17 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             var upcomingEvents = scheduledEvents.Where(e =>
                 e.EventDate.Date.Add(e.StartTime) >= now).ToList();
 
-            if (upcomingEvents.Any())
+            if (scheduledEvents.Any())
             {
                 throw new InvalidOperationException(
-                    "Venue cannot be deleted because upcoming events exist for this venue.");
+                    "Venue cannot be deleted while events reference it. Remove eligible events first.");
             }
 
             _venueRepository.Delete(venue);
 
-            return await _venueRepository.SaveChangesAsync();
+            var saved = await _venueRepository.SaveChangesAsync();
+            await transaction.CommitAsync();
+            return saved;
         }
     }
 }

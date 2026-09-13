@@ -9,6 +9,9 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class PaymentService {
+  getAdminPayments(search = '', status = ''): Observable<AdminPayment[]> {
+    return this.http.get<AdminPayment[]>(this.apiUrl, { params: { search, status } });
+  }
 
   private readonly http = inject(HttpClient);
 
@@ -64,3 +67,4 @@ export class PaymentService {
   }
 
 }
+export interface AdminPayment { paymentId: number; bookingId: number; bookingNumber: string; customerId: number; customerName: string; eventName: string; amount: number; status: string; transactionReference: string | null; paidAt: string | null; }

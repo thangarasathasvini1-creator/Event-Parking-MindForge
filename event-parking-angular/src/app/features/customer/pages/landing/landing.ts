@@ -10,6 +10,7 @@ import { Router } from '@angular/router';
 
 import { EventService } from '../../../../services/event';
 import { Event } from '../../../../models/event.model';
+import { AuthStateService } from '../../../../core/auth/auth-state';
 
 import { Navbar } from '../../../../shared/components/navbar/navbar';
 import { Footer } from '../../../../shared/components/footer/footer';
@@ -34,6 +35,7 @@ import { ErrorMessage } from '../../../../shared/components/error-message/error-
 })
 export class Landing implements OnInit {
   private readonly eventService = inject(EventService);
+  private readonly authState = inject(AuthStateService);
   private readonly router = inject(Router);
 
   readonly featuredEvents = signal<Event[]>([]);
@@ -50,6 +52,13 @@ export class Landing implements OnInit {
   ];
 
   ngOnInit(): void {
+    const user = this.authState.getUser();
+    const role = user?.role?.toLowerCase();
+    if (this.authState.isAuthenticated() && (role === 'admin' || role === 'administrator')) {
+      this.router.navigate(['/admin/dashboard']);
+      return;
+    }
+
     this.loadFeaturedEvents();
   }
 

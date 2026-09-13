@@ -1,182 +1,54 @@
 using Event_And_Parking_Manage_system.Data;
+using Event_And_Parking_Manage_system.Models.Entities;
 using Event_And_Parking_Manage_system.Models.Enums;
-using Event_And_Parking_Manage_system.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-
-namespace Event_And_Parking_Manage_system.Services.Implementation
+namespace Event_And_Parking_Manage_system.Services.Implementation;
+public class BookingExpiryService(IServiceScopeFactory scopes, ILogger<BookingExpiryService> logger, IConfiguration configuration) : BackgroundService
 {
-    public class BookingExpiryService : BackgroundService
+    public static async Task<bool> ExpireAsync(ApplicationDbContext db, int id, CancellationToken ct = default)
     {
-        private readonly IServiceScopeFactory _scopeFactory;
-        private readonly ILogger<BookingExpiryService> _logger;
-
-        public BookingExpiryService(
-            IServiceScopeFactory scopeFactory,
-            ILogger<BookingExpiryService> logger)
+        await using var transaction = await db.BeginReservationTransactionAsync(ct);
+        var booking = await db.Bookings.Include(b => b.BookingSeats).ThenInclude(s => s.Seat)
+            .Include(b => b.ParkingReservation).ThenInclude(p => p!.ParkingSlot).SingleOrDefaultAsync(b => b.BookingId == id, ct);
+        if (booking == null || booking.Status != BookingStatus.Pending || booking.HoldExpiresAt == null || booking.HoldExpiresAt > DateTime.UtcNow) return false;
+        foreach (var item in booking.BookingSeats) item.Seat.Status = SeatStatus.Available;
+        if (booking.ParkingReservation != null) booking.ParkingReservation.ParkingSlot.Status = ParkingSlotStatus.Available;
+        booking.Status = BookingStatus.Expired;
+        booking.HoldExpiresAt = null;
+        booking.UpdatedAt = DateTime.UtcNow;
+        db.Notifications.Add(new Notification { CustomerId = booking.CustomerId, Type = "BookingExpired", Message = $"Booking {booking.BookingNumber} expired because payment was not completed." });
+        await db.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
+        return true;
+    }
+    protected override async Task ExecuteAsync(CancellationToken ct)
+    {
+        while (!ct.IsCancellationRequested)
         {
-            _scopeFactory = scopeFactory;
-            _logger = logger;
-        }
-
-        protected override async Task ExecuteAsync(
-            CancellationToken stoppingToken)
-        {
-            while (!stoppingToken.IsCancellationRequested)
+            try
             {
-                try
+                List<int> ids;
+                using (var scope = scopes.CreateScope())
                 {
-                    using var scope =
-                        _scopeFactory.CreateScope();
-
-                    var context =
-                        scope.ServiceProvider
-                            .GetRequiredService<ApplicationDbContext>();
-
-                    var notificationService =
-                        scope.ServiceProvider
-                            .GetRequiredService<INotificationService>();
-
-                    var now = DateTime.UtcNow;
-
-                    // ==========================================
-                    // Find Expired Pending Bookings
-                    // ==========================================
-
-                    var expiredBookings =
-                        await context.Bookings
-                            .Include(b => b.BookingSeats)
-                                .ThenInclude(bs => bs.Seat)
-                            .Include(b => b.ParkingReservation)
-                                .ThenInclude(pr => pr!.ParkingSlot)
-                            .Where(b =>
-                                b.Status == BookingStatus.Pending &&
-                                b.HoldExpiresAt.HasValue &&
-                                b.HoldExpiresAt.Value <= now)
-                            .ToListAsync(stoppingToken);
-
-                    // ==========================================
-                    // Process Expired Bookings individually
-                    // ==========================================
-
-                    foreach (var booking in expiredBookings)
+                    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    ids = await db.Bookings.AsNoTracking().Where(b => b.Status == BookingStatus.Pending && b.HoldExpiresAt <= DateTime.UtcNow).Select(b => b.BookingId).ToListAsync(ct);
+                }
+                foreach (var id in ids)
+                {
+                    try
                     {
-                        await using var transaction = await context.Database.BeginTransactionAsync(stoppingToken);
-
-                        try
-                        {
-                            // --------------------------------------
-                            // Release Seats
-                            // --------------------------------------
-
-                            foreach (var bookingSeat in booking.BookingSeats)
-                            {
-                                if (bookingSeat.Seat != null &&
-                                    bookingSeat.Seat.Status == SeatStatus.Held)
-                                {
-                                    bookingSeat.Seat.Status = SeatStatus.Available;
-                                    bookingSeat.Seat.UpdatedAt = now;
-                                }
-                            }
-
-                            // --------------------------------------
-                            // Release Parking
-                            // --------------------------------------
-
-                            if (booking.ParkingReservation?.ParkingSlot != null)
-                            {
-                                var parkingSlot = booking.ParkingReservation.ParkingSlot;
-                                if (parkingSlot.Status == ParkingSlotStatus.Held)
-                                {
-                                    parkingSlot.Status = ParkingSlotStatus.Available;
-                                    parkingSlot.UpdatedAt = now;
-                                }
-                            }
-
-                            // --------------------------------------
-                            // Expire Booking
-                            // --------------------------------------
-
-                            booking.Status = BookingStatus.Expired;
-                            booking.UpdatedAt = now;
-
-                            await context.SaveChangesAsync(stoppingToken);
-                            await transaction.CommitAsync(stoppingToken);
-
-                            _logger.LogInformation(
-                                "Expired booking {BookingId} processed successfully.",
-                                booking.BookingId);
-
-                            // --------------------------------------
-                            // Create Expiry Notification
-                            // --------------------------------------
-
-                            try
-                            {
-                                await notificationService.CreateNotificationAsync(
-                                    booking.CustomerId,
-                                    "BookingExpired",
-                                    $"Your booking {booking.BookingNumber} has expired because the payment hold period ended.");
-                            }
-                            catch (Exception notificationEx)
-                            {
-                                _logger.LogError(
-                                    notificationEx,
-                                    "Booking {BookingId} expired successfully, but expiry notification failed.",
-                                    booking.BookingId);
-                            }
-                        }
-                        catch (DbUpdateConcurrencyException ex)
-                        {
-                            await transaction.RollbackAsync(stoppingToken);
-                            _logger.LogWarning(
-                                ex,
-                                "Concurrency conflict while processing expired booking {BookingId}.",
-                                booking.BookingId);
-                        }
-                        catch (Exception ex)
-                        {
-                            await transaction.RollbackAsync(stoppingToken);
-                            _logger.LogError(
-                                ex,
-                                "Error while processing expired booking {BookingId}.",
-                                booking.BookingId);
-                        }
+                        // Each record gets a fresh context, transaction and state check.
+                        using var scope = scopes.CreateScope();
+                        await ExpireAsync(scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(), id, ct);
                     }
-                }
-                catch (DbUpdateConcurrencyException ex)
-                {
-                    _logger.LogWarning(
-                        ex,
-                        "Concurrency conflict while processing expired bookings.");
-                }
-                catch (OperationCanceledException)
-                    when (stoppingToken.IsCancellationRequested)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(
-                        ex,
-                        "Error while processing expired bookings.");
-                }
-
-                // ==========================================
-                // Wait One Minute Before Next Check
-                // ==========================================
-
-                try
-                {
-                    await Task.Delay(
-                        TimeSpan.FromMinutes(1),
-                        stoppingToken);
-                }
-                catch (OperationCanceledException)
-                    when (stoppingToken.IsCancellationRequested)
-                {
-                    break;
+                    catch (OperationCanceledException) when (ct.IsCancellationRequested) { return; }
+                    catch (Exception ex) { logger.LogWarning(ex, "Expiry will retry booking {BookingId}", id); }
                 }
             }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested) { return; }
+            catch (Exception ex) { logger.LogError(ex, "Expiry scan failed"); }
+            try { await Task.Delay(TimeSpan.FromSeconds(Math.Clamp(configuration.GetValue<int?>("Booking:ExpiryScanSeconds") ?? 60, 1, 3600)), ct); }
+            catch (OperationCanceledException) { return; }
         }
     }
 }

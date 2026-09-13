@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.Models.Entities;
+using Event_And_Parking_Manage_system.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -9,6 +9,16 @@ namespace Event_And_Parking_Manage_system.Data.Configurations
         public void Configure(EntityTypeBuilder<Customer> builder)
         {
             builder.HasKey(x => x.CustomerId);
+            builder.Property(x => x.PasswordHash).IsConcurrencyToken();
+            builder.Property(x => x.Email).IsConcurrencyToken();
+            builder.Property(x => x.EmailVerified).IsConcurrencyToken();
+            builder.Property(x => x.Status).IsConcurrencyToken();
+            builder.Property(x => x.EmailVerificationOtpHash).IsConcurrencyToken();
+            builder.Property(x => x.EmailVerificationOtpAttempts).IsConcurrencyToken();
+            builder.Property(x => x.EmailVerificationTokenHash).IsConcurrencyToken();
+            builder.Property(x => x.PasswordResetOtpHash).IsConcurrencyToken();
+            builder.Property(x => x.PasswordResetOtpAttempts).IsConcurrencyToken();
+            builder.Property(x => x.PasswordResetAuthorizationTokenHash).IsConcurrencyToken();
             builder.Property(x => x.Name).IsRequired().HasMaxLength(100);
             builder.Property(x => x.Email).IsRequired().HasMaxLength(100);
             builder.HasIndex(x => x.Email).IsUnique();

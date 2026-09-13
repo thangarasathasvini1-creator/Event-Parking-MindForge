@@ -190,7 +190,7 @@ namespace Event_And_Parking_Manage_system.Controllers
             // Administrator can view any receipt
             if (User.IsInRole("Administrator"))
             {
-                return Ok(payment);
+                return payment.Status == "Completed" ? Ok(payment) : Conflict(new { message = "Receipts are available only for completed payments." });
             }
 
             var currentCustomerId = GetCustomerId();
@@ -220,7 +220,7 @@ namespace Event_And_Parking_Manage_system.Controllers
                 return Forbid();
             }
 
-            return Ok(payment);
+            return payment.Status == "Completed" ? Ok(payment) : Conflict(new { message = "Receipts are available only for completed payments." });
         }
 
         // ==========================================

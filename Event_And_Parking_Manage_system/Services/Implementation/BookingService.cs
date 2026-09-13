@@ -49,8 +49,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             CreateBookingDto dto)
         {
             await using var transaction =
-                await _context.Database.BeginTransactionAsync(
-                    IsolationLevel.Serializable);
+                await _context.BeginReservationTransactionAsync();
 
             try
             {
@@ -58,6 +57,9 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 // 1. Check Event
                 // =================================================
 
+                var customer = await _context.Customers.FindAsync(customerId);
+                if (customer == null || customer.Status != CustomerStatus.Active || !customer.EmailVerified)
+                    throw new UnauthorizedAccessException("An active account with a verified email is required.");
                 var eventEntity =
                     await _eventRepository.GetByIdAsync(dto.EventId);
 
@@ -394,7 +396,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             Booking? booking = null;
 
             await using var transaction =
-                await _context.Database.BeginTransactionAsync();
+                await _context.BeginReservationTransactionAsync();
 
             try
             {
@@ -484,8 +486,10 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 // 8. Cancel Booking
                 // =================================================
 
-                booking.Status =
-                    BookingStatus.Cancelled;
+                booking.Status = BookingStatus.Cancelled;
+                booking.HoldExpiresAt = null;
+                _context.Notifications.Add(new Notification { CustomerId = booking.CustomerId,
+                    Type = "BookingCancelled", Message = $"Your booking {booking.BookingNumber} has been cancelled." });
 
                 booking.UpdatedAt =
                     DateTime.UtcNow;
@@ -526,26 +530,6 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             // =====================================================
             // 11. Create Cancellation Notification
             // =====================================================
-
-            if (booking != null)
-            {
-                try
-                {
-                    await _notificationService.CreateNotificationAsync(
-                        booking.CustomerId,
-                        "BookingCancelled",
-                        $"Your booking {booking.BookingNumber} has been cancelled successfully.");
-                }
-                catch (Exception ex)
-                {
-                    // Booking is already successfully cancelled.
-                    // Notification failure must not undo the booking.
-                    _logger.LogError(
-                        ex,
-                        "Booking {BookingId} was cancelled successfully, but cancellation notification failed.",
-                        booking.BookingId);
-                }
-            }
 
             return true;
         }
