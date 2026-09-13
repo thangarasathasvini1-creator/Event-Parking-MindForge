@@ -1,121 +1,210 @@
 <main class="min-h-screen bg-slate-50/60 py-10 px-4 sm:px-6 lg:px-8 font-sans text-slate-900">
 
-  @if (booking(); as createdBooking) {
-    <!-- Success State -->
-    <section class="max-w-xl mx-auto bg-white rounded-3xl border border-slate-200/90 shadow-md p-8 sm:p-10 text-center" role="status">
-      <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-100 text-emerald-600 font-black text-2xl flex items-center justify-center mb-4">
-        ✓
-      </div>
-      <p class="text-xs font-bold tracking-widest text-emerald-600 uppercase mb-1">
-        Booking Created
-      </p>
-      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight mb-2">
-        Your Reservation is on Hold
+  <div class="max-w-2xl mx-auto">
+    <!-- Header -->
+    <header class="mb-8">
+      <span class="inline-block text-xs font-bold tracking-widest text-blue-600 uppercase mb-1">
+        EVENTRA · CHECKOUT
+      </span>
+      <h1 class="text-3xl font-extrabold text-slate-950 tracking-tight">
+        Review Your Booking
       </h1>
-      <p class="text-sm text-slate-500 mb-6">
-        <strong class="font-mono text-slate-800 font-semibold">{{ createdBooking.bookingNumber }}</strong> was created successfully. Complete payment before the hold expires.
+      <p class="text-slate-500 text-sm mt-1">
+        Verify your event, selected seats, and optional parking before confirming your reservation.
       </p>
+    </header>
 
-      <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-3xl font-black text-blue-600 mb-8 font-mono">
-        {{ createdBooking.totalAmount | currency:'LKR' }}
+    @if (errorMessage()) {
+      <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-3 shadow-xs" role="alert">
+        <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-rose-200 text-rose-800 font-black text-xs">!</span>
+        <span class="font-medium">{{ errorMessage() }}</span>
       </div>
+    }
 
-      <div class="flex items-center justify-center gap-3">
-        <a
-          routerLink="/events"
-          class="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold transition cursor-pointer"
-        >
-          Back to Events
-        </a>
-      </div>
-    </section>
-  } @else {
-    <!-- Checkout Form / Review -->
-    <div class="max-w-xl mx-auto">
-      <header class="mb-8">
-        <p class="text-xs font-bold tracking-widest text-blue-600 uppercase mb-1">
-          Final Step
-        </p>
-        <h1 class="text-3xl font-extrabold text-slate-950 tracking-tight">
-          Review Your Booking
-        </h1>
-        <p class="text-slate-500 text-sm mt-1">
-          Review your tickets and optional parking before confirming.
-        </p>
-      </header>
+    <!-- Checkout Sections Hierarchy -->
+    <div class="space-y-6">
 
-      @if (errorMessage()) {
-        <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-2" role="alert">
-          <span class="font-bold">!</span>
-          <span>{{ errorMessage() }}</span>
-        </div>
-      }
-
-      <section class="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-4 text-sm">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-          <span class="text-slate-500">Event</span>
-          <strong class="font-bold text-slate-900 text-right">{{ event()?.name }}</strong>
+      <!-- 1. EVENT DETAILS -->
+      <section class="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-7">
+        <div class="flex items-center gap-3 pb-4 mb-4 border-b border-slate-100">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-xl text-blue-600">
+            🎟️
+          </div>
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Step 1 of 3</span>
+            <h2 class="text-base font-bold text-slate-900">Event Details</h2>
+          </div>
         </div>
 
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-          <span class="text-slate-500">Seats Reserved</span>
-          <strong class="font-semibold text-slate-800">{{ seats().length }} Seats</strong>
-        </div>
+        <div class="space-y-3 text-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <span class="text-slate-500">Event Name</span>
+            <strong class="font-bold text-slate-900 text-base sm:text-right">{{ event()?.name }}</strong>
+          </div>
 
-        <div class="flex flex-wrap gap-1.5 pb-3 border-b border-slate-100">
-          @for (seat of seats(); track seat.seatId) {
-            <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold">
-              {{ seat | seatLabel }}
+          @if (event()?.eventDate) {
+            <div class="flex items-center justify-between">
+              <span class="text-slate-500">Date & Time</span>
+              <strong class="font-semibold text-slate-800">
+                {{ event()?.eventDate | date:'fullDate' }}
+                @if (event()?.startTime) {
+                  · {{ event()?.startTime }}
+                }
+              </strong>
+            </div>
+          }
+
+          @if (event()?.venueName) {
+            <div class="flex items-center justify-between">
+              <span class="text-slate-500">Venue</span>
+              <strong class="font-semibold text-slate-800">{{ event()?.venueName }}</strong>
+            </div>
+          }
+
+          <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+            <span class="text-slate-500">Ticket Price</span>
+            <span class="font-semibold text-slate-700">
+              {{ event()?.ticketPrice | currency:'LKR':'symbol':'1.2-2' }} <span class="text-xs text-slate-400 font-normal">/ seat</span>
             </span>
-          }
-        </div>
-
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-          <span class="text-slate-500">Ticket Total</span>
-          <strong class="font-semibold text-slate-800">{{ ticketTotal | currency:'LKR' }}</strong>
-        </div>
-
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-          <span class="text-slate-500">Parking Slot</span>
-          @if (parkingSlot(); as slot) {
-            <strong class="font-semibold text-slate-800">{{ slot.slotNumber | slotCode }} · {{ slot.fee | currency:'LKR' }}</strong>
-          } @else {
-            <span class="text-slate-400 italic">No parking selected</span>
-          }
-        </div>
-
-        <div class="pt-2 flex items-center justify-between text-base">
-          <span class="font-bold text-slate-900">Total</span>
-          <strong class="text-2xl font-black text-blue-600">{{ total | currency:'LKR' }}</strong>
+          </div>
         </div>
       </section>
 
-      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6">
+      <!-- 2. SEAT SELECTION SUMMARY -->
+      <section class="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-7">
+        <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+          <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-xl text-indigo-600">
+              💺
+            </div>
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Step 2 of 3</span>
+              <h2 class="text-base font-bold text-slate-900">Reserved Seats</h2>
+            </div>
+          </div>
+          <span class="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 font-bold text-xs border border-indigo-100">
+            {{ seats().length }} {{ seats().length === 1 ? 'Seat' : 'Seats' }}
+          </span>
+        </div>
+
+        <div class="mb-4">
+          <span class="block text-xs font-medium text-slate-400 mb-2">Selected Seat Numbers:</span>
+          <div class="flex flex-wrap gap-2">
+            @for (seat of seats(); track seat.seatId) {
+              <span class="px-3 py-1 rounded-xl bg-slate-100 text-slate-800 border border-slate-200 text-xs font-bold tracking-wide">
+                {{ seat | seatLabel }}
+              </span>
+            }
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-3 border-t border-slate-100 text-sm">
+          <span class="text-slate-500">Seats Subtotal ({{ seats().length }} × {{ event()?.ticketPrice | currency:'LKR':'symbol':'1.2-2' }})</span>
+          <strong class="font-bold text-slate-900">{{ ticketTotal | currency:'LKR':'symbol':'1.2-2' }}</strong>
+        </div>
+      </section>
+
+      <!-- 3. PARKING RESERVATION -->
+      <section class="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-7">
+        <div class="flex items-center gap-3 pb-4 mb-4 border-b border-slate-100">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-xl text-amber-600">
+            🚗
+          </div>
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Step 3 of 3</span>
+            <h2 class="text-base font-bold text-slate-900">Parking Space (Optional)</h2>
+          </div>
+        </div>
+
+        @if (parkingSlot(); as slot) {
+          <div class="flex items-center justify-between text-sm">
+            <div class="flex items-center gap-2.5">
+              <span class="px-3 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold font-mono">
+                Slot {{ slot.slotNumber | slotCode }}
+              </span>
+              <span class="text-xs text-slate-500">Reserved for duration of event</span>
+            </div>
+            <strong class="font-bold text-slate-900">{{ slot.fee | currency:'LKR':'symbol':'1.2-2' }}</strong>
+          </div>
+        } @else {
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-slate-400 italic">No parking space selected for this booking</span>
+            <span class="font-semibold text-slate-400">LKR 0.00</span>
+          </div>
+        }
+      </section>
+
+      <!-- 4. PRICE BREAKDOWN & GRAND TOTAL -->
+      <section class="bg-gradient-to-br from-slate-900 to-slate-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl">
+        <h2 class="text-xs font-extrabold uppercase tracking-widest text-blue-400 mb-4">
+          Price Breakdown
+        </h2>
+
+        <div class="space-y-2.5 text-sm pb-5 border-b border-slate-800">
+          <div class="flex items-center justify-between text-slate-300">
+            <span>Tickets Subtotal</span>
+            <span class="font-mono font-medium">{{ ticketTotal | currency:'LKR':'symbol':'1.2-2' }}</span>
+          </div>
+
+          <div class="flex items-center justify-between text-slate-300">
+            <span>Parking Fee</span>
+            <span class="font-mono font-medium">
+              {{ (parkingSlot()?.fee ?? 0) | currency:'LKR':'symbol':'1.2-2' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Grand Total Dominant -->
+        <div class="pt-5 flex items-end justify-between">
+          <div>
+            <span class="block text-xs uppercase tracking-wider text-slate-400 font-bold">Grand Total</span>
+            <span class="text-xs text-slate-500">Authoritative amount to pay</span>
+          </div>
+          <strong class="text-3xl sm:text-4xl font-black text-blue-400 font-mono tracking-tight">
+            {{ total | currency:'LKR':'symbol':'1.2-2' }}
+          </strong>
+        </div>
+
+        <div class="mt-4 p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 text-xs text-slate-300 flex items-center gap-2">
+          <span class="text-base" aria-hidden="true">🔒</span>
+          <span>Your seats will be temporarily held while you complete payment in the next step.</span>
+        </div>
+      </section>
+
+      <!-- Actions -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
         <a
           [routerLink]="['/events', event()?.eventId, 'parking-selection']"
-          class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition text-center"
+          class="w-full sm:w-auto px-5 py-3 rounded-2xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition text-center shadow-xs cursor-pointer"
         >
           ← Back to Parking
         </a>
 
         <button
           type="button"
+          [disabled]="isSubmitting()"
           (click)="requestConfirmation()"
-          class="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-bold shadow-sm transition active:scale-[0.98] cursor-pointer"
+          class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-bold shadow-md hover:shadow-lg transition active:scale-[0.98] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
         >
-          Confirm Booking →
+          @if (isSubmitting()) {
+            <span class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+            <span>Creating your booking...</span>
+          } @else {
+            <span>Confirm Booking →</span>
+          }
         </button>
       </div>
+
     </div>
-  }
+  </div>
 
 </main>
 
 @if (showConfirmation()) {
   <app-confirmation-dialog
-    title="Create this booking?"
-    message="Your selected seats and optional parking slot will be placed on hold."
-    confirmLabel="Create booking"
+    title="Confirm Your Reservation"
+    [message]="confirmationMessage"
+    confirmLabel="Confirm Booking"
     [busy]="isSubmitting()"
     (confirmed)="confirmBooking()"
     (cancelled)="showConfirmation.set(false)"

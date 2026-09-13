@@ -1,484 +1,241 @@
-<div class="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
+<div class="min-h-screen bg-slate-50/60 px-4 py-8 sm:px-6 lg:px-8 font-sans text-slate-900">
 
   <div class="mx-auto max-w-7xl">
 
     <!-- ==================== HEADER ==================== -->
-
-    <header
-      class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
-    >
-
+    <header class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
       <div>
-
-        <span
-          class="text-xs font-extrabold uppercase tracking-[0.18em] text-indigo-600"
-        >
-          EVENTRA · PAYMENTS
+        <span class="text-xs font-bold uppercase tracking-widest text-blue-600">
+          EVENTRA PAYMENTS
         </span>
-
-        <h1
-          class="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl"
-        >
+        <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">
           Payment History
         </h1>
-
-        <p
-          class="mt-2 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base"
-        >
-          View all your payment transactions and booking payments.
+        <p class="mt-1 max-w-2xl text-sm text-slate-500">
+          View all your completed transactions, payment receipts, and settlement records.
         </p>
-
       </div>
-
-
-      <!-- Back to Bookings -->
 
       <button
         type="button"
-        class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 cursor-pointer self-start sm:self-auto"
         (click)="goToBookings()"
       >
         ← My Bookings
       </button>
-
     </header>
 
-
-    <!-- ==================== LOADING STATE ==================== -->
-
-    @if (isLoading) {
-
-      <section
-        class="flex min-h-[420px] flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm"
-        aria-live="polite"
-        aria-busy="true"
-      >
-
-        <div
-          class="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600"
-          aria-hidden="true"
-        ></div>
-
-        <h2 class="mt-5 text-lg font-bold text-slate-900">
-          Loading payment history...
-        </h2>
-
-        <p class="mt-2 text-sm text-slate-500">
-          Please wait while we retrieve your payment transactions.
-        </p>
-
-      </section>
-
-    }
-
-
     <!-- ==================== ERROR STATE ==================== -->
-
-    @if (!isLoading && errorMessage) {
-
+    @if (!isLoading() && errorMessage()) {
       <section
-        class="flex min-h-[420px] flex-col items-center justify-center rounded-2xl border border-red-200 bg-white p-8 text-center shadow-sm"
+        class="flex min-h-[380px] flex-col items-center justify-center rounded-2xl border border-rose-200 bg-white p-8 text-center shadow-xs mb-8"
         role="alert"
         aria-live="assertive"
       >
-
-        <div
-          class="flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-xl font-bold text-red-600"
-          aria-hidden="true"
-        >
+        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-lg font-bold text-rose-600">
           !
         </div>
-
-        <h2 class="mt-5 text-xl font-bold text-slate-900">
+        <h2 class="mt-4 text-lg font-bold text-slate-900">
           Unable to load payment history
         </h2>
-
-        <p class="mt-2 max-w-md text-sm leading-6 text-slate-500">
-          {{ errorMessage }}
+        <p class="mt-2 max-w-md text-sm text-slate-500">
+          {{ errorMessage() }}
         </p>
-
         <button
           type="button"
-          class="mt-6 inline-flex items-center justify-center rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          class="mt-5 inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-blue-700 cursor-pointer"
           (click)="loadPaymentHistory()"
         >
           Try Again
         </button>
-
       </section>
-
     }
 
-
-    <!-- ==================== EMPTY STATE ==================== -->
-
-    @if (
-      !isLoading &&
-      !errorMessage &&
-      payments.length === 0
-    ) {
-
-      <section
-        class="flex min-h-[420px] flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm"
-      >
-
-        <div
-          class="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 text-3xl"
-          aria-hidden="true"
-        >
-          💳
-        </div>
-
-        <span
-          class="mt-6 text-xs font-extrabold uppercase tracking-[0.16em] text-indigo-600"
-        >
-          PAYMENT HISTORY
-        </span>
-
-        <h2 class="mt-2 text-2xl font-bold text-slate-900">
-          No payments yet
-        </h2>
-
-        <p class="mt-3 max-w-md text-sm leading-6 text-slate-500">
-          You haven't completed any payments yet.
-          Your successful transactions will appear here.
-        </p>
-
-        <button
-          type="button"
-          class="mt-6 inline-flex items-center justify-center rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-          (click)="goToEvents()"
-        >
-          Browse Events
-        </button>
-
-      </section>
-
+    <!-- ==================== LOADING STATE ==================== -->
+    @if (isLoading()) {
+      <div class="max-w-md mx-auto my-16">
+        <app-loading-spinner message="Retrieving your payment records..."></app-loading-spinner>
+      </div>
     }
 
+    <!-- ==================== EMPTY STATE (NO PAYMENTS) ==================== -->
+    @if (!isLoading() && !errorMessage() && payments().length === 0) {
+      <div class="max-w-md mx-auto my-16">
+        <app-empty-state
+          title="No payments yet"
+          description="You haven't completed any payments yet. When you reserve tickets and complete checkout, transactions will appear here."
+          actionText="Browse Events"
+          (action)="goToEvents()"
+        ></app-empty-state>
+      </div>
+    }
 
-    <!-- ==================== PAYMENT HISTORY ==================== -->
+    <!-- ==================== PAYMENT HISTORY CONTENT ==================== -->
+    @if (!isLoading() && !errorMessage() && payments().length > 0) {
+      <section aria-label="Payment history" class="space-y-6">
 
-    @if (
-      !isLoading &&
-      !errorMessage &&
-      payments.length > 0
-    ) {
-
-      <section
-        aria-label="Payment history"
-      >
-
-
-        <!-- ==================== SUMMARY CARDS ==================== -->
-
-        <div
-          class="mb-6 grid gap-4 sm:grid-cols-2"
-        >
-
+        <!-- Summary Metric Cards -->
+        <div class="grid gap-4 sm:grid-cols-2">
 
           <!-- Total Transactions -->
-
-          <div
-            class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-          >
-
-            <div
-              class="flex items-center justify-between gap-4"
-            >
-
-              <div>
-
-                <p class="text-sm font-medium text-slate-500">
-                  Total Transactions
-                </p>
-
-                <p
-                  class="mt-2 text-2xl font-bold text-slate-900"
-                >
-                  {{ payments.length }}
-                </p>
-
-              </div>
-
-
-              <div
-                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-xl"
-                aria-hidden="true"
-              >
-                🧾
-              </div>
-
+          <div class="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Total Transactions
+              </p>
+              <p class="mt-1 text-2xl font-black text-slate-900 font-mono">
+                {{ payments().length }}
+              </p>
             </div>
-
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-xl text-blue-600">
+              🧾
+            </div>
           </div>
 
-
           <!-- Total Paid -->
-
-          <div
-            class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-          >
-
-            <div
-              class="flex items-center justify-between gap-4"
-            >
-
-              <div>
-
-                <p class="text-sm font-medium text-slate-500">
-                  Total Paid
-                </p>
-
-                <p
-                  class="mt-2 text-2xl font-bold text-slate-900"
-                >
-                  {{
-                    getTotalPaid()
-                      | currency:'LKR':'symbol':'1.2-2'
-                  }}
-                </p>
-
-              </div>
-
-
-              <div
-                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-xl"
-                aria-hidden="true"
-              >
-                ✓
-              </div>
-
+          <div class="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Total Paid Amount
+              </p>
+              <p class="mt-1 text-2xl font-black text-emerald-600 font-mono">
+                {{ getTotalPaid() | currency:'LKR':'symbol':'1.2-2' }}
+              </p>
             </div>
-
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-xl text-emerald-600">
+              ✓
+            </div>
           </div>
 
         </div>
 
-
-        <!-- ==================== TRANSACTION LIST ==================== -->
-
-        <div class="space-y-5">
-
-          @for (
-            payment of payments;
-            track payment.paymentId
-          ) {
-
-            <article
-              class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md"
-            >
-
-
-              <!-- ==================== PAYMENT HEADER ==================== -->
-
-              <div
-                class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
+        <!-- Search Bar -->
+        <div class="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="relative w-full sm:w-80">
+            <input
+              type="text"
+              [value]="searchQuery()"
+              (input)="onSearchInput($event)"
+              placeholder="Search by ref, payment ID, or booking ID..."
+              class="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
+            />
+            <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
+            @if (searchQuery()) {
+              <button
+                type="button"
+                (click)="clearSearch()"
+                class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 text-sm cursor-pointer"
               >
+                ✕
+              </button>
+            }
+          </div>
 
-                <div
-                  class="flex items-center gap-4"
-                >
+          <span class="text-xs text-slate-400 font-medium self-end sm:self-auto">
+            Showing {{ filteredPayments().length }} of {{ payments().length }} payments
+          </span>
+        </div>
 
-                  <!-- Payment Icon -->
+        <!-- No Filtered Matches -->
+        @if (filteredPayments().length === 0) {
+          <div class="max-w-md mx-auto my-12">
+            <app-empty-state
+              title="No payments found"
+              description="No transaction records match your search criteria."
+              actionText="Clear Search"
+              (action)="clearSearch()"
+            ></app-empty-state>
+          </div>
+        }
 
-                  <div
-                    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-xl"
-                    aria-hidden="true"
-                  >
+        <!-- Transaction Cards -->
+        <div class="space-y-4">
+          @for (payment of filteredPayments(); track payment.paymentId) {
+            <article class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs hover:shadow-md transition">
+
+              <!-- Payment Header -->
+              <div class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-xl text-blue-600">
                     💳
                   </div>
-
-
-                  <!-- Transaction ID -->
-
                   <div>
-
-                    <span
-                      class="text-[11px] font-extrabold uppercase tracking-[0.16em] text-slate-400"
-                    >
-                      TRANSACTION
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                      PAYMENT #{{ payment.paymentId }}
                     </span>
-
-                    <h2
-                      class="mt-1 text-lg font-bold text-slate-900"
-                    >
-                      #{{ payment.paymentId }}
+                    <h2 class="text-base font-bold text-slate-900">
+                      Booking #{{ payment.bookingId }}
                     </h2>
-
                   </div>
-
                 </div>
 
-
-                <!-- Payment Status -->
-
-                <span
-                  class="inline-flex w-fit items-center rounded-full px-3 py-1.5 text-xs font-bold"
-                  [ngClass]="getStatusClass(payment.status)"
-                >
-                  {{ payment.status || 'Unknown' }}
-                </span>
-
+                <div class="flex items-center gap-2">
+                  <app-status-badge [status]="payment.status"></app-status-badge>
+                </div>
               </div>
 
-
-              <div
-                class="border-t border-slate-100"
-              ></div>
-
-
-              <!-- ==================== PAYMENT INFORMATION ==================== -->
-
-              <div
-                class="grid gap-5 p-5 sm:grid-cols-2 lg:grid-cols-4 lg:p-6"
-              >
-
-
-                <!-- Booking ID -->
-
+              <!-- Payment Info Grid -->
+              <div class="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4 text-sm border-b border-slate-100">
                 <div>
-
-                  <p
-                    class="text-xs font-medium uppercase tracking-wide text-slate-400"
-                  >
-                    Booking ID
-                  </p>
-
-                  <p
-                    class="mt-1 font-semibold text-slate-800"
-                  >
-                    #{{ payment.bookingId }}
-                  </p>
-
-                </div>
-
-
-                <!-- Payment Method -->
-
-                <div>
-
-                  <p
-                    class="text-xs font-medium uppercase tracking-wide text-slate-400"
-                  >
-                    Payment Method
-                  </p>
-
-                  <p
-                    class="mt-1 font-semibold text-slate-800"
-                  >
+                  <span class="block text-xs font-medium text-slate-400">Payment Method</span>
+                  <strong class="font-semibold text-slate-800">
                     {{ getPaymentMethod(payment.paymentMethod) }}
-                  </p>
-
-                </div>
-
-
-                <!-- Transaction Reference -->
-
-                <div>
-
-                  <p
-                    class="text-xs font-medium uppercase tracking-wide text-slate-400"
-                  >
-                    Transaction Reference
-                  </p>
-
-                  <p
-                    class="mt-1 break-all font-semibold text-slate-800"
-                  >
-                    {{ payment.transactionReference || 'N/A' }}
-                  </p>
-
-                </div>
-
-
-                <!-- Payment Date -->
-
-                <div>
-
-                  <p
-                    class="text-xs font-medium uppercase tracking-wide text-slate-400"
-                  >
-                    Payment Date
-                  </p>
-
-                  <p
-                    class="mt-1 font-semibold text-slate-800"
-                  >
-                    {{
-                      (payment.paidAt || payment.createdAt)
-                        | date:'medium'
-                    }}
-                  </p>
-
-                </div>
-
-              </div>
-
-
-              <!-- ==================== AMOUNT ==================== -->
-
-              <div
-                class="mx-5 rounded-xl bg-slate-50 p-4 sm:mx-6"
-              >
-
-                <div
-                  class="flex items-center justify-between gap-4"
-                >
-
-                  <span
-                    class="text-sm font-medium text-slate-500"
-                  >
-                    Amount Paid
-                  </span>
-
-                  <strong
-                    class="text-xl font-bold text-indigo-600"
-                  >
-                    {{
-                      getPaymentAmount(payment.amount)
-                        | currency:'LKR':'symbol':'1.2-2'
-                    }}
                   </strong>
-
                 </div>
 
+                <div>
+                  <span class="block text-xs font-medium text-slate-400">Transaction Reference</span>
+                  <span class="font-mono text-xs text-slate-700 break-all">
+                    {{ payment.transactionReference || 'N/A' }}
+                  </span>
+                </div>
+
+                <div>
+                  <span class="block text-xs font-medium text-slate-400">Payment Date</span>
+                  <span class="text-slate-700 font-medium">
+                    {{ (payment.paidAt || payment.createdAt) | date:'medium' }}
+                  </span>
+                </div>
+
+                <div>
+                  <span class="block text-xs font-medium text-slate-400">Amount Paid</span>
+                  <strong class="text-lg font-black text-blue-700 font-mono">
+                    {{ getPaymentAmount(payment.amount) | currency:'LKR':'symbol':'1.2-2' }}
+                  </strong>
+                </div>
               </div>
 
-
-              <!-- ==================== FOOTER ==================== -->
-
-              <div
-                class="mt-5 flex flex-col gap-4 border-t border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5"
-              >
-
-                <span
-                  class="text-xs text-slate-400"
-                >
-                  Created:
-                  {{ payment.createdAt | date:'mediumDate' }}
+              <!-- Footer Actions -->
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50/50">
+                <span class="text-xs text-slate-400">
+                  Recorded: {{ payment.createdAt | date:'mediumDate' }}
                 </span>
 
+                <div class="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    class="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold shadow-xs transition cursor-pointer"
+                    (click)="viewBooking(payment.bookingId)"
+                  >
+                    View Booking →
+                  </button>
 
-                <button
-                  type="button"
-                  class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                  (click)="viewBooking(payment.bookingId)"
-                >
-                  View Booking →
-                </button>
-
+                  <button
+                    type="button"
+                    class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition cursor-pointer flex items-center gap-1.5"
+                    (click)="viewReceipt(payment.paymentId)"
+                  >
+                    <span>🧾</span>
+                    <span>View Receipt</span>
+                  </button>
+                </div>
               </div>
-
 
             </article>
-
           }
-
         </div>
 
       </section>
-
     }
 
   </div>

@@ -2,7 +2,7 @@
 
   <!-- Loading State -->
   @if (isLoading()) {
-    <section class="max-w-md w-full p-10 bg-white rounded-2xl border border-slate-200 shadow-sm text-center flex flex-col items-center justify-center">
+    <section class="max-w-md w-full p-10 bg-white rounded-3xl border border-slate-200 shadow-sm text-center flex flex-col items-center justify-center">
       <div class="w-10 h-10 border-3 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4" aria-hidden="true"></div>
       <h2 class="text-lg font-bold text-slate-900 mb-1">Loading your confirmation...</h2>
       <p class="text-xs text-slate-500">Please wait while we retrieve your booking.</p>
@@ -11,7 +11,7 @@
 
   <!-- Error State -->
   @else if (errorMessage()) {
-    <section class="max-w-md w-full p-8 bg-white rounded-2xl border border-rose-200 shadow-sm text-center">
+    <section class="max-w-md w-full p-8 bg-white rounded-3xl border border-rose-200 shadow-sm text-center">
       <div class="w-12 h-12 mx-auto rounded-full bg-rose-100 text-rose-600 font-black text-xl flex items-center justify-center mb-4" aria-hidden="true">!</div>
       <h2 class="text-lg font-bold text-slate-900 mb-1">Unable to load confirmation</h2>
       <p class="text-sm text-slate-600 mb-6">{{ errorMessage() }}</p>
@@ -37,27 +37,31 @@
 
   <!-- Confirmation Card -->
   @else if (booking(); as currentBooking) {
-    <section class="max-w-2xl w-full bg-white rounded-3xl border border-slate-200/90 shadow-md p-6 sm:p-10 text-center">
+    <section class="max-w-2xl w-full bg-white rounded-3xl border border-slate-200/90 shadow-xl p-6 sm:p-10 text-center">
 
       <!-- Success Icon -->
       <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-100 text-emerald-600 font-black text-2xl flex items-center justify-center shadow-xs mb-4" aria-hidden="true">
         ✓
       </div>
 
-      <p class="text-xs font-bold tracking-widest text-emerald-600 uppercase mb-1">
-        EVENTRA · BOOKING CONFIRMATION
-      </p>
+      <span class="inline-block text-xs font-bold tracking-widest text-emerald-600 uppercase mb-1">
+        EVENTRA · RESERVATION CONFIRMED
+      </span>
 
       <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight mb-2">
-        Booking Confirmed!
+        {{ currentBooking.status === 'Pending' ? 'Booking Created & On Hold' : 'Booking Confirmed!' }}
       </h1>
 
-      <p class="text-sm text-slate-500 mb-8 max-w-md mx-auto">
-        Your reservation has been successfully confirmed. A receipt and details have been recorded in your account.
+      <p class="text-sm text-slate-500 mb-8 max-w-md mx-auto leading-relaxed">
+        @if (currentBooking.status === 'Pending') {
+          Your reservation is created and on temporary hold. Please complete payment to fully confirm your seats.
+        } @else {
+          Your reservation has been successfully confirmed. A receipt and details have been recorded in your account.
+        }
       </p>
 
       <!-- Booking Number Box -->
-      <div class="mb-8 p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+      <div class="mb-8 p-5 rounded-2xl bg-slate-50 border border-slate-200/80">
         <span class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">
           BOOKING NUMBER
         </span>
@@ -68,14 +72,14 @@
 
       <!-- Details Section -->
       <div class="text-left mb-8 border-t border-b border-slate-100 py-6">
-        <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
+        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
           Reservation Details
         </h2>
 
-        <div class="grid grid-cols-2 gap-4 text-sm">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div>
             <span class="block text-xs text-slate-400 font-medium">Booking ID</span>
-            <strong class="text-slate-800">#{{ currentBooking.bookingId }}</strong>
+            <strong class="text-slate-800 font-mono">#{{ currentBooking.bookingId }}</strong>
           </div>
 
           <div>
@@ -84,12 +88,12 @@
           </div>
 
           <div>
-            <span class="block text-xs text-slate-400 font-medium">Seats</span>
+            <span class="block text-xs text-slate-400 font-medium">Reserved Seats</span>
             <strong class="text-slate-800">{{ currentBooking.seatIds?.length ?? currentBooking.seatCount ?? 0 }} Seats</strong>
           </div>
 
           <div>
-            <span class="block text-xs text-slate-400 font-medium">Parking</span>
+            <span class="block text-xs text-slate-400 font-medium">Parking Space</span>
             <strong class="text-slate-800">
               @if (currentBooking.parkingSlotId !== null && currentBooking.parkingSlotId !== undefined) {
                 Slot #{{ currentBooking.parkingSlotId }}
@@ -101,49 +105,64 @@
 
           <div>
             <span class="block text-xs text-slate-400 font-medium mb-1">Booking Status</span>
-            <span
-              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border"
-              [class]="getStatusClass(currentBooking.status)"
-            >
-              {{ currentBooking.status }}
-            </span>
+            <app-status-badge [status]="currentBooking.status" />
           </div>
 
           <div>
             <span class="block text-xs text-slate-400 font-medium mb-1">Payment Status</span>
-            <span
-              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border"
-              [class.bg-emerald-50]="isPaymentSuccessful()"
-              [class.text-emerald-700]="isPaymentSuccessful()"
-              [class.border-emerald-200]="isPaymentSuccessful()"
-              [class.bg-amber-50]="!isPaymentSuccessful()"
-              [class.text-amber-700]="!isPaymentSuccessful()"
-              [class.border-amber-200]="!isPaymentSuccessful()"
-            >
-              {{ currentBooking.paymentStatus || 'Pending' }}
-            </span>
+            <app-status-badge [status]="currentBooking.paymentStatus || 'Pending'" />
           </div>
+
+          @if (payment()?.transactionReference || currentBooking.transactionReference) {
+            <div class="sm:col-span-2 pt-2 border-t border-slate-100">
+              <span class="block text-xs text-slate-400 font-medium">Transaction Reference</span>
+              <strong class="font-mono text-xs text-slate-700 break-all">
+                {{ payment()?.transactionReference || currentBooking.transactionReference }}
+              </strong>
+            </div>
+          }
         </div>
       </div>
 
-      <!-- Amount -->
-      <div class="flex items-center justify-between p-4 rounded-xl bg-blue-50/50 border border-blue-100 text-left mb-6">
-        <span class="text-sm font-semibold text-slate-700">Total Amount Paid</span>
-        <strong class="text-2xl font-black text-blue-700">
-          {{ currentBooking.totalAmount | currency:'LKR' }}
+      <!-- Amount Box -->
+      <div class="flex items-center justify-between p-4 rounded-2xl bg-blue-50/60 border border-blue-100 text-left mb-6">
+        <div>
+          <span class="block text-xs font-semibold text-slate-600">Total Amount</span>
+          <span class="text-[11px] text-slate-400">Created: {{ currentBooking.createdAt | date:'mediumDate' }}</span>
+        </div>
+        <strong class="text-2xl font-black text-blue-700 font-mono">
+          {{ currentBooking.totalAmount | currency:'LKR':'symbol':'1.2-2' }}
         </strong>
       </div>
 
-      <div class="text-xs text-slate-400 mb-8">
-        Booking created on {{ currentBooking.createdAt | date:'medium' }}
-      </div>
+      <!-- Actions Hierarchy -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-3 flex-wrap">
 
-      <!-- Actions -->
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+        @if (currentBooking.status === 'Pending') {
+          <button
+            type="button"
+            (click)="payNow()"
+            class="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold shadow-sm transition active:scale-[0.98] cursor-pointer"
+          >
+            Pay Now →
+          </button>
+        }
+
+        @if (payment()?.paymentId) {
+          <button
+            type="button"
+            (click)="viewReceipt()"
+            class="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-sm transition active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
+          >
+            <span>🧾</span>
+            <span>View Receipt</span>
+          </button>
+        }
+
         <button
           type="button"
           (click)="viewBooking()"
-          class="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold shadow-sm transition active:scale-[0.98] cursor-pointer"
+          class="w-full sm:w-auto px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold shadow-sm transition active:scale-[0.98] cursor-pointer"
         >
           View Booking Details
         </button>

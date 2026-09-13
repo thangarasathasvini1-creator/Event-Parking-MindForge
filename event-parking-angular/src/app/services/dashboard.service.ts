@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../environments/environment';
-import { Dashboard } from '../models/dashboard.model';
+import { Dashboard, AdminDashboard } from '../models/dashboard.model';
 
 @Injectable({
   providedIn: 'root',
@@ -26,8 +26,8 @@ export class DashboardService {
 
   // ==================== ADMIN DASHBOARD ====================
 
-  getAdminDashboard(): Observable<unknown> {
-    return this.http.get<unknown>(
+  getAdminDashboard(): Observable<AdminDashboard> {
+    return this.http.get<AdminDashboard>(
       `${environment.apiUrl}/admin/dashboard`
     );
   }

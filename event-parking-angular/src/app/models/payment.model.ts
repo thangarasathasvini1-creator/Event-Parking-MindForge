@@ -8,3 +8,8 @@ export interface Payment {
   paidAt: string | null;
   createdAt: string;
 }
+
+export interface CreatePaymentRequest {
+  paymentMethod: string;
+  simulateSuccess?: boolean;
+}

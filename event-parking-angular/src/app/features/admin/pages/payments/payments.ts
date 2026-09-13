@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-admin-payments',
@@ -9,27 +10,13 @@ import { CommonModule } from '@angular/common';
   styleUrl: './payments.css',
 })
 export class Payments {
+  private readonly router = inject(Router);
 
-  payments: unknown[] = [];
-
-  isLoading = false;
-  errorMessage = '';
-
-  loadPayments(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    // Admin payment listing API is not documented
-    // in the current backend responsibility/API documents.
-    //
-    // Keep this page ready for the backend endpoint
-    // instead of inventing an API.
-
-    this.payments = [];
-    this.isLoading = false;
+  goToDashboard(): void {
+    this.router.navigate(['/admin/dashboard']);
   }
 
-  refresh(): void {
-    this.loadPayments();
+  goToBookings(): void {
+    this.router.navigate(['/admin/bookings']);
   }
 }

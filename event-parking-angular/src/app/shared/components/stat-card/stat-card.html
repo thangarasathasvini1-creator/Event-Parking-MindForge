@@ -1,1 +1,33 @@
-<p>stat-card works!</p>
+<div class="rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-xs hover:shadow-md transition">
+  <div class="flex items-center justify-between gap-4">
+    <div class="min-w-0 flex-1">
+      <p class="text-xs font-bold uppercase tracking-wider text-slate-500 truncate">
+        {{ title }}
+      </p>
+      <h3 class="mt-1.5 text-2xl sm:text-3xl font-extrabold tracking-tight font-mono" [ngClass]="valueColorClass">
+        {{ value }}
+      </h3>
+      @if (description) {
+        <p class="mt-1 text-xs text-slate-400 truncate">
+          {{ description }}
+        </p>
+      }
+    </div>
+
+    @if (icon) {
+      <div
+        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border text-xl shadow-xs"
+        [ngClass]="iconBgClass"
+        aria-hidden="true"
+      >
+        {{ icon }}
+      </div>
+    }
+  </div>
+
+  @if (trend) {
+    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center gap-1.5 text-xs text-slate-500">
+      <span class="font-semibold">{{ trend }}</span>
+    </div>
+  }
+</div>
