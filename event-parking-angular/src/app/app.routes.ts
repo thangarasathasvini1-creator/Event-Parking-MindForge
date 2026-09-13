@@ -251,172 +251,128 @@ export const routes: Routes = [
 
 
   // ============================================================
-  // ADMIN DASHBOARD
+  // ADMIN - PROTECTED (WITH PERSISTENT SIDEBAR & TOPBAR SHELL)
   // ============================================================
 
   {
-    path: 'admin/dashboard',
+    path: 'admin',
     canActivate: [adminGuard],
     loadComponent: () =>
       import(
-        './features/admin/pages/dashboard/dashboard'
-      ).then((m) => m.Dashboard),
-  },
-
-
-  // ============================================================
-  // ADMIN BOOKINGS
-  // ============================================================
-
-  {
-    path: 'admin/bookings',
-    canActivate: [adminGuard],
-    loadComponent: () =>
-      import(
-        './features/admin/pages/bookings/bookings'
-      ).then((m) => m.Bookings),
-  },
-
-
-  // ============================================================
-  // ADMIN PAYMENTS
-  // ============================================================
-
-  {
-    path: 'admin/payments',
-    canActivate: [adminGuard],
-    loadComponent: () =>
-      import(
-        './features/admin/pages/payments/payments'
-      ).then((m) => m.Payments),
-  },
-
-
-  // ============================================================
-  // ADMIN EVENTS
-  // ============================================================
-
-  {
-    path: 'admin/events',
-    canActivate: [adminGuard],
-    loadComponent: () =>
-      import(
-        './features/admin/pages/events/event-list/event-list'
-      ).then((m) => m.EventList),
-  },
-
-  {
-    path: 'admin/events/new',
-    canActivate: [adminGuard],
-    loadComponent: () =>
-      import(
-        './features/admin/pages/events/event-form/event-form'
-      ).then((m) => m.EventForm),
-  },
-
-  {
-    path: 'admin/events/:eventId/edit',
-    canActivate: [adminGuard],
-    loadComponent: () =>
-      import(
-        './features/admin/pages/events/event-edit/event-edit'
-      ).then((m) => m.EventEdit),
-  },
-
-
-  // ============================================================
-  // ADMIN VENUES
-  // ============================================================
-
-  {
-    path: 'admin/venues',
-    canActivate: [adminGuard],
-    loadComponent: () =>
-      import(
-        './features/admin/pages/venues/venue-list/venue-list'
-      ).then((m) => m.VenueList),
-  },
-
-  {
-    path: 'admin/venues/new',
-    canActivate: [adminGuard],
-    loadComponent: () =>
-      import(
-        './features/admin/pages/venues/venue-form/venue-form'
-      ).then((m) => m.VenueForm),
-  },
-
-  {
-    path: 'admin/venues/:venueId/edit',
-    canActivate: [adminGuard],
-    loadComponent: () =>
-      import(
-        './features/admin/pages/venues/venue-edit/venue-edit'
-      ).then((m) => m.VenueEdit),
-  },
-
-  {
-    path: 'admin/venues/availability',
-    canActivate: [adminGuard],
-    loadComponent: () =>
-      import(
-        './features/admin/pages/venues/venue-availability/venue-availability'
-      ).then((m) => m.VenueAvailability),
-  },
-
-
-  // ============================================================
-  // ADMIN CATEGORIES
-  // ============================================================
-
-  {
-    path: 'admin/categories',
-    canActivate: [adminGuard],
-    loadComponent: () =>
-      import(
-        './features/admin/pages/categories/category-list/category-list'
-      ).then((m) => m.CategoryList),
-  },
-
-  {
-    path: 'admin/categories/new',
-    canActivate: [adminGuard],
-    loadComponent: () =>
-      import(
-        './features/admin/pages/categories/category-form/category-form'
-      ).then((m) => m.CategoryForm),
-  },
-
-  {
-    path: 'admin/categories/:categoryId/edit',
-    canActivate: [adminGuard],
-    loadComponent: () =>
-      import(
-        './features/admin/pages/categories/category-edit/category-edit'
-      ).then((m) => m.CategoryEdit),
-  },
-
-
-  // ============================================================
-  // ADMIN SEATS & PARKING
-  // ============================================================
-
-  {
-    path: 'admin/seats',
-    canActivate: [adminGuard],
-    loadComponent: () =>
-      import(
-        './features/admin/pages/seats/seats'
-      ).then((m) => m.Seats),
-  },
-
-  {
-    path: 'admin/parking',
-    canActivate: [adminGuard],
-    loadComponent: () =>
-      import(
-        './features/admin/pages/parking/parking'
-      ).then((m) => m.Parking),
+        './features/admin/layout/admin-layout/admin-layout'
+      ).then((m) => m.AdminLayout),
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'dashboard',
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import(
+            './features/admin/pages/dashboard/dashboard'
+          ).then((m) => m.Dashboard),
+      },
+      {
+        path: 'bookings',
+        loadComponent: () =>
+          import(
+            './features/admin/pages/bookings/bookings'
+          ).then((m) => m.Bookings),
+      },
+      {
+        path: 'payments',
+        loadComponent: () =>
+          import(
+            './features/admin/pages/payments/payments'
+          ).then((m) => m.Payments),
+      },
+      {
+        path: 'events',
+        loadComponent: () =>
+          import(
+            './features/admin/pages/events/event-list/event-list'
+          ).then((m) => m.EventList),
+      },
+      {
+        path: 'events/new',
+        loadComponent: () =>
+          import(
+            './features/admin/pages/events/event-form/event-form'
+          ).then((m) => m.EventForm),
+      },
+      {
+        path: 'events/:eventId/edit',
+        loadComponent: () =>
+          import(
+            './features/admin/pages/events/event-edit/event-edit'
+          ).then((m) => m.EventEdit),
+      },
+      {
+        path: 'venues',
+        loadComponent: () =>
+          import(
+            './features/admin/pages/venues/venue-list/venue-list'
+          ).then((m) => m.VenueList),
+      },
+      {
+        path: 'venues/new',
+        loadComponent: () =>
+          import(
+            './features/admin/pages/venues/venue-form/venue-form'
+          ).then((m) => m.VenueForm),
+      },
+      {
+        path: 'venues/:venueId/edit',
+        loadComponent: () =>
+          import(
+            './features/admin/pages/venues/venue-edit/venue-edit'
+          ).then((m) => m.VenueEdit),
+      },
+      {
+        path: 'venues/availability',
+        loadComponent: () =>
+          import(
+            './features/admin/pages/venues/venue-availability/venue-availability'
+          ).then((m) => m.VenueAvailability),
+      },
+      {
+        path: 'categories',
+        loadComponent: () =>
+          import(
+            './features/admin/pages/categories/category-list/category-list'
+          ).then((m) => m.CategoryList),
+      },
+      {
+        path: 'categories/new',
+        loadComponent: () =>
+          import(
+            './features/admin/pages/categories/category-form/category-form'
+          ).then((m) => m.CategoryForm),
+      },
+      {
+        path: 'categories/:categoryId/edit',
+        loadComponent: () =>
+          import(
+            './features/admin/pages/categories/category-edit/category-edit'
+          ).then((m) => m.CategoryEdit),
+      },
+      {
+        path: 'seats',
+        loadComponent: () =>
+          import(
+            './features/admin/pages/seats/seats'
+          ).then((m) => m.Seats),
+      },
+      {
+        path: 'parking',
+        loadComponent: () =>
+          import(
+            './features/admin/pages/parking/parking'
+          ).then((m) => m.Parking),
+      },
+    ],
   },
 
 
