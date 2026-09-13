@@ -6,6 +6,7 @@ import {
   Booking,
   CreateBookingRequest
 } from '../models/booking.model';
+import { Payment } from '../models/payment.model';
 
 import { environment } from '../../environments/environment';
 
@@ -101,9 +102,9 @@ export class BookingService {
 
   getPaymentStatus(
     bookingId: number
-  ): Observable<any> {
+  ): Observable<Payment> {
 
-    return this.http.get<any>(
+    return this.http.get<Payment>(
       `${this.apiUrl}/${bookingId}/payment`
     );
   }
@@ -115,10 +116,11 @@ export class BookingService {
     bookingId: number,
     request: {
       paymentMethod: string;
+      simulateSuccess?: boolean;
     }
-  ): Observable<any> {
+  ): Observable<Payment> {
 
-    return this.http.post<any>(
+    return this.http.post<Payment>(
       `${this.apiUrl}/${bookingId}/payment`,
       request
     );

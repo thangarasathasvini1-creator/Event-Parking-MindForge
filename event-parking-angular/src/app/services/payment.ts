@@ -28,14 +28,23 @@ export class PaymentService {
   }
 
 
-  // ==================== PAYMENT DETAILS ====================
+  // ==================== PAYMENT DETAILS / RECEIPT DATA ====================
 
   getPaymentById(
     paymentId: number
   ): Observable<Payment> {
 
     return this.http.get<Payment>(
-      `${this.apiUrl}/${paymentId}`
+      `${this.apiUrl}/${paymentId}/receipt`
+    );
+  }
+
+  getPaymentReceipt(
+    paymentId: number
+  ): Observable<Payment> {
+
+    return this.http.get<Payment>(
+      `${this.apiUrl}/${paymentId}/receipt`
     );
   }
 

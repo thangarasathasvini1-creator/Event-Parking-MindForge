@@ -14,8 +14,15 @@ export interface Booking {
   totalAmount: number;
   holdExpiresAt?: string | null;
   createdAt: string;
+  updatedAt?: string | null;
   seatCount?: number;
   seatIds?: number[];
   parkingSlotId?: number | null;
+  parkingFee?: number | null;
   paymentStatus?: string | null;
+  transactionReference?: string | null;
+}
+
+export interface CancelBookingRequest {
+  reason?: string;
 }
