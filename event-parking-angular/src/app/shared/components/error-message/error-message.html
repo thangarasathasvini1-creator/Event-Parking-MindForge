@@ -1,1 +1,20 @@
-<p>error-message works!</p>
+<div class="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700" role="alert">
+  <div class="flex items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100 font-bold text-red-600">
+        !
+      </div>
+      <p class="text-sm font-medium">{{ message }}</p>
+    </div>
+    @if (showRetry) {
+      <button
+        type="button"
+        (click)="onRetry()"
+        class="shrink-0 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition"
+      >
+        Retry
+      </button>
+    }
+  </div>
+</div>
+
