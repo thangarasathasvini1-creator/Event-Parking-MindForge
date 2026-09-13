@@ -113,8 +113,8 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () =>
       import(
-        './features/customer/pages/dashboard/dashboard'
-      ).then((m) => m.Dashboard),
+        './features/customer/pages/events/event-list/event-list'
+      ).then((m) => m.EventList),
   },
 
   {

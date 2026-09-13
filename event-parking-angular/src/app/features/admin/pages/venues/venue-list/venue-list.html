@@ -1,164 +1,163 @@
-<div class="min-h-screen bg-slate-50 px-6 py-8">
+<div class="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
   <div class="mx-auto max-w-7xl">
 
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-slate-900">
-        Venue Management
-      </h1>
-
-      <p class="mt-2 text-slate-600">
-        Manage event venues and their capacity.
-      </p>
-
-      <button
-        type="button"
-        (click)="createVenue()"
-        class="mt-5 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700">
-        + Create Venue
-      </button>
-
-    </div>
-
-    @if (isLoading()) {
-
-      <div class="flex justify-center py-16">
-        <div
-          class="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600">
-        </div>
+    <!-- Page Header -->
+    <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-widest text-blue-600">
+          EVENTRA · ADMIN
+        </p>
+        <h1 class="mt-1 text-3xl font-extrabold text-slate-950 tracking-tight">
+          Venue Management
+        </h1>
+        <p class="mt-1 text-sm text-slate-500">
+          Configure physical event spaces, seating capacities, and vehicle parking allocations.
+        </p>
       </div>
 
-    } @else if (errorMessage()) {
-
-      <div class="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
-
-        <p class="font-medium text-red-700">
-          {{ errorMessage() }}
-        </p>
+      <div class="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          (click)="checkAvailability()"
+          class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-2xs transition hover:bg-slate-50 cursor-pointer"
+        >
+          <svg class="h-4 w-4 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span>Check Availability</span>
+        </button>
 
         <button
           type="button"
-          (click)="retry()"
-          class="mt-4 rounded-lg bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700">
-          Try Again
+          (click)="createVenue()"
+          class="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-5 py-2.5 text-xs font-bold text-white shadow-xs transition active:scale-[0.98] cursor-pointer"
+        >
+          <span>+ Add Venue</span>
         </button>
-
       </div>
+    </header>
 
-    } @else {
+    <!-- Success Message Banner -->
+    @if (successMessage()) {
+      <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-semibold text-emerald-800 flex items-center justify-between">
+        <span>✓ {{ successMessage() }}</span>
+        <button type="button" (click)="successMessage.set('')" class="text-emerald-600 hover:text-emerald-800">✕</button>
+      </div>
+    }
 
+    <!-- Error Message Banner -->
+    @if (errorMessage()) {
+      <div class="mb-6">
+        <app-error-message
+          [message]="errorMessage()"
+          [showRetry]="true"
+          (retry)="retry()"
+        ></app-error-message>
+      </div>
+    }
+
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <div class="py-16 flex justify-center">
+        <app-loading-spinner message="Loading venues..."></app-loading-spinner>
+      </div>
+    }
+
+    <!-- Venues Grid -->
+    @if (!isLoading() && !errorMessage()) {
       @if (venues().length > 0) {
-
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-
           @for (venue of venues(); track venue.venueId) {
-
-            <article
-              class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-
-              <div class="mb-5">
-                <p class="text-xs font-semibold uppercase text-slate-400">
-                  Venue #{{ venue.venueId }}
-                </p>
-
-                <h2 class="mt-2 text-xl font-bold text-slate-900">
-                  {{ venue.name }}
-                </h2>
-              </div>
-
-              <div class="space-y-4">
-
-                <div>
-                  <p class="text-xs font-semibold uppercase text-slate-400">
-                    Address
-                  </p>
-
-                  <p class="mt-1 text-sm text-slate-700">
-                    {{ venue.address }}
-                  </p>
+            <article class="flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs transition hover:-translate-y-0.5 hover:shadow-lg">
+              <div>
+                <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                  <span class="font-mono font-bold uppercase">ID #{{ venue.venueId }}</span>
+                  <span class="rounded-md bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">Active</span>
                 </div>
 
-                <div
-                  class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4">
+                <h2 class="text-xl font-bold text-slate-900 leading-snug">
+                  {{ venue.name }}
+                </h2>
 
-                  <div>
-                    <p class="text-xs font-semibold uppercase text-slate-400">
-                      Total Capacity
-                    </p>
+                <p class="mt-2 text-xs text-slate-600 flex items-start gap-1.5 leading-relaxed">
+                  <svg class="h-3.5 w-3.5 shrink-0 text-slate-400 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  <span>{{ venue.address }}</span>
+                </p>
 
-                    <p class="mt-1 text-lg font-bold text-indigo-600">
+                <!-- Capacities Grid -->
+                <div class="mt-5 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4">
+                  <div class="rounded-xl bg-slate-50 p-3">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Total Capacity</span>
+                    <p class="text-lg font-extrabold text-blue-600 mt-0.5">
                       {{ venue.totalCapacity }}
                     </p>
                   </div>
 
-                  <div>
-                    <p class="text-xs font-semibold uppercase text-slate-400">
-                      Parking Slots
-                    </p>
-
-                    <p class="mt-1 text-lg font-bold text-emerald-600">
+                  <div class="rounded-xl bg-slate-50 p-3">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Parking Slots</span>
+                    <p class="text-lg font-extrabold text-emerald-600 mt-0.5">
                       {{ venue.totalParkingSlots ?? 0 }}
                     </p>
                   </div>
-
                 </div>
 
-                <!-- Vehicle Type Badges -->
-                <div class="flex flex-wrap gap-2 pt-2">
-                  <span class="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
-                    🚗 Car: {{ venue.carCapacity ?? 0 }}
-                  </span>
-                  <span class="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
-                    🏍️ Bike: {{ venue.bikeCapacity ?? 0 }}
-                  </span>
-                  <span class="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
-                    🚌 Bus: {{ venue.busCapacity ?? 0 }}
-                  </span>
-                  <span class="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
-                    🚐 Van: {{ venue.vanCapacity ?? 0 }}
-                  </span>
+                <!-- Vehicle breakdown badges -->
+                <div class="mt-3 flex flex-wrap gap-1.5 text-[11px] font-medium text-slate-600">
+                  <span class="rounded-md bg-slate-100 px-2 py-0.5" title="Car Capacity">🚗 {{ venue.carCapacity ?? 0 }} Cars</span>
+                  <span class="rounded-md bg-slate-100 px-2 py-0.5" title="Bike Capacity">🏍️ {{ venue.bikeCapacity ?? 0 }} Bikes</span>
+                  <span class="rounded-md bg-slate-100 px-2 py-0.5" title="Bus Capacity">🚌 {{ venue.busCapacity ?? 0 }} Buses</span>
+                  <span class="rounded-md bg-slate-100 px-2 py-0.5" title="Van Capacity">🚐 {{ venue.vanCapacity ?? 0 }} Vans</span>
                 </div>
+              </div>
 
-                <!-- Edit Venue -->
+              <!-- Card Action Buttons -->
+              <div class="mt-6 border-t border-slate-100 pt-4 flex items-center gap-2">
                 <button
                   type="button"
                   (click)="editVenue(venue.venueId)"
-                  class="mt-5 w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700">
-                  Edit Venue
+                  class="flex-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 py-2 px-3 text-xs font-bold transition cursor-pointer text-center"
+                >
+                  Edit
                 </button>
 
                 <button
-  type="button"
-  (click)="deleteVenue(venue.venueId)"
-  class="mt-2 w-full rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700">
-  Delete Venue
-</button>
-
+                  type="button"
+                  (click)="initiateDelete(venue)"
+                  class="rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 py-2 px-3 text-xs font-bold transition cursor-pointer"
+                >
+                  Delete
+                </button>
               </div>
-
             </article>
-
           }
-
         </div>
-
       } @else {
-
-        <div
-          class="rounded-2xl border border-slate-200 bg-white p-12 text-center">
-
-          <h2 class="text-xl font-semibold text-slate-800">
-            No venues found
-          </h2>
-
-          <p class="mt-2 text-slate-500">
-            There are currently no venues available.
-          </p>
-
+        <div class="max-w-md mx-auto my-12">
+          <app-empty-state
+            title="No venues found"
+            description="There are currently no venues registered in the system. Add your first venue to begin scheduling events."
+            actionText="+ Create Venue"
+            (action)="createVenue()"
+          ></app-empty-state>
         </div>
-
       }
-
     }
 
   </div>
 </div>
+
+<!-- Shared Delete Confirmation Dialog -->
+@if (showDeleteModal()) {
+  <app-confirmation-dialog
+    title="Delete Venue"
+    [message]="'Are you sure you want to delete venue \'' + (pendingVenueToDelete()?.name || '') + '\'? This operation cannot be undone.'"
+    confirmLabel="Delete Venue"
+    [busy]="isDeleting()"
+    (confirmed)="confirmDelete()"
+    (cancelled)="cancelDelete()"
+  ></app-confirmation-dialog>
+}

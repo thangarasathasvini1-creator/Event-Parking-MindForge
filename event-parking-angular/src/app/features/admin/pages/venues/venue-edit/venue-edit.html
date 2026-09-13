@@ -1,227 +1,194 @@
-<div class="min-h-screen bg-slate-50 px-6 py-8">
+<div class="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
   <div class="mx-auto max-w-2xl">
 
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-slate-900">
+    <!-- Header -->
+    <header class="mb-8">
+      <button
+        type="button"
+        (click)="goBack()"
+        class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-blue-600 transition mb-3 cursor-pointer"
+      >
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+        <span>Back to Venues</span>
+      </button>
+
+      <p class="text-xs font-bold uppercase tracking-widest text-blue-600">
+        EVENTRA · ADMIN
+      </p>
+      <h1 class="mt-1 text-3xl font-extrabold text-slate-950 tracking-tight">
         Edit Venue
       </h1>
-
-      <p class="mt-2 text-slate-600">
-        Update venue information and capacity.
+      <p class="mt-1 text-sm text-slate-500">
+        Update venue details, physical address, capacity thresholds, and parking slots.
       </p>
-    </div>
+    </header>
 
     @if (isLoading()) {
-
-      <div class="flex justify-center py-16">
-        <div
-          class="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600">
-        </div>
+      <div class="py-16 flex justify-center">
+        <app-loading-spinner message="Loading venue details..."></app-loading-spinner>
       </div>
+    }
 
-    } @else if (errorMessage() && !venue.venueId) {
-
-      <div class="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
-
-        <p class="font-medium text-red-700">
-          {{ errorMessage() }}
-        </p>
-
-        <button
-          type="button"
-          (click)="goBack()"
-          class="mt-4 rounded-lg bg-slate-700 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800">
-          Back to Venues
-        </button>
-
-      </div>
-
-    } @else {
-
-      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    @if (!isLoading()) {
+      <!-- Form Card -->
+      <div class="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs">
 
         @if (successMessage()) {
-          <div
-            class="mb-6 rounded-lg bg-emerald-50 p-4 text-sm font-medium text-emerald-700">
-            {{ successMessage() }}
+          <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-bold text-emerald-800 flex items-center gap-2">
+            <span>✓</span>
+            <span>{{ successMessage() }}</span>
           </div>
         }
 
         @if (errorMessage()) {
-          <div
-            class="mb-6 rounded-lg bg-red-50 p-4 text-sm font-medium text-red-700">
-            {{ errorMessage() }}
+          <div class="mb-6">
+            <app-error-message [message]="errorMessage()"></app-error-message>
           </div>
         }
 
-        <form (ngSubmit)="updateVenue()">
+        <form (ngSubmit)="updateVenue()" #venueEditForm="ngForm" class="space-y-6">
 
-          <!-- Venue Name -->
-          <div class="mb-5">
-            <label
-              for="venue-name"
-              class="mb-2 block text-sm font-semibold text-slate-700">
-              Venue Name
+          <!-- 1. Venue Name -->
+          <div>
+            <label for="edit-venue-name" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700">
+              Venue Name <span class="text-rose-600">*</span>
             </label>
-
             <input
-              id="venue-name"
+              id="edit-venue-name"
               type="text"
               name="name"
               [(ngModel)]="venue.name"
-              placeholder="Enter venue name"
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              required
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </div>
 
-          <!-- Address -->
-          <div class="mb-5">
-            <label
-              for="venue-address"
-              class="mb-2 block text-sm font-semibold text-slate-700">
-              Address
+          <!-- 2. Address -->
+          <div>
+            <label for="edit-venue-address" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700">
+              Physical Address <span class="text-rose-600">*</span>
             </label>
-
             <textarea
-              id="venue-address"
+              id="edit-venue-address"
               name="address"
               [(ngModel)]="venue.address"
+              required
               rows="3"
-              placeholder="Enter venue address"
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"></textarea>
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            ></textarea>
           </div>
 
-          <!-- Capacity -->
-          <div class="mb-5">
-            <label
-              for="venue-capacity"
-              class="mb-2 block text-sm font-semibold text-slate-700">
-              Total Capacity
+          <!-- 3. Total Seating Capacity -->
+          <div>
+            <label for="edit-venue-capacity" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700">
+              Total Seating Capacity <span class="text-rose-600">*</span>
             </label>
-
             <input
-              id="venue-capacity"
+              id="edit-venue-capacity"
               type="number"
               name="totalCapacity"
               [(ngModel)]="venue.totalCapacity"
+              required
               min="1"
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </div>
 
-          <!-- Parking Slots Breakdown -->
-          <div class="mb-6 rounded-xl border border-slate-200 bg-slate-50/50 p-5">
-            <div class="mb-4 flex items-center justify-between">
-              <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700">
-                Parking Capacity Breakdown
-              </h3>
-              <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
-                Total Slots: {{ computedTotalParkingSlots > 0 ? computedTotalParkingSlots : (venue.totalParkingSlots ?? 0) }}
-              </span>
-            </div>
+          <!-- 4. Parking Allocations -->
+          <fieldset class="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 space-y-4">
+            <legend class="text-xs font-bold uppercase tracking-wider text-slate-700 px-2">
+              Parking Capacities (Vehicle Breakdown)
+            </legend>
 
             <div class="grid grid-cols-2 gap-4">
-              <!-- Car Capacity -->
               <div>
-                <label for="edit-car-capacity" class="mb-1 block text-xs font-semibold text-slate-600">
-                  🚗 Car Slots
-                </label>
+                <label for="edit-car-capacity" class="mb-1 block text-xs font-semibold text-slate-600">🚗 Car Slots</label>
                 <input
                   id="edit-car-capacity"
                   type="number"
+                  min="0"
                   name="carCapacity"
                   [(ngModel)]="venue.carCapacity"
                   (ngModelChange)="updateTotalSlots()"
-                  min="0"
-                  placeholder="0"
-                  class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
-              <!-- Bike Capacity -->
               <div>
-                <label for="edit-bike-capacity" class="mb-1 block text-xs font-semibold text-slate-600">
-                  🏍️ Bike Slots
-                </label>
+                <label for="edit-bike-capacity" class="mb-1 block text-xs font-semibold text-slate-600">🏍️ Bike Slots</label>
                 <input
                   id="edit-bike-capacity"
                   type="number"
+                  min="0"
                   name="bikeCapacity"
                   [(ngModel)]="venue.bikeCapacity"
                   (ngModelChange)="updateTotalSlots()"
-                  min="0"
-                  placeholder="0"
-                  class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
-              <!-- Bus Capacity -->
               <div>
-                <label for="edit-bus-capacity" class="mb-1 block text-xs font-semibold text-slate-600">
-                  🚌 Bus Slots
-                </label>
+                <label for="edit-bus-capacity" class="mb-1 block text-xs font-semibold text-slate-600">🚌 Bus Slots</label>
                 <input
                   id="edit-bus-capacity"
                   type="number"
+                  min="0"
                   name="busCapacity"
                   [(ngModel)]="venue.busCapacity"
                   (ngModelChange)="updateTotalSlots()"
-                  min="0"
-                  placeholder="0"
-                  class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
-              <!-- Van Capacity -->
               <div>
-                <label for="edit-van-capacity" class="mb-1 block text-xs font-semibold text-slate-600">
-                  🚐 Van Slots
-                </label>
+                <label for="edit-van-capacity" class="mb-1 block text-xs font-semibold text-slate-600">🚐 Van Slots</label>
                 <input
                   id="edit-van-capacity"
                   type="number"
+                  min="0"
                   name="vanCapacity"
                   [(ngModel)]="venue.vanCapacity"
                   (ngModelChange)="updateTotalSlots()"
-                  min="0"
-                  placeholder="0"
-                  class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
             </div>
-          </div>
 
-          <!-- Actions -->
-          <div class="flex gap-3">
+            <div class="pt-2 border-t border-slate-200/80 flex items-center justify-between text-xs">
+              <span class="font-semibold text-slate-500">Calculated Total Parking Slots:</span>
+              <span class="font-black text-emerald-700 text-sm">{{ computedTotalParkingSlots }} slots</span>
+            </div>
+          </fieldset>
 
-            <!-- Cancel -->
+          <!-- Form Actions -->
+          <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
             <button
               type="button"
               (click)="goBack()"
-              class="flex-1 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+              [disabled]="isSaving()"
+              class="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition cursor-pointer disabled:opacity-50"
+            >
               Cancel
             </button>
 
-            <!-- Update -->
             <button
               type="submit"
               [disabled]="isSaving()"
-              class="flex-1 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60">
-
+              class="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-6 py-2.5 text-xs font-bold text-white shadow-xs transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer flex items-center gap-2"
+            >
               @if (isSaving()) {
-                Updating...
+                <span class="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+                <span>Saving Changes...</span>
               } @else {
-                Update Venue
+                <span>Save Changes</span>
               }
-
             </button>
-
           </div>
 
         </form>
-
       </div>
-
     }
 
   </div>

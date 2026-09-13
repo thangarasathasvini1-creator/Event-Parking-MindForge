@@ -28,13 +28,17 @@ export class CategoryService {
   );
 }
 
-updateCategory(
-  categoryId: number,
-  category: Category
-): Observable<Category> {
-  return this.http.put<Category>(
-    `${this.apiUrl}/${categoryId}`,
-    category
-  );
-}
+  updateCategory(
+    categoryId: number,
+    category: Category
+  ): Observable<Category> {
+    return this.http.put<Category>(
+      `${this.apiUrl}/${categoryId}`,
+      category
+    );
+  }
+
+  deleteCategory(categoryId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${categoryId}`);
+  }
 }

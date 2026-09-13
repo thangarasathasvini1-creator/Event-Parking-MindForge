@@ -1,205 +1,181 @@
-<div class="min-h-screen bg-slate-50 px-6 py-8">
+<div class="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
   <div class="mx-auto max-w-7xl">
 
     <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-slate-900">
-        Event Management
-      </h1>
-
-      <p class="mt-2 text-slate-600">
-        Manage events, venues, categories, pricing, and capacity.
-      </p>
+    <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-widest text-blue-600">
+          EVENTRA · ADMIN
+        </p>
+        <h1 class="mt-1 text-3xl font-extrabold text-slate-950 tracking-tight">
+          Event Management
+        </h1>
+        <p class="mt-1 text-sm text-slate-500">
+          Create and schedule events, assign venues, set ticket pricing, and configure parking fees.
+        </p>
+      </div>
 
       <button
         type="button"
         (click)="createEvent()"
-        class="mt-5 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700">
-        + Create Event
+        class="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-5 py-2.5 text-xs font-bold text-white shadow-xs transition active:scale-[0.98] cursor-pointer"
+      >
+        <span>+ Add Event</span>
       </button>
-    </div>
+    </header>
 
-    <!-- Loading -->
+    <!-- Success Message Banner -->
+    @if (successMessage()) {
+      <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-semibold text-emerald-800 flex items-center justify-between">
+        <span>✓ {{ successMessage() }}</span>
+        <button type="button" (click)="successMessage.set('')" class="text-emerald-600 hover:text-emerald-800">✕</button>
+      </div>
+    }
+
+    <!-- Error Message Banner -->
+    @if (errorMessage()) {
+      <div class="mb-6">
+        <app-error-message
+          [message]="errorMessage()"
+          [showRetry]="true"
+          (retry)="retry()"
+        ></app-error-message>
+      </div>
+    }
+
+    <!-- Loading State -->
     @if (isLoading()) {
-
-      <div class="flex justify-center py-16">
-        <div
-          class="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600">
-        </div>
+      <div class="py-16 flex justify-center">
+        <app-loading-spinner message="Loading event catalogue..."></app-loading-spinner>
       </div>
+    }
 
-    } @else if (errorMessage()) {
-
-      <!-- Error -->
-      <div class="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
-
-        <p class="font-medium text-red-700">
-          {{ errorMessage() }}
-        </p>
-
-        <button
-          type="button"
-          (click)="retry()"
-          class="mt-4 rounded-lg bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700">
-          Try Again
-        </button>
-
-      </div>
-
-    } @else {
-
+    <!-- Events Grid -->
+    @if (!isLoading() && !errorMessage()) {
       @if (events().length > 0) {
-
-        <!-- Event Grid -->
         <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-
           @for (event of events(); track event.eventId) {
-
-            <article
-              class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-
-              <!-- Event Header -->
-              <div
-                class="bg-gradient-to-r from-indigo-600 to-violet-600 p-6 text-white">
-
-                <p class="text-sm font-medium text-indigo-100">
-                  Event #{{ event.eventId }}
-                </p>
-
-                <h2 class="mt-2 text-xl font-bold">
-                  {{ event.name }}
-                </h2>
-
-              </div>
-
-              <!-- Event Information -->
-              <div class="space-y-4 p-6">
-
-                <!-- Category -->
-                <div>
-                  <p class="text-xs font-semibold uppercase text-slate-400">
-                    Category
-                  </p>
-
-                  <p class="mt-1 text-sm font-medium text-slate-700">
-                    {{ getCategoryName(event.categoryId) }}
-                  </p>
-                </div>
-
-                <!-- Venue -->
-                <div>
-                  <p class="text-xs font-semibold uppercase text-slate-400">
-                    Venue
-                  </p>
-
-                  <p class="mt-1 text-sm font-medium text-slate-700">
-                    {{ getVenueName(event.venueId) }}
-                  </p>
-                </div>
-
-                <!-- Date -->
-                <div>
-                  <p class="text-xs font-semibold uppercase text-slate-400">
-                    Date
-                  </p>
-
-                  <p class="mt-1 text-sm font-medium text-slate-700">
-                    {{ event.eventDate | date:'mediumDate' }}
-                  </p>
-                </div>
-
-                <!-- Time -->
-                <div>
-                  <p class="text-xs font-semibold uppercase text-slate-400">
-                    Time
-                  </p>
-
-                  <p class="mt-1 text-sm font-medium text-slate-700">
-                    {{ event.startTime }} - {{ event.endTime }}
-                  </p>
-                </div>
-
-                <!-- Price / Capacity -->
-                <div
-                  class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4">
-
-                  <div>
-                    <p class="text-xs text-slate-400">
-                      Ticket Price
-                    </p>
-
-                    <p class="mt-1 text-lg font-bold text-indigo-600">
-                      {{ event.ticketPrice | currency }}
-                    </p>
+            <article class="flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xs transition hover:-translate-y-0.5 hover:shadow-lg">
+              <div>
+                <!-- Event Card Banner Header -->
+                <div class="bg-gradient-to-r from-slate-900 to-blue-950 p-5 text-white">
+                  <div class="flex items-center justify-between text-xs text-blue-200 mb-1">
+                    <span class="rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-semibold border border-white/10">
+                      {{ getCategoryName(event.categoryId) }}
+                    </span>
+                    <span class="font-mono text-[11px] text-slate-400">#{{ event.eventId }}</span>
                   </div>
 
-                  <div>
-                    <p class="text-xs text-slate-400">
-                      Capacity
-                    </p>
+                  <h2 class="mt-2 text-lg font-bold text-white line-clamp-1">
+                    {{ event.name }}
+                  </h2>
+                </div>
 
-                    <p class="mt-1 text-lg font-bold text-slate-700">
-                      {{ event.capacity }}
-                    </p>
+                <!-- Event Details Body -->
+                <div class="p-5 space-y-3.5 text-xs">
+                  <!-- Venue -->
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Venue</span>
+                    <span class="font-bold text-slate-800 text-right truncate max-w-[180px]">
+                      {{ getVenueName(event.venueId) }}
+                    </span>
                   </div>
 
+                  <!-- Date & Time -->
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Schedule</span>
+                    <div class="text-right">
+                      <p class="font-bold text-slate-800">{{ event.eventDate | date:'mediumDate' }}</p>
+                      <p class="text-slate-500 font-medium">{{ event.startTime }} - {{ event.endTime }}</p>
+                    </div>
+                  </div>
+
+                  <!-- Price & Capacity -->
+                  <div class="grid grid-cols-2 gap-3 border-t border-slate-100 pt-3">
+                    <div class="rounded-xl bg-slate-50 p-2.5">
+                      <span class="text-[10px] uppercase font-bold text-slate-400 block">Ticket Price</span>
+                      <p class="text-base font-extrabold text-blue-600 mt-0.5">
+                        ${{ event.ticketPrice }}
+                      </p>
+                    </div>
+
+                    <div class="rounded-xl bg-slate-50 p-2.5">
+                      <span class="text-[10px] uppercase font-bold text-slate-400 block">Capacity</span>
+                      <p class="text-base font-extrabold text-slate-800 mt-0.5">
+                        {{ event.capacity }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Parking Fee Badge -->
+                  <div class="rounded-xl px-3 py-2 text-xs flex items-center justify-between"
+                       [class.bg-emerald-50]="event.parkingFee > 0"
+                       [class.text-emerald-800]="event.parkingFee > 0"
+                       [class.bg-slate-100]="event.parkingFee === 0"
+                       [class.text-slate-500]="event.parkingFee === 0">
+                    <span class="font-medium">
+                      {{ event.parkingFee > 0 ? '🚗 Parking Included' : 'No Dedicated Parking Fee' }}
+                    </span>
+                    <span class="font-bold">
+                      ${{ event.parkingFee }}
+                    </span>
+                  </div>
                 </div>
-
-                <!-- Parking -->
-                <div
-                  class="rounded-lg bg-emerald-50 px-3 py-2 text-center text-sm font-medium text-emerald-700">
-
-                  Parking Fee:
-                  {{ event.parkingFee | currency }}
-
-                </div>
-
-                <!-- Actions -->
-                <div class="flex gap-3 pt-2">
-
-                  <button
-                    type="button"
-                    (click)="editEvent(event.eventId)"
-                    class="flex-1 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700">
-                    Edit
-                  </button>
-
-                  <button
-                    type="button"
-                    (click)="deleteEvent(event.eventId)"
-                    class="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700">
-                    Delete
-                  </button>
-
-                </div>
-
               </div>
 
+              <!-- Action Buttons -->
+              <div class="border-t border-slate-100 p-4 bg-slate-50/50 flex items-center gap-2">
+                <button
+                  type="button"
+                  (click)="viewEvent(event.eventId)"
+                  class="rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 py-2 px-3 text-xs font-bold transition cursor-pointer"
+                  title="View as customer"
+                >
+                  View
+                </button>
+
+                <button
+                  type="button"
+                  (click)="editEvent(event.eventId)"
+                  class="flex-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 py-2 px-3 text-xs font-bold transition cursor-pointer text-center"
+                >
+                  Edit
+                </button>
+
+                <button
+                  type="button"
+                  (click)="initiateDelete(event)"
+                  class="rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 py-2 px-3 text-xs font-bold transition cursor-pointer"
+                >
+                  Delete
+                </button>
+              </div>
             </article>
-
           }
-
         </div>
-
       } @else {
-
-        <!-- Empty State -->
-        <div
-          class="rounded-2xl border border-slate-200 bg-white p-12 text-center">
-
-          <h2 class="text-xl font-semibold text-slate-800">
-            No events found
-          </h2>
-
-          <p class="mt-2 text-slate-500">
-            There are currently no events available.
-          </p>
-
+        <div class="max-w-md mx-auto my-12">
+          <app-empty-state
+            title="No events found"
+            description="There are currently no events created in the system. Add your first event to open ticket sales and parking."
+            actionText="+ Create Event"
+            (action)="createEvent()"
+          ></app-empty-state>
         </div>
-
       }
-
     }
 
   </div>
 </div>
+
+<!-- Shared Delete Confirmation Dialog -->
+@if (showDeleteModal()) {
+  <app-confirmation-dialog
+    title="Delete Event"
+    [message]="'Are you sure you want to delete event \'' + (pendingEventToDelete()?.name || '') + '\'? If active bookings exist, the backend will prevent deletion.'"
+    confirmLabel="Delete Event"
+    [busy]="isDeleting()"
+    (confirmed)="confirmDelete()"
+    (cancelled)="cancelDelete()"
+  ></app-confirmation-dialog>
+}

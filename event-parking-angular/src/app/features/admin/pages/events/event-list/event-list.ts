@@ -14,11 +14,21 @@ import { CategoryService } from '../../../../../services/category';
 import { Event } from '../../../../../models/event.model';
 import { Venue } from '../../../../../models/venue.model';
 import { Category } from '../../../../../models/category.model';
+import { ConfirmationDialog } from '../../../../../shared/components/confirmation-dialog/confirmation-dialog';
+import { LoadingSpinner } from '../../../../../shared/components/loading-spinner/loading-spinner';
+import { ErrorMessage } from '../../../../../shared/components/error-message/error-message';
+import { EmptyState } from '../../../../../shared/components/empty-state/empty-state';
 
 @Component({
   selector: 'app-admin-event-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    ConfirmationDialog,
+    LoadingSpinner,
+    ErrorMessage,
+    EmptyState,
+  ],
   templateUrl: './event-list.html',
   styleUrl: './event-list.css',
 })
@@ -34,6 +44,11 @@ export class EventList implements OnInit {
 
   readonly isLoading = signal(true);
   readonly errorMessage = signal('');
+  readonly successMessage = signal('');
+
+  readonly pendingEventToDelete = signal<Event | null>(null);
+  readonly showDeleteModal = signal(false);
+  readonly isDeleting = signal(false);
 
   ngOnInit(): void {
     this.loadEvents();
@@ -41,47 +56,42 @@ export class EventList implements OnInit {
     this.loadCategories();
   }
 
-  private loadEvents(): void {
+  loadEvents(): void {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
     this.eventService.getEvents().subscribe({
       next: (response) => {
-        this.events.set(response);
+        this.events.set(response ?? []);
         this.isLoading.set(false);
       },
-
       error: (error) => {
         console.error('Failed to load events:', error);
-
         this.errorMessage.set(
           error?.error?.message ??
-            'Unable to load events. Please try again.'
+            'Unable to load events. Please check your connection and try again.'
         );
-
         this.isLoading.set(false);
       },
     });
   }
 
-  private loadVenues(): void {
+  loadVenues(): void {
     this.venueService.getVenues().subscribe({
       next: (response) => {
-        this.venues.set(response);
+        this.venues.set(response ?? []);
       },
-
       error: (error) => {
         console.error('Failed to load venues:', error);
       },
     });
   }
 
-  private loadCategories(): void {
+  loadCategories(): void {
     this.categoryService.getCategories().subscribe({
       next: (response) => {
-        this.categories.set(response);
+        this.categories.set(response ?? []);
       },
-
       error: (error) => {
         console.error('Failed to load categories:', error);
       },
@@ -90,17 +100,15 @@ export class EventList implements OnInit {
 
   getVenueName(venueId: number): string {
     return (
-      this.venues().find(
-        (venue) => venue.venueId === venueId
-      )?.name ?? `Venue #${venueId}`
+      this.venues().find((venue) => venue.venueId === venueId)?.name ??
+      `Venue #${venueId}`
     );
   }
 
   getCategoryName(categoryId: number): string {
     return (
-      this.categories().find(
-        (category) => category.categoryId === categoryId
-      )?.name ?? `Category #${categoryId}`
+      this.categories().find((category) => category.categoryId === categoryId)
+        ?.name ?? `Category #${categoryId}`
     );
   }
 
@@ -109,41 +117,62 @@ export class EventList implements OnInit {
   }
 
   editEvent(eventId: number): void {
-    this.router.navigate([
-      '/admin/events',
-      eventId,
-      'edit',
-    ]);
+    this.router.navigate(['/admin/events', eventId, 'edit']);
   }
 
-  deleteEvent(eventId: number): void {
-    const confirmed = window.confirm(
-      'Are you sure you want to delete this event?'
-    );
+  viewEvent(eventId: number): void {
+    this.router.navigate(['/events', eventId]);
+  }
 
-    if (!confirmed) {
+  initiateDelete(event: Event): void {
+    this.errorMessage.set('');
+    this.successMessage.set('');
+    this.pendingEventToDelete.set(event);
+    this.showDeleteModal.set(true);
+  }
+
+  cancelDelete(): void {
+    this.pendingEventToDelete.set(null);
+    this.showDeleteModal.set(false);
+    this.isDeleting.set(false);
+  }
+
+  confirmDelete(): void {
+    const event = this.pendingEventToDelete();
+    if (!event?.eventId) {
+      this.cancelDelete();
       return;
     }
 
-    this.eventService.deleteEvent(eventId).subscribe({
+    this.isDeleting.set(true);
+    this.errorMessage.set('');
+
+    this.eventService.deleteEvent(event.eventId).subscribe({
       next: () => {
         this.events.update((events) =>
-          events.filter(
-            (event) => event.eventId !== eventId
-          )
+          events.filter((e) => e.eventId !== event.eventId)
         );
+        this.successMessage.set(
+          `Event "${event.name}" was deleted successfully.`
+        );
+        this.cancelDelete();
       },
-
       error: (error) => {
-        console.error(
-          'Failed to delete event:',
-          error
-        );
+        console.error('Failed to delete event:', error);
+        this.isDeleting.set(false);
 
-        this.errorMessage.set(
-          error?.error?.message ??
-            'Unable to delete event. It may have active bookings or dependencies.'
-        );
+        if (error?.status === 409) {
+          this.errorMessage.set(
+            `Unable to delete "${event.name}" because active customer bookings or seat reservations already exist for this event.`
+          );
+        } else {
+          this.errorMessage.set(
+            error?.error?.message ??
+              `Unable to delete "${event.name}". It may have dependent records or bookings.`
+          );
+        }
+
+        this.showDeleteModal.set(false);
       },
     });
   }

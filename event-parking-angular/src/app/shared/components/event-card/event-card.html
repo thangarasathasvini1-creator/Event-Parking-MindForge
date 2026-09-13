@@ -1,23 +1,38 @@
-<div
+<article
+  role="article"
+  tabindex="0"
   (click)="onSelect()"
-  class="group cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl flex flex-col h-full"
+  (keydown)="onKeyDown($event)"
+  [attr.aria-label]="event?.name || 'Event card'"
+  class="group cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition duration-200 hover:-translate-y-1 hover:border-blue-300 hover:shadow-xl flex flex-col h-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
 >
-  <!-- Card Header / Image placeholder -->
+  <!-- Card Header / Visual Area -->
   <div class="relative h-44 w-full overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 p-5 flex flex-col justify-between">
-    <div class="flex items-center justify-between">
-      <span class="rounded-full bg-white/10 backdrop-blur-md px-3 py-1 text-[11px] font-semibold text-blue-200 border border-white/10">
+    <!-- Ambient glow decorations -->
+    <div class="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-blue-500/20 blur-2xl group-hover:bg-blue-400/30 transition duration-300" aria-hidden="true"></div>
+    <div class="absolute -bottom-8 left-8 h-24 w-24 rounded-full bg-indigo-500/20 blur-xl" aria-hidden="true"></div>
+
+    <div class="relative z-10 flex items-center justify-between gap-2">
+      <span class="inline-flex items-center rounded-full bg-white/15 backdrop-blur-md px-3 py-1 text-[11px] font-semibold text-blue-100 border border-white/10">
         {{ event?.categoryName || 'Event' }}
       </span>
-      <span class="rounded-full bg-emerald-500/20 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-400/30 uppercase">
-        Available
-      </span>
+
+      @if (hasParking) {
+        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-400/30">
+          <span>🚗</span> Parking
+        </span>
+      }
     </div>
 
-    <div>
-      <p class="text-xs font-semibold text-blue-300 tracking-wide uppercase">
-        {{ eventDate | date:'EEEE, MMM d, y' }}
-      </p>
-      <h3 class="mt-1 text-lg font-bold text-white line-clamp-1 group-hover:text-blue-300 transition">
+    <div class="relative z-10">
+      <div class="flex items-center gap-2 text-xs font-semibold text-blue-300 tracking-wide">
+        <span>{{ eventDate ? (eventDate | date:'mediumDate') : 'Upcoming' }}</span>
+        @if (formattedTime) {
+          <span>·</span>
+          <span>{{ formattedTime }}</span>
+        }
+      </div>
+      <h3 class="mt-1 text-lg font-bold text-white line-clamp-1 group-hover:text-blue-200 transition">
         {{ event?.name || event?.eventName || 'Live Event' }}
       </h3>
     </div>
@@ -25,26 +40,57 @@
 
   <!-- Card Body -->
   <div class="p-5 flex-1 flex flex-col justify-between">
-    <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-      {{ event?.description || 'Join us for this exciting live event experience. Choose your seat and reserve optional parking.' }}
-    </p>
-
-    <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
-      <div>
-        <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">Venue</span>
-        <span class="text-xs font-semibold text-slate-700 truncate max-w-[140px] block">
+    <div class="space-y-3">
+      <!-- Venue & Capacity -->
+      <div class="flex items-center justify-between text-xs text-slate-600">
+        <span class="inline-flex items-center gap-1.5 truncate max-w-[160px] font-medium text-slate-700" title="{{ event?.venueName }}">
+          <svg class="h-3.5 w-3.5 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
           {{ event?.venueName || 'Main Venue' }}
         </span>
+
+        @if (event?.capacity) {
+          <span class="text-[11px] text-slate-500">
+            Cap: <strong class="font-semibold text-slate-700">{{ event.capacity }}</strong>
+          </span>
+        }
       </div>
 
-      <div class="text-right">
-        <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">Starting from</span>
-        <span class="text-sm font-extrabold text-blue-600">
+      <!-- Parking Fee Info -->
+      @if (hasParking) {
+        <div class="rounded-lg bg-emerald-50 px-2.5 py-1.5 text-[11px] font-medium text-emerald-700 flex items-center justify-between">
+          <span>Parking available</span>
+          <span class="font-bold">${{ event.parkingFee }}</span>
+        </div>
+      } @else {
+        <div class="rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-500">
+          No parking reserved for this event
+        </div>
+      }
+    </div>
+
+    <!-- Pricing & CTA -->
+    <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+      <div>
+        <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">Ticket Price</span>
+        <span class="text-base font-extrabold text-blue-600">
           ${{ event?.ticketPrice ?? 0 }}
         </span>
       </div>
+
+      <button
+        type="button"
+        (click)="onSelect(); $event.stopPropagation()"
+        class="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-blue-700 group-hover:shadow-md cursor-pointer"
+      >
+        <span>View Details</span>
+        <svg class="h-3.5 w-3.5 transition group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14"/>
+          <path d="m12 5 7 7-7 7"/>
+        </svg>
+      </button>
     </div>
   </div>
-</div>
-
-
+</article>
