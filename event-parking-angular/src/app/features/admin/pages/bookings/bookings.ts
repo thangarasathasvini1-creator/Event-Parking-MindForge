@@ -3,43 +3,76 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { Booking } from '../../../../models/booking.model';
+import { Event } from '../../../../models/event.model';
 import { BookingService } from '../../../../services/booking';
+import { EventService } from '../../../../services/event';
+import { StatusBadge } from '../../../../shared/components/status-badge/status-badge';
+import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
+import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 
 @Component({
   selector: 'app-admin-bookings',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule
+    FormsModule,
+    StatusBadge,
+    LoadingSpinner,
+    EmptyState,
   ],
   templateUrl: './bookings.html',
   styleUrl: './bookings.css',
 })
 export class Bookings implements OnInit {
+  private readonly bookingService = inject(BookingService);
+  private readonly eventService = inject(EventService, { optional: true });
 
-  private readonly bookingService =
-    inject(BookingService);
-
+  events: Event[] = [];
   bookings: Booking[] = [];
-
   filteredBookings: Booking[] = [];
-
   eventId: number | null = null;
-
   searchTerm = '';
-
   isLoading = false;
-
+  isLoadingEvents = false;
   errorMessage = '';
 
   ngOnInit(): void {
+    this.loadEvents();
     this.loadBookings();
+  }
+
+  // ==================== LOAD EVENTS ====================
+
+  loadEvents(): void {
+    if (!this.eventService) return;
+    this.isLoadingEvents = true;
+
+    this.eventService.getEvents().subscribe({
+      next: (events: Event[]) => {
+        this.events = events ?? [];
+        this.isLoadingEvents = false;
+      },
+      error: () => {
+        this.isLoadingEvents = false;
+      }
+    });
+  }
+
+  onEventSelect(selectedId: unknown): void {
+    const parsed = Number(selectedId);
+    if (parsed > 0) {
+      this.eventId = parsed;
+      this.loadBookings();
+    } else {
+      this.eventId = null;
+      this.bookings = [];
+      this.filteredBookings = [];
+    }
   }
 
   // ==================== LOAD BOOKINGS ====================
 
   loadBookings(): void {
-
     if (!this.eventId) {
       this.bookings = [];
       this.filteredBookings = [];
@@ -53,23 +86,14 @@ export class Bookings implements OnInit {
       .getBookingsByEvent(this.eventId)
       .subscribe({
         next: (bookings: Booking[]) => {
-
           this.bookings = bookings ?? [];
-
           this.applyFilter();
-
           this.isLoading = false;
         },
 
         error: (error: unknown) => {
-
-          console.error(
-            'Failed to load admin bookings:',
-            error
-          );
-
+          console.error('Failed to load admin bookings:', error);
           this.isLoading = false;
-
           this.handleError(error);
         }
       });
@@ -78,47 +102,28 @@ export class Bookings implements OnInit {
   // ==================== SEARCH ====================
 
   applyFilter(): void {
-
-    const search =
-      this.searchTerm
-        .trim()
-        .toLowerCase();
+    const search = this.searchTerm.trim().toLowerCase();
 
     if (!search) {
-      this.filteredBookings = [
-        ...this.bookings
-      ];
+      this.filteredBookings = [...this.bookings];
       return;
     }
 
-    this.filteredBookings =
-      this.bookings.filter(
-        (booking: Booking) =>
-          booking.bookingNumber
-            ?.toLowerCase()
-            .includes(search) ||
-
-          booking.status
-            ?.toLowerCase()
-            .includes(search) ||
-
-          String(booking.bookingId)
-            .includes(search)
-      );
+    this.filteredBookings = this.bookings.filter(
+      (booking: Booking) =>
+        booking.bookingNumber?.toLowerCase().includes(search) ||
+        booking.status?.toLowerCase().includes(search) ||
+        (booking.paymentStatus ?? '').toLowerCase().includes(search) ||
+        String(booking.bookingId).includes(search) ||
+        String(booking.customerId).includes(search)
+    );
   }
 
   // ==================== EVENT ID ====================
 
-  setEventId(value: string): void {
-
-    const parsed =
-      Number(value);
-
-    this.eventId =
-      Number.isInteger(parsed) &&
-      parsed > 0
-        ? parsed
-        : null;
+  setEventId(value: string | number): void {
+    const parsed = Number(value);
+    this.eventId = Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 
     if (this.eventId) {
       this.loadBookings();
@@ -143,115 +148,80 @@ export class Bookings implements OnInit {
 
   // ==================== HELPERS ====================
 
-  getStatusClass(
-    status: string
-  ): string {
-
-    switch (
-      status
-        ?.trim()
-        .toLowerCase()
-    ) {
-
+  getStatusClass(status: string): string {
+    switch (status?.trim().toLowerCase()) {
       case 'confirmed':
         return 'bg-emerald-100 text-emerald-700';
-
       case 'pending':
       case 'hold':
         return 'bg-amber-100 text-amber-700';
-
       case 'cancelled':
       case 'canceled':
         return 'bg-red-100 text-red-700';
-
       case 'completed':
         return 'bg-blue-100 text-blue-700';
-
       default:
         return 'bg-slate-100 text-slate-600';
     }
   }
 
-  getPaymentStatusClass(
-    status: string | null
-  ): string {
-
-    switch (
-      (status ?? '')
-        .trim()
-        .toLowerCase()
-    ) {
-
+  getPaymentStatusClass(status: string | null): string {
+    switch ((status ?? '').trim().toLowerCase()) {
       case 'paid':
       case 'completed':
       case 'success':
       case 'successful':
         return 'bg-emerald-100 text-emerald-700';
-
       case 'pending':
         return 'bg-amber-100 text-amber-700';
-
       case 'failed':
       case 'failure':
         return 'bg-red-100 text-red-700';
-
       case 'refunded':
         return 'bg-blue-100 text-blue-700';
-
       default:
         return 'bg-slate-100 text-slate-600';
     }
   }
 
-  getPaymentStatus(
-    status: string | null
-  ): string {
-    return status || 'Not Paid';
+  getPaymentStatus(status: string | null): string {
+    return status || 'Pending';
+  }
+
+  getSeatsCount(b: Booking): number {
+    return b.seatIds?.length ?? b.seatCount ?? 0;
   }
 
   // ==================== ERROR HANDLING ====================
 
-  private handleError(
-    error: unknown
-  ): void {
-
-    const httpError =
-      error as {
-        status?: number;
-        error?: {
-          message?: string;
-        };
+  private handleError(error: unknown): void {
+    const httpError = error as {
+      status?: number;
+      error?: {
+        message?: string;
       };
+    };
 
     if (httpError.status === 401) {
-      this.errorMessage =
-        'Your session has expired. Please log in again.';
+      this.errorMessage = 'Your session has expired. Please log in again.';
       return;
     }
 
     if (httpError.status === 403) {
-      this.errorMessage =
-        'You do not have permission to view bookings.';
+      this.errorMessage = 'You do not have permission to view bookings.';
       return;
     }
 
     if (httpError.status === 404) {
-      this.errorMessage =
-        'No bookings were found for this event.';
+      this.errorMessage = 'No bookings were found for this event.';
       return;
     }
 
-    if (
-      httpError.status !== undefined &&
-      httpError.status >= 500
-    ) {
-      this.errorMessage =
-        'The server is temporarily unavailable. Please try again later.';
+    if (httpError.status !== undefined && httpError.status >= 500) {
+      this.errorMessage = 'The server is temporarily unavailable. Please try again later.';
       return;
     }
 
-    this.errorMessage =
-      httpError.error?.message ??
-      'Unable to load bookings. Please try again.';
+    this.errorMessage = httpError.error?.message ?? 'Unable to load bookings. Please try again.';
   }
 }

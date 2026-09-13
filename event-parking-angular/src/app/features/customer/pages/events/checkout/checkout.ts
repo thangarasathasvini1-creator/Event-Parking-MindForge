@@ -54,6 +54,14 @@ export class Checkout {
     );
   }
 
+  get confirmationMessage(): string {
+    const ev = this.event();
+    const stCount = this.seats().length;
+    const pk = this.parkingSlot();
+    const pkText = pk ? `Slot #${pk.slotNumber} (LKR ${pk.fee.toLocaleString()})` : 'No parking selected';
+    return `Please review your booking details: Event: "${ev?.name || 'Selected Event'}", Seats: ${stCount}, Parking: ${pkText}, Grand Total: LKR ${this.total.toLocaleString()}. Click Confirm Booking to place your seats on hold and proceed to payment.`;
+  }
+
 
   // ==================== CONFIRMATION ====================
 

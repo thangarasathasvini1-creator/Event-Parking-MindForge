@@ -1,15 +1,27 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { Booking } from '../../../../models/booking.model';
 import { BookingService } from '../../../../services/booking';
 import { AuthStateService } from '../../../../core/auth/auth-state';
+import { StatusBadge } from '../../../../shared/components/status-badge/status-badge';
+import { ConfirmationDialog } from '../../../../shared/components/confirmation-dialog/confirmation-dialog';
+import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
+import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 
 @Component({
   selector: 'app-bookings',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    StatusBadge,
+    ConfirmationDialog,
+    LoadingSpinner,
+    EmptyState,
+  ],
   templateUrl: './bookings.html',
   styleUrl: './bookings.css',
 })
@@ -26,6 +38,55 @@ export class Bookings implements OnInit {
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
   readonly cancellingBookingId = signal<number | null>(null);
+
+  // Search & Filter
+  readonly searchQuery = signal('');
+  readonly selectedStatus = signal<string>('ALL');
+
+  // Confirmation Modal
+  readonly showCancelDialog = signal(false);
+  readonly bookingToCancel = signal<Booking | null>(null);
+
+  // ==================== COMPUTED ====================
+
+  readonly filteredBookings = computed(() => {
+    const list = this.bookings();
+    const query = this.searchQuery().trim().toLowerCase();
+    const status = this.selectedStatus().toUpperCase();
+
+    return list.filter((b) => {
+      // Filter by Status
+      if (status !== 'ALL') {
+        const bStatus = (b.status ?? '').toUpperCase();
+        if (bStatus !== status) {
+          return false;
+        }
+      }
+
+      // Filter by Query (bookingNumber, eventName, bookingId)
+      if (query) {
+        const num = (b.bookingNumber ?? '').toLowerCase();
+        const event = (b.eventName ?? '').toLowerCase();
+        const id = String(b.bookingId);
+        if (!num.includes(query) && !event.includes(query) && !id.includes(query)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  });
+
+  readonly statusCounts = computed(() => {
+    const list = this.bookings();
+    return {
+      all: list.length,
+      confirmed: list.filter((b) => (b.status ?? '').toLowerCase() === 'confirmed').length,
+      pending: list.filter((b) => (b.status ?? '').toLowerCase() === 'pending').length,
+      cancelled: list.filter((b) => (b.status ?? '').toLowerCase() === 'cancelled').length,
+      expired: list.filter((b) => (b.status ?? '').toLowerCase() === 'expired').length,
+    };
+  });
 
   // ==================== INITIALIZATION ====================
 
@@ -62,6 +123,21 @@ export class Bookings implements OnInit {
     });
   }
 
+  // ==================== FILTERS ====================
+
+  setStatusFilter(status: string): void {
+    this.selectedStatus.set(status);
+  }
+
+  onSearchInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.searchQuery.set(input.value);
+  }
+
+  clearSearch(): void {
+    this.searchQuery.set('');
+  }
+
   // ==================== VIEW BOOKING ====================
 
   viewBooking(bookingId: number): void {
@@ -72,17 +148,17 @@ export class Bookings implements OnInit {
     this.router.navigate(['/bookings', bookingId]);
   }
 
-  // ==================== CANCEL BOOKING ====================
+  payNow(bookingId: number): void {
+    if (!bookingId) return;
+    this.router.navigate(['/events/payment'], {
+      queryParams: { bookingId }
+    });
+  }
 
-  cancelBooking(bookingId: number): void {
-    const booking = this.bookings().find((item) => item.bookingId === bookingId);
+  // ==================== CANCEL BOOKING WITH DIALOG ====================
 
-    if (!booking) {
-      return;
-    }
-
+  openCancelDialog(booking: Booking): void {
     const status = booking.status?.toLowerCase() ?? '';
-
     if (
       status === 'cancelled' ||
       status === 'completed' ||
@@ -92,33 +168,51 @@ export class Bookings implements OnInit {
       return;
     }
 
-    const confirmed = confirm(
-      `Are you sure you want to cancel booking ${booking.bookingNumber}?`
-    );
+    this.bookingToCancel.set(booking);
+    this.showCancelDialog.set(true);
+  }
 
-    if (!confirmed) {
-      return;
+  closeCancelDialog(): void {
+    if (!this.isCancelling()) {
+      this.showCancelDialog.set(false);
+      this.bookingToCancel.set(null);
     }
+  }
+
+  confirmCancel(): void {
+    const b = this.bookingToCancel();
+    if (!b) return;
 
     this.isCancelling.set(true);
-    this.cancellingBookingId.set(bookingId);
+    this.cancellingBookingId.set(b.bookingId);
     this.errorMessage.set('');
     this.successMessage.set('');
 
-    this.bookingService.cancelBooking(bookingId).subscribe({
+    this.bookingService.cancelBooking(b.bookingId).subscribe({
       next: () => {
         this.isCancelling.set(false);
         this.cancellingBookingId.set(null);
-        this.successMessage.set('Booking cancelled successfully.');
+        this.showCancelDialog.set(false);
+        this.bookingToCancel.set(null);
+        this.successMessage.set(`Booking #${b.bookingNumber} was cancelled successfully.`);
         this.loadBookings();
       },
       error: (error: unknown) => {
         console.error('Failed to cancel booking:', error);
         this.isCancelling.set(false);
         this.cancellingBookingId.set(null);
+        this.showCancelDialog.set(false);
+        this.bookingToCancel.set(null);
         this.handleCancelError(error);
       },
     });
+  }
+
+  // Backward-compatible method if called directly
+  cancelBooking(bookingId: number): void {
+    const booking = this.bookings().find((item) => item.bookingId === bookingId);
+    if (!booking) return;
+    this.openCancelDialog(booking);
   }
 
   // ==================== NAVIGATION ====================
@@ -127,7 +221,7 @@ export class Bookings implements OnInit {
     this.router.navigate(['/events']);
   }
 
-  // ==================== STATUS ====================
+  // ==================== STATUS UTILITIES ====================
 
   getStatusClass(status: string): string {
     const s = (status ?? '').toLowerCase();
@@ -160,15 +254,13 @@ export class Bookings implements OnInit {
     }
   }
 
-  // ==================== CANCEL BUTTON STATE ====================
-
   isCancellingBooking(bookingId: number): boolean {
     return (
       this.isCancelling() && this.cancellingBookingId() === bookingId
     );
   }
 
-  // ==================== LOAD ERROR ====================
+  // ==================== ERROR HANDLING ====================
 
   private handleLoadError(error: unknown): void {
     const httpError = error as {
@@ -207,8 +299,6 @@ export class Bookings implements OnInit {
         'Unable to load your bookings. Please try again.'
     );
   }
-
-  // ==================== CANCEL ERROR ====================
 
   private handleCancelError(error: unknown): void {
     const httpError = error as {

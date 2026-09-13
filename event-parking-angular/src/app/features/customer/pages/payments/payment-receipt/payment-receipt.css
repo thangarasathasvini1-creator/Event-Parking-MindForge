@@ -1,0 +1,36 @@
+/* Payment Receipt Print Styles */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Hide elements that should not appear on printed receipt */
+  .no-print,
+  header,
+  nav,
+  button,
+  footer {
+    display: none !important;
+  }
+
+  /* Optimize receipt card for full-width print page */
+  #payment-receipt {
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    border-radius: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 16px !important;
+    page-break-inside: avoid;
+  }
+
+  .min-h-screen {
+    min-height: auto !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+}

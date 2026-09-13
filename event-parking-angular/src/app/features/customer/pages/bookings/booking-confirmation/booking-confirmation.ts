@@ -5,10 +5,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Booking } from '../../../../../models/booking.model';
 import { BookingService } from '../../../../../services/booking';
 
+import { StatusBadge } from '../../../../../shared/components/status-badge/status-badge';
+import { Payment } from '../../../../../models/payment.model';
+
 @Component({
   selector: 'app-booking-confirmation',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, StatusBadge],
   templateUrl: './booking-confirmation.html',
   styleUrl: './booking-confirmation.css',
 })
@@ -18,6 +21,7 @@ export class BookingConfirmation implements OnInit {
   private readonly router = inject(Router);
 
   readonly booking = signal<Booking | null>(null);
+  readonly payment = signal<Payment | null>(null);
   readonly isLoading = signal(false);
   readonly errorMessage = signal('');
 
@@ -47,6 +51,8 @@ export class BookingConfirmation implements OnInit {
       next: (booking: Booking) => {
         this.booking.set(booking);
         this.isLoading.set(false);
+
+        this.loadPaymentDetails();
       },
 
       error: (error: unknown) => {
@@ -61,10 +67,30 @@ export class BookingConfirmation implements OnInit {
     });
   }
 
+  private loadPaymentDetails(): void {
+    this.bookingService.getPaymentStatus(this.bookingId).subscribe({
+      next: (payment: Payment) => {
+        this.payment.set(payment);
+      },
+      error: () => {}
+    });
+  }
+
   // ==================== NAVIGATION ====================
 
   viewBooking(): void {
     this.router.navigate(['/bookings', this.bookingId]);
+  }
+
+  viewReceipt(): void {
+    const p = this.payment();
+    if (p?.paymentId) {
+      this.router.navigate(['/payments', p.paymentId, 'receipt']);
+    }
+  }
+
+  payNow(): void {
+    this.router.navigate(['/bookings', this.bookingId, 'payment']);
   }
 
   goToBookings(): void {

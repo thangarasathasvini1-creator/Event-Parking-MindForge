@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -11,40 +11,38 @@ import {
 
 import { Booking } from '../../../../../models/booking.model';
 import { BookingService } from '../../../../../services/booking';
-
-interface PaymentResponse {
-  paymentId?: number;
-  bookingId?: number;
-  amount?: number;
-  status?: string;
-  transactionReference?: string;
-  createdAt?: string;
-}
+import { Payment as PaymentModel } from '../../../../../models/payment.model';
+import { StatusBadge } from '../../../../../shared/components/status-badge/status-badge';
 
 @Component({
   selector: 'app-payment',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, StatusBadge],
   templateUrl: './payment.html',
   styleUrl: './payment.css',
 })
-export class Payment implements OnInit {
+export class Payment implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly bookingService = inject(BookingService);
 
   readonly booking = signal<Booking | null>(null);
-  readonly payment = signal<PaymentResponse | null>(null);
+  readonly payment = signal<PaymentModel | null>(null);
 
   readonly isLoading = signal(false);
   readonly isSubmitting = signal(false);
   readonly isSuccess = signal(false);
+  readonly isAlreadyPaid = signal(false);
+
+  readonly remainingHoldTime = signal<string>('');
+  readonly isHoldExpired = signal(false);
 
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
 
   bookingId = 0;
+  private holdTimerInterval: ReturnType<typeof setInterval> | null = null;
 
   // ============================================================
   // PAYMENT FORM
@@ -55,7 +53,7 @@ export class Payment implements OnInit {
       '',
       [
         Validators.required,
-        Validators.pattern(/^[0-9]{13,19}$/),
+        this.cardNumberValidator,
         this.cardChecksumValidator,
       ],
     ],
@@ -96,6 +94,13 @@ export class Payment implements OnInit {
     this.loadBooking();
   }
 
+  ngOnDestroy(): void {
+    if (this.holdTimerInterval) {
+      clearInterval(this.holdTimerInterval);
+      this.holdTimerInterval = null;
+    }
+  }
+
   // ============================================================
   // LOAD BOOKING
   // ============================================================
@@ -110,6 +115,23 @@ export class Payment implements OnInit {
         next: (booking: Booking) => {
           this.booking.set(booking);
           this.isLoading.set(false);
+
+          const status = booking.status?.trim().toLowerCase();
+          const pStatus = booking.paymentStatus?.trim().toLowerCase();
+
+          if (
+            status === 'confirmed' ||
+            status === 'completed' ||
+            pStatus === 'completed' ||
+            pStatus === 'paid'
+          ) {
+            this.isAlreadyPaid.set(true);
+            this.isSuccess.set(true);
+          } else if (status === 'cancelled' || status === 'expired') {
+            this.isHoldExpired.set(true);
+          } else {
+            this.initHoldTimer(booking.holdExpiresAt);
+          }
 
           this.loadPaymentStatus();
         },
@@ -130,6 +152,51 @@ export class Payment implements OnInit {
   }
 
   // ============================================================
+  // HOLD TIMER COUNTDOWN
+  // ============================================================
+
+  private initHoldTimer(holdExpiresAt: string | null | undefined): void {
+    if (this.holdTimerInterval) {
+      clearInterval(this.holdTimerInterval);
+      this.holdTimerInterval = null;
+    }
+
+    if (!holdExpiresAt) {
+      this.remainingHoldTime.set('');
+      this.isHoldExpired.set(false);
+      return;
+    }
+
+    const expiryTime = new Date(holdExpiresAt).getTime();
+
+    const updateCountdown = () => {
+      const diff = expiryTime - Date.now();
+      if (diff <= 0) {
+        this.remainingHoldTime.set('00:00');
+        this.isHoldExpired.set(true);
+        if (this.holdTimerInterval) {
+          clearInterval(this.holdTimerInterval);
+          this.holdTimerInterval = null;
+        }
+        // Refresh authoritative booking status from backend
+        this.bookingService.getBookingById(this.bookingId).subscribe({
+          next: (b) => this.booking.set(b),
+          error: () => {}
+        });
+      } else {
+        this.isHoldExpired.set(false);
+        const minutes = Math.floor(diff / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        this.remainingHoldTime.set(`${pad(minutes)}:${pad(seconds)}`);
+      }
+    };
+
+    updateCountdown();
+    this.holdTimerInterval = setInterval(updateCountdown, 1000);
+  }
+
+  // ============================================================
   // LOAD PAYMENT STATUS
   // ============================================================
 
@@ -137,7 +204,7 @@ export class Payment implements OnInit {
     this.bookingService
       .getPaymentStatus(this.bookingId)
       .subscribe({
-        next: (payment: PaymentResponse) => {
+        next: (payment: PaymentModel) => {
           this.payment.set(payment);
 
           const status =
@@ -149,6 +216,7 @@ export class Payment implements OnInit {
             status === 'paid'
           ) {
             this.isSuccess.set(true);
+            this.isAlreadyPaid.set(true);
           }
         },
 
@@ -192,6 +260,13 @@ export class Payment implements OnInit {
       return;
     }
 
+    if (this.isHoldExpired()) {
+      this.errorMessage.set(
+        'This booking hold has expired. Seats and parking have been released. Please select seats again.'
+      );
+      return;
+    }
+
     this.isSubmitting.set(true);
 
     this.bookingService
@@ -199,7 +274,7 @@ export class Payment implements OnInit {
         paymentMethod: 'Card',
       })
       .subscribe({
-        next: (payment: PaymentResponse) => {
+        next: (payment: PaymentModel) => {
           this.payment.set(payment);
 
           this.successMessage.set(
@@ -278,6 +353,23 @@ export class Payment implements OnInit {
     this.router.navigate(['/bookings']);
   }
 
+  goToConfirmation(): void {
+    this.router.navigate([
+      '/bookings',
+      this.bookingId,
+      'confirmation',
+    ]);
+  }
+
+  goToEvent(): void {
+    const evId = this.booking()?.eventId;
+    if (evId) {
+      this.router.navigate(['/events', evId]);
+    } else {
+      this.router.navigate(['/events']);
+    }
+  }
+
   // ============================================================
   // PAYMENT ERROR HANDLING
   // ============================================================
@@ -293,7 +385,7 @@ export class Payment implements OnInit {
     if (httpError.status === 409) {
       this.errorMessage.set(
         httpError.error?.message ??
-          'This booking is no longer available for payment.'
+          'This booking is no longer available for payment. It may have expired or already been paid.'
       );
 
       this.loadBooking();
@@ -362,8 +454,22 @@ export class Payment implements OnInit {
   }
 
   // ============================================================
-  // CARD LUHN VALIDATION
+  // CARD VALIDATION & CHECKSUM
   // ============================================================
+
+  private cardNumberValidator(
+    control: AbstractControl
+  ): ValidationErrors | null {
+    const raw = String(control.value ?? '').trim();
+    if (!raw) {
+      return null;
+    }
+    const digitsOnly = raw.replace(/\s+/g, '');
+    if (!/^\d{13,19}$/.test(digitsOnly)) {
+      return { pattern: true };
+    }
+    return null;
+  }
 
   private cardChecksumValidator(
     control: AbstractControl
