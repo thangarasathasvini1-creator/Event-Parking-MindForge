@@ -5,28 +5,14 @@
     <button
       type="button"
       (click)="goToHome()"
-      class="group flex items-center gap-3 text-left transition hover:opacity-95 focus:outline-none cursor-pointer"
+      class="group flex items-center gap-3 text-left transition hover:opacity-95 focus:outline-none cursor-pointer py-1"
+      aria-label="EVENTRA Home"
     >
-      <div
-        class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-500 text-lg font-black text-white shadow-lg shadow-blue-500/25 ring-1 ring-white/20 transition-transform duration-200 group-hover:scale-105"
-      >
-        E
-      </div>
-
-      <div>
-        <div class="flex items-center gap-2">
-          <span class="text-base font-black tracking-tight text-white sm:text-lg">
-            EVENTRA
-          </span>
-          <span class="hidden rounded-full bg-blue-500/20 px-1.5 py-0.5 text-[9px] font-bold tracking-wider uppercase text-blue-300 ring-1 ring-blue-400/30 sm:inline-block">
-            PLATFORM
-          </span>
-        </div>
-
-        <p class="text-[11px] font-medium text-slate-400 leading-none">
-          Events · Seats · Parking
-        </p>
-      </div>
+      <img
+        src="/logo-white.png"
+        alt="EVENTRA - Discover, Reserve, Park, Experience"
+        class="h-10 sm:h-11 w-auto max-w-[200px] sm:max-w-[240px] object-contain transition-transform duration-200 group-hover:scale-[1.02]"
+      />
     </button>
 
     <!-- Center Navigation Links (Desktop) -->

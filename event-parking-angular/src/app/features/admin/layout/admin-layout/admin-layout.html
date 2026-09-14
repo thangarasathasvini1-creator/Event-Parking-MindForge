@@ -30,29 +30,29 @@
       <button
         type="button"
         (click)="navigateTab('dashboard')"
-        class="flex items-center gap-3 cursor-pointer text-left focus:outline-none"
+        class="flex items-center cursor-pointer text-left focus:outline-none"
+        [class.gap-3]="!sidebarCollapsed() || mobileMenuOpen()"
+        [class.justify-center]="sidebarCollapsed() && !mobileMenuOpen()"
+        [class.w-full]="sidebarCollapsed() && !mobileMenuOpen()"
         aria-label="EVENTRA Admin"
       >
-        <div
-          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-xl font-black text-white shadow-lg shadow-blue-600/20"
-        >
-          E
-        </div>
-
         @if (!sidebarCollapsed() || mobileMenuOpen()) {
-          <div class="overflow-hidden">
-            <div class="flex items-center gap-1.5">
-              <span class="text-lg font-bold tracking-tight text-slate-950 leading-none">
-                EVENTRA
-              </span>
-              <span class="rounded bg-blue-100 px-1.5 py-0.5 text-[9px] font-extrabold tracking-wider uppercase text-blue-700">
-                ADMIN
-              </span>
-            </div>
-            <p class="text-xs text-slate-400 font-medium mt-0.5">
-              Enterprise Console
-            </p>
+          <div class="flex items-center gap-2 overflow-hidden">
+            <img
+              src="/logo.png"
+              alt="EVENTRA"
+              class="h-9 w-auto max-w-[160px] object-contain"
+            />
+            <span class="rounded bg-blue-100 px-1.5 py-0.5 text-[9px] font-extrabold tracking-wider uppercase text-blue-700 shrink-0">
+              ADMIN
+            </span>
           </div>
+        } @else {
+          <img
+            src="/logo-icon.png"
+            alt="EVENTRA"
+            class="h-10 w-10 shrink-0 object-contain drop-shadow-xs transition-transform hover:scale-105"
+          />
         }
       </button>
 
