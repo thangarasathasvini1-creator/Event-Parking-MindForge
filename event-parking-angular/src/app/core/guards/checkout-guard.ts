@@ -6,7 +6,7 @@ export const checkoutGuard: CanActivateFn = () => {
   const bookingState = inject(BookingStateService);
   const router = inject(Router);
 
-  if (bookingState.event() && bookingState.selectedSeats().length > 0) {
+  if (bookingState.event() && bookingState.selectedSeats().length > 0 && bookingState.selectedSeats().length <= 4) {
     return true;
   }
 

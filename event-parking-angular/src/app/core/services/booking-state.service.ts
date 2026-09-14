@@ -26,13 +26,16 @@ export class BookingStateService {
       if (index >= 0) {
         return seats.filter(s => s.seatId !== seat.seatId);
       } else {
+        if (seats.length >= 4) {
+          return seats;
+        }
         return [...seats, seat];
       }
     });
   }
 
   setSelectedSeats(seats: Seat[]): void {
-    this.selectedSeats.set([...seats]);
+    this.selectedSeats.set(seats.slice(0, 4));
   }
 
   clearSeats(): void {
