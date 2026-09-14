@@ -13,4 +13,8 @@ dist/
 
 # Audit and temporary analysis artifacts
 .audit/
-*.log
+*.log
+
+# Sensitive keys and database backups
+key.txt
+*.bak

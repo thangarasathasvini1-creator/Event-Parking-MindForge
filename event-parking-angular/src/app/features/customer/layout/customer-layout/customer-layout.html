@@ -26,35 +26,30 @@
   >
 
     <!-- Brand -->
-    <div class="flex h-20 items-center border-b border-slate-100 px-5">
-
+    <div
+      class="flex h-20 items-center border-b border-slate-100 px-5"
+      [class.justify-center]="sidebarCollapsed() && !mobileMenuOpen()"
+    >
       <button
         type="button"
         (click)="navigateTab('dashboard')"
-        class="flex items-center cursor-pointer"
+        class="flex items-center cursor-pointer focus:outline-none"
         aria-label="EVENTRA Dashboard"
       >
-        <div
-          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-xl font-black text-white shadow-lg shadow-blue-600/20"
-        >
-          E
-        </div>
+        @if (!sidebarCollapsed() || mobileMenuOpen()) {
+          <img
+            src="/logo.png"
+            alt="EVENTRA"
+            class="h-9 w-auto max-w-[185px] object-contain transition-transform hover:scale-[1.02]"
+          />
+        } @else {
+          <img
+            src="/logo-icon.png"
+            alt="EVENTRA"
+            class="h-10 w-10 shrink-0 object-contain drop-shadow-xs transition-transform hover:scale-105"
+          />
+        }
       </button>
-
-      @if (!sidebarCollapsed() || mobileMenuOpen()) {
-        <div class="ml-3 overflow-hidden">
-          <h1
-            class="whitespace-nowrap text-lg font-bold tracking-tight text-slate-950"
-          >
-            EVENTRA
-          </h1>
-
-          <p class="whitespace-nowrap text-xs text-slate-500 font-medium">
-            Events. Seats. Parking.
-          </p>
-        </div>
-      }
-
     </div>
 
 
