@@ -209,13 +209,13 @@ export class Parking implements OnInit {
     switch ((vehicleType || '').toLowerCase()) {
       case 'bike':
       case 'motorcycle':
-        return '🏍️';
+        return 'Bike';
       case 'bus':
-        return '🚌';
+        return 'Bus';
       case 'van':
-        return '🚐';
+        return 'Van';
       default:
-        return '🚗';
+        return 'Car';
     }
   }
 

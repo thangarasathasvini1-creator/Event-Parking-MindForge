@@ -44,11 +44,11 @@ export class Landing implements OnInit {
   readonly searchQuery = signal('');
 
   readonly categories = [
-    { name: 'Concerts & Music', icon: '🎵', slug: 'music' },
-    { name: 'Sports & Games', icon: '⚽', slug: 'sports' },
-    { name: 'Theatre & Arts', icon: '🎭', slug: 'theatre' },
-    { name: 'Conferences & Tech', icon: '💼', slug: 'conference' },
-    { name: 'Festivals & Food', icon: '🎪', slug: 'festival' },
+    { name: 'Concerts & Music', icon: 'music', slug: 'music' },
+    { name: 'Sports & Games', icon: 'sports', slug: 'sports' },
+    { name: 'Theatre & Arts', icon: 'theatre', slug: 'theatre' },
+    { name: 'Conferences & Tech', icon: 'conference', slug: 'conference' },
+    { name: 'Festivals & Food', icon: 'festival', slug: 'festival' },
   ];
 
   ngOnInit(): void {
