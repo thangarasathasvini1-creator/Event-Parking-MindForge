@@ -149,14 +149,19 @@ export class SeatSelection implements OnInit {
       const updated = currentSelected.filter(s => s.seatId !== seat.seatId);
       this.selectedSeats.set(updated);
       this.bookingState.setSelectedSeats(updated);
+      this.errorMessage.set('');
+      this.conflictMessage.set('');
     } else {
+      if (currentSelected.length >= 4) {
+        this.conflictMessage.set('You can select a maximum of 4 seats at one time.');
+        return;
+      }
       const updated = [...currentSelected, seat];
       this.selectedSeats.set(updated);
       this.bookingState.setSelectedSeats(updated);
+      this.errorMessage.set('');
+      this.conflictMessage.set('');
     }
-
-    this.errorMessage.set('');
-    this.conflictMessage.set('');
   }
 
   isSelected(seatId: number): boolean {
@@ -226,6 +231,11 @@ export class SeatSelection implements OnInit {
 
     if (this.selectedSeats().length === 0) {
       this.errorMessage.set('Please select at least one seat to continue.');
+      return;
+    }
+
+    if (this.selectedSeats().length > 4) {
+      this.errorMessage.set('You can book a maximum of 4 seats at one time.');
       return;
     }
 

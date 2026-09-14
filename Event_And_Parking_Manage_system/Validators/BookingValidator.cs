@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.DTOs.Bookings;
+using Event_And_Parking_Manage_system.DTOs.Bookings;
 using FluentValidation;
 
 namespace Event_And_Parking_Manage_system.Validators
@@ -19,6 +19,10 @@ namespace Event_And_Parking_Manage_system.Validators
             RuleFor(x => x.SeatIds)
                 .Must(seats => seats != null && seats.Distinct().Count() == seats.Count)
                 .WithMessage("Duplicate seat IDs are not allowed.");
+
+            RuleFor(x => x.SeatIds)
+                .Must(seats => seats == null || seats.Count <= 4)
+                .WithMessage("A maximum of 4 seats can be booked at one time.");
 
             RuleForEach(x => x.SeatIds)
                 .GreaterThan(0)
