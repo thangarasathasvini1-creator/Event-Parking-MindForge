@@ -1,4 +1,4 @@
-﻿using Event_And_Parking_Manage_system.Models.Entities;
+using Event_And_Parking_Manage_system.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -22,6 +22,13 @@ namespace Event_And_Parking_Manage_system.Data.Configurations
 
             builder.Property(x => x.Capacity)
                 .IsRequired();
+
+            builder.Property(x => x.ImageUrl)
+                .HasMaxLength(1000)
+                .IsRequired(false);
+
+            builder.Property(x => x.BookingClosesAt)
+                .IsRequired(false);
 
             builder.HasIndex(x => x.VenueId);
 

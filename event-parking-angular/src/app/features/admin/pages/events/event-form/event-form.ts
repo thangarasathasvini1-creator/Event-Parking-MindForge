@@ -82,6 +82,8 @@ export class EventForm implements OnInit {
     ticketPrice: 0,
     parkingFee: 0,
     capacity: 0,
+    imageUrl: '',
+    bookingClosesAt: '',
   };
   readonly form = new FormRecord<FormControl<any>>({
     name: new FormControl(this.event.name ?? '', { nonNullable: true, validators: [Validators.required] }),
@@ -90,17 +92,77 @@ export class EventForm implements OnInit {
     eventDate: new FormControl(this.event.eventDate ?? '', { nonNullable: true, validators: [Validators.required] }),
     startTime: new FormControl(this.event.startTime ?? '', { nonNullable: true, validators: [Validators.required] }),
     endTime: new FormControl(this.event.endTime ?? '', { nonNullable: true, validators: [Validators.required] }),
+    bookingClosesAt: new FormControl(this.event.bookingClosesAt ?? '', { nonNullable: true }),
     ticketPrice: new FormControl(this.event.ticketPrice ?? 0, { nonNullable: true, validators: [Validators.min(0)] }),
     parkingFee: new FormControl(this.event.parkingFee ?? 0, { nonNullable: true, validators: [Validators.min(0)] }),
     capacity: new FormControl(this.event.capacity ?? 0, { nonNullable: true, validators: [Validators.required, Validators.min(1)] }),
+    imageUrl: new FormControl(this.event.imageUrl ?? '', { nonNullable: true }),
   });
   constructor() { this.form.valueChanges.subscribe(value => Object.assign(this.event, value)); }
+
+  setBookingClosesPreset(preset: 'start' | '1h' | '2h' | '24h' | 'clear'): void {
+    if (preset === 'clear') {
+      this.form.controls['bookingClosesAt'].setValue('');
+      return;
+    }
+    if (!this.event.eventDate || !this.event.startTime) {
+      return;
+    }
+    const [year, month, day] = this.event.eventDate.split('T')[0].split('-').map(Number);
+    const [hours, minutes] = this.event.startTime.split(':').map(Number);
+    const eventStartDate = new Date(year, month - 1, day, hours, minutes);
+
+    let targetDate: Date;
+    switch (preset) {
+      case 'start':
+        targetDate = new Date(eventStartDate);
+        break;
+      case '1h':
+        targetDate = new Date(eventStartDate.getTime() - 60 * 60 * 1000);
+        break;
+      case '2h':
+        targetDate = new Date(eventStartDate.getTime() - 2 * 60 * 60 * 1000);
+        break;
+      case '24h':
+        targetDate = new Date(eventStartDate.getTime() - 24 * 60 * 60 * 1000);
+        break;
+    }
+
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const localIso = `${targetDate.getFullYear()}-${pad(targetDate.getMonth() + 1)}-${pad(targetDate.getDate())}T${pad(targetDate.getHours())}:${pad(targetDate.getMinutes())}`;
+    this.form.controls['bookingClosesAt'].setValue(localIso);
+  }
+
+  readonly imagePresets = [
+    { label: '🎵 Music Concert', url: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=80' },
+    { label: '🏟️ Sports Match', url: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&auto=format&fit=crop&q=80' },
+    { label: '🎤 Tech Conference', url: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80' },
+    { label: '🎭 Theatre & Drama', url: 'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?w=800&auto=format&fit=crop&q=80' },
+    { label: '🥂 Gala Dinner', url: 'https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?w=800&auto=format&fit=crop&q=80' },
+    { label: '🎨 Art Exhibition', url: 'https://images.unsplash.com/photo-1531058020387-3be344556be6?w=800&auto=format&fit=crop&q=80' },
+  ];
+
+  selectImagePreset(url: string): void {
+    this.form.controls['imageUrl'].setValue(url);
+    this.event.imageUrl = url;
+  }
+
+  clearImage(): void {
+    this.form.controls['imageUrl'].setValue('');
+    this.event.imageUrl = '';
+  }
 
 
   /** Selected venue computed based on current event.venueId */
   readonly selectedVenue = () => {
     const venueId = Number(this.event.venueId);
     return this.venues().find((v) => v.venueId === venueId) ?? null;
+  };
+
+  /** Selected category computed based on current event.categoryId */
+  readonly selectedCategory = () => {
+    const categoryId = Number(this.event.categoryId);
+    return this.categories().find((c) => c.categoryId === categoryId) ?? null;
   };
 
   /** Max venue capacity for immediate validation */
@@ -252,9 +314,13 @@ export class EventForm implements OnInit {
       eventDate: this.event.eventDate,
       startTime: formattedStart,
       endTime: formattedEnd,
+      bookingClosesAt: this.event.bookingClosesAt
+        ? new Date(this.event.bookingClosesAt).toISOString()
+        : undefined,
       ticketPrice: Number(this.event.ticketPrice),
       parkingFee: Number(this.event.parkingFee),
       capacity: Number(this.event.capacity),
+      imageUrl: this.event.imageUrl?.trim() || undefined,
     };
 
     this.eventService.createEvent(eventData).subscribe({

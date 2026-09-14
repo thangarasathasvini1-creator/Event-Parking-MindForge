@@ -18,4 +18,6 @@ export interface Event {
   ticketPrice: number;
   parkingFee: number;
   capacity: number;
+  imageUrl?: string;
+  bookingClosesAt?: string;
 }
