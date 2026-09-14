@@ -8,20 +8,52 @@
 >
   <!-- Card Header / Visual Area -->
   <div class="relative h-44 w-full overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 p-5 flex flex-col justify-between">
-    <!-- Ambient glow decorations -->
-    <div class="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-blue-500/20 blur-2xl group-hover:bg-blue-400/30 transition duration-300" aria-hidden="true"></div>
-    <div class="absolute -bottom-8 left-8 h-24 w-24 rounded-full bg-indigo-500/20 blur-xl" aria-hidden="true"></div>
+    @if (event?.imageUrl && !imageLoadError) {
+      <img
+        [src]="event.imageUrl"
+        [alt]="event?.name || 'Event poster'"
+        (error)="onImageError()"
+        class="absolute inset-0 h-full w-full object-cover object-center transition duration-500 group-hover:scale-105"
+      />
+      <!-- Gradient overlay for strong readability of badges & text -->
+      <div class="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/55 to-slate-950/30" aria-hidden="true"></div>
+    } @else {
+      <!-- Ambient glow decorations -->
+      <div class="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-blue-500/20 blur-2xl group-hover:bg-blue-400/30 transition duration-300" aria-hidden="true"></div>
+      <div class="absolute -bottom-8 left-8 h-24 w-24 rounded-full bg-indigo-500/20 blur-xl" aria-hidden="true"></div>
+    }
 
     <div class="relative z-10 flex items-center justify-between gap-2">
       <span class="inline-flex items-center rounded-full bg-white/15 backdrop-blur-md px-3 py-1 text-[11px] font-semibold text-blue-100 border border-white/10">
         {{ event?.categoryName || 'Event' }}
       </span>
 
-      @if (hasParking) {
-        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-400/30">
-          <span>🚗</span> Parking
-        </span>
-      }
+      <div class="flex items-center gap-1.5">
+        @if (hasParking) {
+          <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-400/30">
+            <span>🚗</span> Parking
+          </span>
+        }
+
+        <!-- Countdown / Closed Badge in Header -->
+        @if (isBookingClosed()) {
+          <span class="inline-flex items-center gap-1 rounded-full bg-rose-500/80 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold text-white border border-rose-400/40">
+            <span>🚫</span> Closed
+          </span>
+        } @else if (countdownText()) {
+          <span
+            class="inline-flex items-center gap-1 rounded-full backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold border"
+            [class.bg-amber-500/80]="isClosingSoon()"
+            [class.text-amber-100]="isClosingSoon()"
+            [class.border-amber-400/40]="isClosingSoon()"
+            [class.bg-blue-500/30]="!isClosingSoon()"
+            [class.text-blue-200]="!isClosingSoon()"
+            [class.border-blue-400/30]="!isClosingSoon()"
+          >
+            <span>⏳</span> {{ countdownText() }}
+          </span>
+        }
+      </div>
     </div>
 
     <div class="relative z-10">
@@ -62,11 +94,45 @@
       @if (hasParking) {
         <div class="rounded-lg bg-emerald-50 px-2.5 py-1.5 text-[11px] font-medium text-emerald-700 flex items-center justify-between">
           <span>Parking available</span>
-          <span class="font-bold">${{ event.parkingFee }}</span>
+          <span class="font-bold">LKR {{ event.parkingFee | number }}</span>
         </div>
       } @else {
         <div class="rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-500">
           No parking reserved for this event
+        </div>
+      }
+
+      <!-- Dedicated Booking Countdown Strip -->
+      @if (isBookingClosed()) {
+        <div class="rounded-xl bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 border border-rose-200/80 flex items-center justify-between">
+          <span class="flex items-center gap-1.5">
+            <span class="inline-block h-2 w-2 rounded-full bg-rose-500"></span>
+            Booking Closed
+          </span>
+          <span class="text-[10px] text-rose-600 font-semibold">Deadline passed</span>
+        </div>
+      } @else if (countdownText()) {
+        <div
+          class="rounded-xl px-3 py-2 text-xs font-semibold flex items-center justify-between transition border"
+          [class.bg-amber-50]="isClosingSoon()"
+          [class.text-amber-800]="isClosingSoon()"
+          [class.border-amber-200]="isClosingSoon()"
+          [class.bg-slate-50]="!isClosingSoon()"
+          [class.text-slate-800]="!isClosingSoon()"
+          [class.border-slate-200]="!isClosingSoon()"
+        >
+          <span class="flex items-center gap-1.5">
+            <span
+              class="inline-block h-2 w-2 rounded-full"
+              [class.bg-amber-500]="isClosingSoon()"
+              [class.animate-pulse]="isClosingSoon()"
+              [class.bg-blue-600]="!isClosingSoon()"
+            ></span>
+            <span class="text-[11px] font-bold">Booking Closes In:</span>
+          </span>
+          <span class="font-mono font-bold text-xs tracking-tight">
+            {{ countdownText() }}
+          </span>
         </div>
       }
     </div>
@@ -76,21 +142,32 @@
       <div>
         <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">Ticket Price</span>
         <span class="text-base font-extrabold text-blue-600">
-          ${{ event?.ticketPrice ?? 0 }}
+          LKR {{ (event?.ticketPrice ?? 0) | number }}
         </span>
       </div>
 
-      <button
-        type="button"
-        (click)="onSelect(); $event.stopPropagation()"
-        class="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-blue-700 group-hover:shadow-md cursor-pointer"
-      >
-        <span>View Details</span>
-        <svg class="h-3.5 w-3.5 transition group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M5 12h14"/>
-          <path d="m12 5 7 7-7 7"/>
-        </svg>
-      </button>
+      @if (isBookingClosed()) {
+        <button
+          type="button"
+          disabled
+          class="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-400 border border-slate-200 shadow-none cursor-not-allowed"
+          title="Bookings for this event have closed"
+        >
+          <span>🚫 Booking Closed</span>
+        </button>
+      } @else {
+        <button
+          type="button"
+          (click)="onSelect(); $event.stopPropagation()"
+          class="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-blue-700 group-hover:shadow-md cursor-pointer"
+        >
+          <span>Book Tickets</span>
+          <svg class="h-3.5 w-3.5 transition group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/>
+            <path d="m12 5 7 7-7 7"/>
+          </svg>
+        </button>
+      }
     </div>
   </div>
 </article>

@@ -56,7 +56,9 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 EndTime = e.EndTime,
                 TicketPrice = e.TicketPrice,
                 ParkingFee = e.ParkingFee,
-                Capacity = e.Capacity
+                Capacity = e.Capacity,
+                ImageUrl = e.ImageUrl,
+                BookingClosesAt = e.BookingClosesAt ?? (e.EventDate.Date + e.StartTime)
             });
         }
 
@@ -85,7 +87,9 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 EndTime = eventEntity.EndTime,
                 TicketPrice = eventEntity.TicketPrice,
                 ParkingFee = eventEntity.ParkingFee,
-                Capacity = eventEntity.Capacity
+                Capacity = eventEntity.Capacity,
+                ImageUrl = eventEntity.ImageUrl,
+                BookingClosesAt = eventEntity.BookingClosesAt ?? (eventEntity.EventDate.Date + eventEntity.StartTime)
             };
         }
 
@@ -117,7 +121,9 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 EndTime = e.EndTime,
                 TicketPrice = e.TicketPrice,
                 ParkingFee = e.ParkingFee,
-                Capacity = e.Capacity
+                Capacity = e.Capacity,
+                ImageUrl = e.ImageUrl,
+                BookingClosesAt = e.BookingClosesAt ?? (e.EventDate.Date + e.StartTime)
             });
         }
 
@@ -191,6 +197,7 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             // -----------------------------------------
 
             var now = DateTime.UtcNow;
+            var bookingClose = dto.BookingClosesAt ?? (dto.EventDate.Date + dto.StartTime);
 
             var eventEntity = new Event
             {
@@ -203,6 +210,8 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 TicketPrice = dto.TicketPrice,
                 ParkingFee = dto.ParkingFee,
                 Capacity = dto.Capacity,
+                ImageUrl = dto.ImageUrl,
+                BookingClosesAt = bookingClose,
                 CreatedAt = now,
                 UpdatedAt = now
             };
@@ -229,7 +238,9 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                 EndTime = eventEntity.EndTime,
                 TicketPrice = eventEntity.TicketPrice,
                 ParkingFee = eventEntity.ParkingFee,
-                Capacity = eventEntity.Capacity
+                Capacity = eventEntity.Capacity,
+                ImageUrl = eventEntity.ImageUrl,
+                BookingClosesAt = eventEntity.BookingClosesAt
             };
         }
 
@@ -396,6 +407,8 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
             eventEntity.TicketPrice = dto.TicketPrice;
             eventEntity.ParkingFee = dto.ParkingFee;
             eventEntity.Capacity = dto.Capacity;
+            eventEntity.ImageUrl = dto.ImageUrl;
+            eventEntity.BookingClosesAt = dto.BookingClosesAt ?? (dto.EventDate.Date + dto.StartTime);
             eventEntity.UpdatedAt = DateTime.UtcNow;
 
             _eventRepository.Update(eventEntity);

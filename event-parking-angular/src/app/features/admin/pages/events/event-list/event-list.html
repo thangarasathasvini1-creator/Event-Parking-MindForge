@@ -95,7 +95,7 @@
                     <div class="rounded-xl bg-slate-50 p-2.5">
                       <span class="text-[10px] uppercase font-bold text-slate-400 block">Ticket Price</span>
                       <p class="text-base font-extrabold text-blue-600 mt-0.5">
-                        ${{ event.ticketPrice }}
+                        LKR {{ event.ticketPrice | number }}
                       </p>
                     </div>
 
@@ -117,7 +117,7 @@
                       {{ event.parkingFee > 0 ? '🚗 Parking Included' : 'No Dedicated Parking Fee' }}
                     </span>
                     <span class="font-bold">
-                      ${{ event.parkingFee }}
+                      LKR {{ event.parkingFee | number }}
                     </span>
                   </div>
                 </div>

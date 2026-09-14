@@ -113,6 +113,98 @@
                 </select>
               </div>
             </div>
+
+            <!-- Event Cover Image URL -->
+            <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-3">
+              <div class="flex items-center justify-between">
+                <label for="edit-event-image" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Event Cover Image (Optional)
+                </label>
+                @if (event.imageUrl) {
+                  <button
+                    type="button"
+                    (click)="clearImage()"
+                    class="text-[11px] font-semibold text-rose-600 hover:text-rose-700 transition cursor-pointer"
+                  >
+                    ✕ Remove Image
+                  </button>
+                }
+              </div>
+
+              <!-- Image URL Input -->
+              <div class="relative">
+                <input
+                  id="edit-event-image"
+                  type="url"
+                  name="imageUrl"
+                  formControlName="imageUrl"
+                  placeholder="https://example.com/images/event-poster.jpg"
+                  class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder:text-slate-400"
+                />
+              </div>
+
+              <!-- Curated Presets -->
+              <div>
+                <span class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                  Quick-Select Theme Presets
+                </span>
+                <div class="flex flex-wrap gap-1.5">
+                  @for (preset of imagePresets; track preset.label) {
+                    <button
+                      type="button"
+                      (click)="selectImagePreset(preset.url)"
+                      [class.border-blue-500]="event.imageUrl === preset.url"
+                      [class.bg-blue-50]="event.imageUrl === preset.url"
+                      [class.text-blue-700]="event.imageUrl === preset.url"
+                      [class.font-bold]="event.imageUrl === preset.url"
+                      class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-700 shadow-2xs transition hover:border-blue-300 hover:bg-slate-50 cursor-pointer"
+                    >
+                      {{ preset.label }}
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Live Card Mini-Preview -->
+              <div class="mt-2 pt-3 border-t border-slate-200/80">
+                <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  Card Visual Preview
+                </span>
+                <div class="relative h-32 w-full max-w-sm overflow-hidden rounded-xl bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 p-3.5 flex flex-col justify-between shadow-xs border border-slate-300/80">
+                  @if (event.imageUrl) {
+                    <img
+                      [src]="event.imageUrl"
+                      alt="Card Preview"
+                      class="absolute inset-0 h-full w-full object-cover object-center"
+                    />
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-slate-950/20" aria-hidden="true"></div>
+                  } @else {
+                    <div class="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-blue-500/20 blur-xl"></div>
+                    <div class="absolute -bottom-4 left-4 h-16 w-16 rounded-full bg-indigo-500/20 blur-lg"></div>
+                  }
+
+                  <div class="relative z-10 flex items-center justify-between">
+                    <span class="inline-flex items-center rounded-full bg-white/20 backdrop-blur-md px-2 py-0.5 text-[10px] font-semibold text-blue-100">
+                      {{ selectedCategory()?.name || 'Category' }}
+                    </span>
+                    @if (event.imageUrl) {
+                      <span class="rounded bg-emerald-500/80 px-1.5 py-0.5 text-[9px] font-black uppercase text-white">
+                        Custom Image Active
+                      </span>
+                    }
+                  </div>
+
+                  <div class="relative z-10">
+                    <h4 class="text-sm font-bold text-white truncate">
+                      {{ event.name || 'Event Title Preview' }}
+                    </h4>
+                    <p class="text-[10px] text-blue-200 truncate">
+                      {{ (selectedVenue()?.name) || 'Selected Venue' }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </fieldset>
 
           <!-- SECTION 2: SCHEDULE -->
@@ -167,6 +259,77 @@
                 />
               </div>
             </div>
+
+            <!-- Booking Closes At (Deadline) -->
+            <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-3">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <label for="edit-booking-closes-at" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Booking Closed Time (Optional)
+                  </label>
+                  <p class="text-[11px] text-slate-500 mt-0.5">
+                    When reached, customer bookings are automatically disabled with a countdown timer. Defaults to Event Start if unset.
+                  </p>
+                </div>
+
+                <!-- Quick Presets -->
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="text-[10px] font-bold text-slate-400 uppercase mr-1">Presets:</span>
+                  <button
+                    type="button"
+                    (click)="setBookingClosesPreset('start')"
+                    class="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+                    title="Close right when event starts"
+                  >
+                    At Start
+                  </button>
+                  <button
+                    type="button"
+                    (click)="setBookingClosesPreset('1h')"
+                    class="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+                    title="Close 1 hour before event start"
+                  >
+                    1h Before
+                  </button>
+                  <button
+                    type="button"
+                    (click)="setBookingClosesPreset('2h')"
+                    class="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+                    title="Close 2 hours before event start"
+                  >
+                    2h Before
+                  </button>
+                  <button
+                    type="button"
+                    (click)="setBookingClosesPreset('24h')"
+                    class="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+                    title="Close 24 hours before event start"
+                  >
+                    24h Before
+                  </button>
+                  @if (event.bookingClosesAt) {
+                    <button
+                      type="button"
+                      (click)="setBookingClosesPreset('clear')"
+                      class="rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-600 hover:bg-rose-100 transition cursor-pointer"
+                      title="Clear custom deadline"
+                    >
+                      Clear
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <div class="relative max-w-sm">
+                <input
+                  id="edit-booking-closes-at"
+                  type="datetime-local"
+                  name="bookingClosesAt"
+                  formControlName="bookingClosesAt"
+                  class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+            </div>
           </fieldset>
 
           <!-- SECTION 3: PRICING -->
@@ -179,7 +342,7 @@
               <!-- Ticket Price -->
               <div>
                 <label for="edit-ticket-price" class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Ticket Price ($) <span class="text-rose-600">*</span>
+                  Ticket Price (LKR) <span class="text-rose-600">*</span>
                 </label>
                 <input
                   id="edit-ticket-price"
@@ -196,7 +359,7 @@
               <!-- Parking Fee -->
               <div>
                 <label for="edit-parking-fee" class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Parking Fee ($) <span class="text-rose-600">*</span>
+                  Parking Fee (LKR) <span class="text-rose-600">*</span>
                 </label>
                 <input
                   id="edit-parking-fee"

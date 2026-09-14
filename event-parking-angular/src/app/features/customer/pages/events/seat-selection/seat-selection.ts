@@ -45,6 +45,7 @@ export class SeatSelection implements OnInit {
 
   eventId = 0;
   readonly event = signal<Event | null>(null);
+  readonly isBookingClosed = signal(false);
 
   ngOnInit(): void {
     this.eventId = Number(
@@ -68,9 +69,33 @@ export class SeatSelection implements OnInit {
 
   loadEvent(): void {
     this.eventService.getEventById(this.eventId).subscribe({
-      next: (event) => this.event.set(event),
+      next: (event) => {
+        this.event.set(event);
+        this.checkBookingClosed(event);
+      },
       error: () => this.errorMessage.set('Failed to load event details.')
     });
+  }
+
+  private checkBookingClosed(ev: Event): void {
+    let deadline: Date | null = null;
+    if (ev.bookingClosesAt) {
+      const parsed = new Date(ev.bookingClosesAt);
+      if (!isNaN(parsed.getTime())) deadline = parsed;
+    }
+    if (!deadline && ev.eventDate) {
+      const datePart = ev.eventDate.substring(0, 10);
+      const timePart = ev.startTime ? ev.startTime.substring(0, 8) : '00:00:00';
+      const parsed = new Date(`${datePart}T${timePart}`);
+      if (!isNaN(parsed.getTime())) deadline = parsed;
+      else deadline = new Date(ev.eventDate);
+    }
+    if (deadline && deadline.getTime() <= Date.now()) {
+      this.isBookingClosed.set(true);
+      this.conflictMessage.set('Booking for this event has closed. Ticket reservations are no longer permitted.');
+    } else {
+      this.isBookingClosed.set(false);
+    }
   }
 
   loadSeats(isRefresh = false): void {
@@ -108,6 +133,11 @@ export class SeatSelection implements OnInit {
   }
 
   toggleSeat(seat: Seat): void {
+    if (this.isBookingClosed()) {
+      this.conflictMessage.set('Booking for this event has closed.');
+      return;
+    }
+
     if ((seat.status || '').toLowerCase() !== 'available') {
       return;
     }
@@ -189,6 +219,11 @@ export class SeatSelection implements OnInit {
   }
 
   continueToParking(): void {
+    if (this.isBookingClosed()) {
+      this.errorMessage.set('Booking for this event has closed.');
+      return;
+    }
+
     if (this.selectedSeats().length === 0) {
       this.errorMessage.set('Please select at least one seat to continue.');
       return;
