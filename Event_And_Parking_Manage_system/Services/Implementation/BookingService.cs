@@ -94,6 +94,12 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                         "At least one seat must be selected.");
                 }
 
+                if (dto.SeatIds.Count > 4)
+                {
+                    throw new InvalidOperationException(
+                        "A maximum of 4 seats can be booked at one time.");
+                }
+
                 var distinctSeatIds = dto.SeatIds
                     .Distinct()
                     .ToList();

@@ -100,6 +100,15 @@ export class Checkout {
       return;
     }
 
+    if (seats.length > 4) {
+      this.errorMessage.set(
+        'You can only book a maximum of 4 seats at one time.'
+      );
+
+      this.showConfirmation.set(false);
+      return;
+    }
+
     this.errorMessage.set('');
     this.isSubmitting.set(true);
 
