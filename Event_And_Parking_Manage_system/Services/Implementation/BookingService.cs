@@ -69,6 +69,12 @@ namespace Event_And_Parking_Manage_system.Services.Implementation
                         "Event not found.");
                 }
 
+                var bookingDeadline = eventEntity.BookingClosesAt ?? (eventEntity.EventDate.Date + eventEntity.StartTime);
+                if (DateTime.UtcNow >= bookingDeadline)
+                {
+                    throw new InvalidOperationException("Booking for this event has closed.");
+                }
+
                 // Verify event seat map completeness
                 var eventSeats = await _seatRepository.GetSeatsByEventIdAsync(dto.EventId);
                 if (eventSeats.Count() != eventEntity.Capacity)

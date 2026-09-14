@@ -1,4 +1,4 @@
-﻿namespace Event_And_Parking_Manage_system.Models.Entities
+namespace Event_And_Parking_Manage_system.Models.Entities
 {
     public class Event
     {
@@ -21,6 +21,10 @@
         public decimal ParkingFee { get; set; }
 
         public int Capacity { get; set; }
+
+        public string? ImageUrl { get; set; }
+
+        public DateTime? BookingClosesAt { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

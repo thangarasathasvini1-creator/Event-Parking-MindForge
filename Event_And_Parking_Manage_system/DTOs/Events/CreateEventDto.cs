@@ -1,4 +1,4 @@
-﻿namespace Event_And_Parking_Manage_system.DTOs.Events
+namespace Event_And_Parking_Manage_system.DTOs.Events
 {
     public class CreateEventDto
     {
@@ -19,5 +19,7 @@
         public decimal ParkingFee { get; set; }
 
         public int Capacity { get; set; }
+        public string? ImageUrl { get; set; }
+        public DateTime? BookingClosesAt { get; set; }
     }
 }
