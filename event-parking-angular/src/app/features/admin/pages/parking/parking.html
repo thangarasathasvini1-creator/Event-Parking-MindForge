@@ -36,7 +36,9 @@
           class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-700 text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-50"
           title="Generate a batch of slots for a zone"
         >
-          <span>⚡</span>
+          <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
           <span>Generate Zone</span>
         </button>
 
@@ -81,7 +83,9 @@
     @if (occupiedSlotsCount() > 0) {
       <div class="flex items-center justify-between rounded-xl bg-amber-50 border border-amber-200 p-4 text-xs font-medium text-amber-900 animate-in fade-in duration-200">
         <div class="flex items-center gap-2">
-          <span class="text-base">🔒</span>
+          <svg class="w-4 h-4 text-amber-700 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
           <span>
             <strong>Active Reservations Protected:</strong> This event has {{ occupiedSlotsCount() }} confirmed occupied parking slot(s). Existing allocations cannot be overridden to protect customer bookings.
           </span>
@@ -141,9 +145,11 @@
               [class.font-bold]="viewMode() === 'grid'"
               [class.shadow-xs]="viewMode() === 'grid'"
               [class.text-slate-600]="viewMode() !== 'grid'"
-              class="flex-1 py-1.5 text-xs transition cursor-pointer text-center rounded-lg flex items-center justify-center gap-1"
+              class="flex-1 py-1.5 text-xs transition cursor-pointer text-center rounded-lg flex items-center justify-center gap-1.5"
             >
-              <span>🅿️</span>
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4zM5 11l2-5h10l2 5M4 11h16v6H4v-6z" />
+              </svg>
               <span>Visual Bays</span>
             </button>
 
@@ -155,9 +161,11 @@
               [class.font-bold]="viewMode() === 'table'"
               [class.shadow-xs]="viewMode() === 'table'"
               [class.text-slate-600]="viewMode() !== 'table'"
-              class="flex-1 py-1.5 text-xs transition cursor-pointer text-center rounded-lg flex items-center justify-center gap-1"
+              class="flex-1 py-1.5 text-xs transition cursor-pointer text-center rounded-lg flex items-center justify-center gap-1.5"
             >
-              <span>📋</span>
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 4h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
               <span>Table List</span>
             </button>
           </div>
@@ -180,9 +188,6 @@
               [class.text-slate-600]="vehicleFilter() !== vOpt"
               class="px-2.5 py-1 rounded-lg font-medium transition cursor-pointer text-[11px] whitespace-nowrap"
             >
-              @if (vOpt !== 'ALL') {
-                {{ getVehicleIcon(vOpt) }}
-              }
               {{ vOpt }}
             </button>
           }
@@ -216,7 +221,9 @@
         <div class="flex items-center justify-between">
           <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Parking Bays</p>
           <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 text-sm">
-            🅿️
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4zM5 11l2-5h10l2 5M4 11h16v6H4v-6z" />
+            </svg>
           </div>
         </div>
         <div class="mt-2 flex items-baseline gap-2">
@@ -332,7 +339,17 @@
                     >
                       <!-- Top row: Vehicle Icon & Status Dot -->
                       <div class="w-full flex items-center justify-between">
-                        <span class="text-base" [title]="slot.vehicleType">{{ getVehicleIcon(slot.vehicleType) }}</span>
+                        <span class="text-slate-600" [title]="slot.vehicleType">
+                          @if ((slot.vehicleType || '').toLowerCase().includes('bike')) {
+                            <svg class="w-4 h-4 text-indigo-600 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                            </svg>
+                          } @else {
+                            <svg class="w-4 h-4 text-blue-600 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4zM5 11l2-5h10l2 5M4 11h16v6H4v-6z" />
+                            </svg>
+                          }
+                        </span>
                         <span
                           class="h-2 w-2 rounded-full"
                           [class.bg-emerald-500]="slot.status === 'Available'"
@@ -379,18 +396,26 @@
                 <span>Occupied / Booked</span>
               </div>
               <div class="flex items-center gap-3 text-slate-500 pl-4 border-l border-slate-200">
-                <span>🚗 Car</span>
-                <span>🏍️ Bike</span>
-                <span>🚐 Van</span>
-                <span>🚌 Bus</span>
+                <span class="inline-flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4zM5 11l2-5h10l2 5M4 11h16v6H4v-6z" /></svg>
+                  <span>Car</span>
+                </span>
+                <span class="inline-flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /></svg>
+                  <span>Bike</span>
+                </span>
+                <span>Van</span>
+                <span>Bus</span>
               </div>
               <span class="text-slate-400 italic text-[11px]">• Click any slot to modify its status or fee</span>
             </div>
 
           } @else {
             <div class="rounded-2xl border border-slate-200/90 bg-white p-12 shadow-xs text-center">
-              <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 text-2xl mb-3">
-                🅿️
+              <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 mb-3">
+                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4zM5 11l2-5h10l2 5M4 11h16v6H4v-6z" />
+                </svg>
               </div>
               <h3 class="text-base font-bold text-slate-900">No Parking Bays Configured Yet</h3>
               <p class="text-xs text-slate-400 mt-1 max-w-md mx-auto">
@@ -402,7 +427,9 @@
                   (click)="openBulkModal()"
                   class="rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-indigo-700 shadow-xs transition cursor-pointer flex items-center gap-1.5"
                 >
-                  <span>⚡</span>
+                  <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
                   <span>Generate Parking Zone</span>
                 </button>
               </div>
@@ -439,8 +466,16 @@
                         </span>
                       </td>
                       <td class="px-6 py-3.5">
-                        <span class="inline-flex items-center gap-1 font-semibold text-slate-800">
-                          <span>{{ getVehicleIcon(slot.vehicleType) }}</span>
+                        <span class="inline-flex items-center gap-1.5 font-semibold text-slate-800">
+                          @if ((slot.vehicleType || '').toLowerCase().includes('bike')) {
+                            <svg class="w-4 h-4 text-indigo-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                            </svg>
+                          } @else {
+                            <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4zM5 11l2-5h10l2 5M4 11h16v6H4v-6z" />
+                            </svg>
+                          }
                           <span>{{ slot.vehicleType }}</span>
                         </span>
                       </td>
@@ -497,7 +532,9 @@
           
           <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/50">
             <div class="flex items-center gap-2">
-              <span class="text-base">⚡</span>
+              <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
               <h3 class="text-sm font-bold text-slate-900">Generate Parking Zone</h3>
             </div>
             <button
@@ -560,7 +597,7 @@
                   class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 >
                   @for (v of vehicleTypes; track v) {
-                    <option [value]="v">{{ getVehicleIcon(v) }} {{ v }}</option>
+                    <option [value]="v">{{ v }}</option>
                   }
                 </select>
               </div>
@@ -596,7 +633,13 @@
               [disabled]="generating() || !generateZone.trim() || !generateCount"
               class="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition cursor-pointer shadow-xs disabled:opacity-50 flex items-center gap-1.5"
             >
-              <span [class.animate-spin]="generating()">⚡</span>
+              @if (generating()) {
+                <span class="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+              } @else {
+                <svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              }
               <span>{{ generating() ? 'Generating...' : 'Generate Slots' }}</span>
             </button>
           </div>
@@ -667,7 +710,7 @@
                   class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 >
                   @for (vType of vehicleTypes; track vType) {
-                    <option [value]="vType">{{ getVehicleIcon(vType) }} {{ vType }}</option>
+                    <option [value]="vType">{{ vType }}</option>
                   }
                 </select>
               </div>
