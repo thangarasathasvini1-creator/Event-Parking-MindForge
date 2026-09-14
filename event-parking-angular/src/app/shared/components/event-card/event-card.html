@@ -94,7 +94,7 @@
       @if (hasParking) {
         <div class="rounded-lg bg-emerald-50 px-2.5 py-1.5 text-[11px] font-medium text-emerald-700 flex items-center justify-between">
           <span>Parking available</span>
-          <span class="font-bold">${{ event.parkingFee }}</span>
+          <span class="font-bold">LKR {{ event.parkingFee | number }}</span>
         </div>
       } @else {
         <div class="rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-500">
@@ -142,7 +142,7 @@
       <div>
         <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">Ticket Price</span>
         <span class="text-base font-extrabold text-blue-600">
-          ${{ event?.ticketPrice ?? 0 }}
+          LKR {{ (event?.ticketPrice ?? 0) | number }}
         </span>
       </div>
 

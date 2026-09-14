@@ -232,7 +232,7 @@
                   <div class="text-right shrink-0">
                     <span class="text-[10px] uppercase tracking-wider text-emerald-600 font-bold block">Parking Fee</span>
                     <span class="text-lg font-black text-emerald-800">
-                      ${{ currentEvent.parkingFee }}
+                      LKR {{ currentEvent.parkingFee | number }}
                     </span>
                   </div>
                 </div>
@@ -253,8 +253,8 @@
               </span>
 
               <div class="flex items-baseline gap-2 mb-6">
-                <span class="text-4xl font-black text-blue-600">
-                  ${{ currentEvent.ticketPrice }}
+                <span class="text-3xl font-black text-blue-600">
+                  LKR {{ currentEvent.ticketPrice | number }}
                 </span>
                 <span class="text-xs text-slate-500 font-medium">/ seat</span>
               </div>
